@@ -1,0 +1,105 @@
+import { useState, useEffect } from "react";
+import { Menu, X, Camera, Ticket } from "lucide-react";
+import { LogoGardu } from "../../App";
+
+
+const scrollTo = (href: string) => {
+  document.querySelector(href)?.scrollIntoView({ behavior: "smooth" });
+};
+
+
+
+const NAV = [
+  { label: "Beranda",  href: "#hero" },
+  { label: "Wisata",   href: "#wisata" },
+  { label: "Paket",    href: "#paket" },
+  { label: "UMKM",     href: "#umkm" },
+  { label: "Budaya",   href: "#budaya" },
+  { label: "Kontak",   href: "#kontak" },
+];
+
+export default function Navbar({ onOpenBooking }: { onOpenBooking: () => void }) {
+  const [open, setOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+  useEffect(() => {
+    const fn = () => setScrolled(window.scrollY > 20);
+    window.addEventListener("scroll", fn);
+    return () => window.removeEventListener("scroll", fn);
+  }, []);
+
+  return (
+    <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled ? "bg-white/95 backdrop-blur-md shadow-sm border-b border-[#bbf7d0]" : "bg-white/90 backdrop-blur-md"}`}>
+      <div className="max-w-7xl mx-auto px-5 sm:px-8 h-16 flex items-center justify-between gap-3">
+
+        {/* ── Left: Logo + AR Explore ── */}
+        <div className="flex items-center gap-3 flex-shrink-0">
+          <button onClick={() => scrollTo("#hero")} className="flex items-center gap-2 flex-shrink-0">
+            <img src={LogoGardu} alt="Logo Desa Getas" className="w-8 h-8 object-contain" />
+            <span className="font-bold text-[#0a1f0f] text-sm tracking-wide hidden sm:block" style={{ fontFamily: "Poppins, sans-serif" }}>
+              DESA<span className="text-[#16a34a]">GETAS</span>
+            </span>
+          </button>
+
+          {/* AR Explore — prominent left button */}
+          <button onClick={() => scrollTo("#ar")}
+            className="hidden sm:flex items-center gap-1.5 pl-3 pr-3.5 py-1.5 rounded-xl border border-[#bbf7d0] bg-white hover:bg-[#dcfce7] hover:border-[#16a34a]/50 transition-all group shadow-sm"
+            style={{ fontFamily: "Inter, sans-serif" }}>
+            <div className="w-5 h-5 rounded-md bg-gradient-to-br from-[#16a34a] to-[#4ade80] flex items-center justify-center flex-shrink-0">
+              <Camera size={11} className="text-white" />
+            </div>
+            <span className="text-xs font-bold text-[#16a34a]">AR Explore</span>
+            <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+          </button>
+        </div>
+
+        {/* ── Centre: Nav links ── */}
+        <div className="hidden md:flex items-center gap-0.5 flex-1 justify-center">
+          {NAV.map(l => (
+            <button key={l.label} onClick={() => scrollTo(l.href)}
+              className="px-3 py-2 text-sm text-[#166534] hover:text-[#16a34a] hover:bg-[#dcfce7] rounded-lg transition-all font-medium"
+              style={{ fontFamily: "Inter, sans-serif" }}>
+              {l.label}
+            </button>
+          ))}
+        </div>
+
+        {/* ── Right: Pesan Sekarang ── */}
+        <div className="flex items-center gap-2 flex-shrink-0">
+          <button onClick={onOpenBooking}
+            className="hidden sm:flex items-center gap-1.5 px-4 py-2 bg-[#16a34a] hover:bg-[#15803d] text-white text-sm font-bold rounded-xl transition shadow-md shadow-green-200/60"
+            style={{ fontFamily: "Poppins, sans-serif" }}>
+            <Ticket size={14} />
+            Pesan Sekarang
+          </button>
+          <button onClick={() => setOpen(!open)} className="md:hidden w-9 h-9 flex items-center justify-center rounded-lg text-[#166534] hover:bg-[#dcfce7] transition">
+            {open ? <X size={18} /> : <Menu size={18} />}
+          </button>
+        </div>
+      </div>
+
+      {/* Mobile menu */}
+      {open && (
+        <div className="md:hidden bg-white border-t border-[#bbf7d0] px-5 py-3 space-y-1">
+          <button onClick={() => { scrollTo("#ar"); setOpen(false); }}
+            className="w-full text-left px-4 py-2.5 text-sm font-bold text-[#16a34a] hover:bg-[#dcfce7] rounded-lg transition flex items-center gap-2">
+            <Camera size={14} /> AR Explore
+          </button>
+          {NAV.map(l => (
+            <button key={l.label} onClick={() => { scrollTo(l.href); setOpen(false); }}
+              className="w-full text-left px-4 py-2.5 text-sm text-[#166534] hover:text-[#16a34a] hover:bg-[#dcfce7] rounded-lg transition"
+              style={{ fontFamily: "Inter, sans-serif" }}>
+              {l.label}
+            </button>
+          ))}
+          <div className="pt-2">
+            <button onClick={() => { onOpenBooking(); setOpen(false); }}
+              className="w-full py-3 bg-[#16a34a] text-white font-bold rounded-xl text-sm flex items-center justify-center gap-2"
+              style={{ fontFamily: "Poppins, sans-serif" }}>
+              <Ticket size={15} /> Pesan Sekarang
+            </button>
+          </div>
+        </div>
+      )}
+    </nav>
+  );
+}
