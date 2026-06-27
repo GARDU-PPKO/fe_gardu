@@ -7,6 +7,11 @@ import DusunPage from "./components/sections/DusunPage";
 import TourPackages from "./components/sections/TourPackages";
 import UMKMSection from "./components/sections/UMKMSection";
 import KebudayaanSection from "./components/sections/KebudayaanSection";
+import StatistikSection from "./components/sections/StatistikSection";
+import ARSection from "./components/sections/ARSection";
+import KontakSection from "./components/sections/KontakSection";
+import DusunSlider from "./components/sections/DusunSlider";
+import ProfilDesa from "./components/sections/ProfilDesa";
 import { PACKAGES } from "./data/mockData";
 import type { DusunData } from "./data/mockData";
 
@@ -27,10 +32,23 @@ export default function App() {
         <DusunPage dusun={selectedDusun} onClose={() => setSelectedDusun(null)} />
       ) : (
         <main>
-          <Hero onSelectDusun={setSelectedDusun} />
+<<<<<<< HEAD
+          <Hero />
           <TourPackages onBook={(pkg) => setBookingPkg(pkg)} />
+          
+          {/* Section Wilayah Desa */}
+          <section id="wisata" className="py-16 px-4 sm:px-8 bg-gray-50 border-t border-b border-[#bbf7d0]/20">
+            <div className="max-w-7xl mx-auto">
+              <DusunSlider onSelect={setSelectedDusun} />
+            </div>
+          </section>
+
           <UMKMSection />
           <KebudayaanSection />
+          <ARSection />
+          <ProfilDesa />
+          <StatistikSection />
+          <KontakSection />
         </main>
       )}
 

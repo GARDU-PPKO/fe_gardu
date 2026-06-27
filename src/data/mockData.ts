@@ -6,7 +6,7 @@ export const DUSUN = [
     desc: "Dusun di tepi sungai dengan sawah hijau membentang luas.",
     detail: "Seklotok adalah dusun yang berbatasan langsung dengan aliran Sungai Blukar. Hamparan sawah organik membentang hijau sepanjang musim tanam. Warganya dikenal sebagai petani padi terbaik di Desa Getas.",
     keunggulan: ["Sawah organik tepi sungai", "Pemandangan matahari terbit terbaik", "Akses jalur tubing utama"],
-    galeri: ["https://images.unsplash.com/photo-1627796863235-2dddce3e862d?w=600&h=400&fit=crop&auto=format","https://images.unsplash.com/photo-1683506684881-efbb5203eacf?w=600&h=400&fit=crop&auto=format","https://images.unsplash.com/photo-1546845776-dcdf70fd09e3?w=600&h=400&fit=crop&auto=format"],
+    galeri: ["https://images.unsplash.com/photo-1627796863235-2dddce3e862d?w=600&h=400&fit=crop&auto=format", "https://images.unsplash.com/photo-1683506684881-efbb5203eacf?w=600&h=400&fit=crop&auto=format", "https://images.unsplash.com/photo-1546845776-dcdf70fd09e3?w=600&h=400&fit=crop&auto=format"],
   },
   {
     name: "Mambang", rw: "RW 02", rt: 3, penduduk: 445, luas: "1,4 km²",
@@ -15,7 +15,7 @@ export const DUSUN = [
     desc: "Kawasan pertanian organik unggulan Desa Getas.",
     detail: "Mambang dikenal sebagai lumbung pangan Desa Getas. Sistem pertanian organik diterapkan secara konsisten sejak 2015. Produk beras organiknya telah merambah pasar Kabupaten Kendal.",
     keunggulan: ["Sentra beras organik", "Kelompok tani aktif", "Irigasi teknis terbaik"],
-    galeri: ["https://images.unsplash.com/photo-1683506684881-efbb5203eacf?w=600&h=400&fit=crop&auto=format","https://images.unsplash.com/photo-1536304929831-ee1ca9d44906?w=600&h=400&fit=crop&auto=format","https://images.unsplash.com/photo-1627796863235-2dddce3e862d?w=600&h=400&fit=crop&auto=format"],
+    galeri: ["https://images.unsplash.com/photo-1683506684881-efbb5203eacf?w=600&h=400&fit=crop&auto=format", "https://images.unsplash.com/photo-1536304929831-ee1ca9d44906?w=600&h=400&fit=crop&auto=format", "https://images.unsplash.com/photo-1627796863235-2dddce3e862d?w=600&h=400&fit=crop&auto=format"],
   },
   {
     name: "Jolinggo", rw: "RW 03", rt: 2, penduduk: 387, luas: "1,6 km²",
@@ -24,7 +24,7 @@ export const DUSUN = [
     desc: "Dikelilingi hutan pinus dengan udara sejuk sepanjang hari.",
     detail: "Jolinggo terletak di ketinggian paling tinggi di Desa Getas, dikelilingi hutan pinus dan tanaman kopi. Udaranya paling sejuk dan cocok untuk agrowisata perkebunan. Warganya aktif mengembangkan kopi robusta lokal.",
     keunggulan: ["Hutan pinus dan kopi", "Agrowisata perkebunan", "Udara pegunungan segar"],
-    galeri: ["https://images.unsplash.com/photo-1672128558402-8e03471c8779?w=600&h=400&fit=crop&auto=format","https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=600&h=400&fit=crop&auto=format","https://images.unsplash.com/photo-1637993921206-cae1c2cbba20?w=600&h=400&fit=crop&auto=format"],
+    galeri: ["https://images.unsplash.com/photo-1672128558402-8e03471c8779?w=600&h=400&fit=crop&auto=format", "https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=600&h=400&fit=crop&auto=format", "https://images.unsplash.com/photo-1637993921206-cae1c2cbba20?w=600&h=400&fit=crop&auto=format"],
   },
   {
     name: "Genting", rw: "RW 04", rt: 2, penduduk: 356, luas: "1,1 km²",
@@ -33,7 +33,7 @@ export const DUSUN = [
     desc: "Dusun yang terkenal dengan kerajinan bambu tradisional.",
     detail: "Genting adalah pusat kerajinan tangan Desa Getas. Anyaman bambu buatan warga Genting dikenal hingga tingkat provinsi. Setiap rumah tangga rata-rata menghasilkan kerajinan sebagai sumber penghasilan tambahan.",
     keunggulan: ["Pusat kerajinan anyaman bambu", "Workshop batik tulis", "Pasar seni mingguan"],
-    galeri: ["https://images.unsplash.com/photo-1546845776-dcdf70fd09e3?w=600&h=400&fit=crop&auto=format","https://images.unsplash.com/photo-1586717799252-bd134ad00e26?w=600&h=400&fit=crop&auto=format","https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=600&h=400&fit=crop&auto=format"],
+    galeri: ["https://images.unsplash.com/photo-1546845776-dcdf70fd09e3?w=600&h=400&fit=crop&auto=format", "https://images.unsplash.com/photo-1586717799252-bd134ad00e26?w=600&h=400&fit=crop&auto=format", "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=600&h=400&fit=crop&auto=format"],
   },
   {
     name: "Metep", rw: "RW 05", rt: 2, penduduk: 398, luas: "1,8 km²",
@@ -42,7 +42,7 @@ export const DUSUN = [
     desc: "Dekat air terjun alami, destinasi hiking favorit warga.",
     detail: "Metep menjadi pintu masuk utama menuju Air Terjun Getas yang tersembunyi di balik bukit. Jalur hiking sepanjang 3 km melewati dusun ini menjadi favorit wisatawan alam. Komunitas pemandu lokal aktif beroperasi di sini.",
     keunggulan: ["Gerbang air terjun tersembunyi", "Jalur hiking 3 km", "Pemandu wisata lokal"],
-    galeri: ["https://images.unsplash.com/photo-1637993921206-cae1c2cbba20?w=600&h=400&fit=crop&auto=format","https://images.unsplash.com/photo-1554931670-4ebfabf6e7a9?w=600&h=400&fit=crop&auto=format","https://images.unsplash.com/photo-1582583088753-afb19907963a?w=600&h=400&fit=crop&auto=format"],
+    galeri: ["https://images.unsplash.com/photo-1637993921206-cae1c2cbba20?w=600&h=400&fit=crop&auto=format", "https://images.unsplash.com/photo-1554931670-4ebfabf6e7a9?w=600&h=400&fit=crop&auto=format", "https://images.unsplash.com/photo-1582583088753-afb19907963a?w=600&h=400&fit=crop&auto=format"],
   },
   {
     name: "Bleder", rw: "RW 06", rt: 2, penduduk: 421, luas: "1,3 km²",
@@ -51,7 +51,7 @@ export const DUSUN = [
     desc: "Titik awal jalur tubing Sungai Blukar yang terkenal.",
     detail: "Bleder adalah titik start utama wisata tubing Sungai Blukar. Pengelola wisata tubing terbesar bermarkas di dusun ini. Infrastruktur wisata seperti gazebo, toilet, dan area parkir telah tersedia lengkap.",
     keunggulan: ["Start point tubing Sungai Blukar", "Fasilitas wisata terlengkap", "Penginapan warga tersedia"],
-    galeri: ["https://images.unsplash.com/photo-1719380959727-b240fc7c77de?w=600&h=400&fit=crop&auto=format","https://images.unsplash.com/photo-1546058914-5000137323f0?w=600&h=400&fit=crop&auto=format","https://images.unsplash.com/photo-1709025876683-b252a617ab17?w=600&h=400&fit=crop&auto=format"],
+    galeri: ["https://images.unsplash.com/photo-1719380959727-b240fc7c77de?w=600&h=400&fit=crop&auto=format", "https://images.unsplash.com/photo-1546058914-5000137323f0?w=600&h=400&fit=crop&auto=format", "https://images.unsplash.com/photo-1709025876683-b252a617ab17?w=600&h=400&fit=crop&auto=format"],
   },
   {
     name: "Getas", rw: "RW 07", rt: 3, penduduk: 478, luas: "1,0 km²",
@@ -60,7 +60,7 @@ export const DUSUN = [
     desc: "Pusat pemerintahan dan balai desa berada di sini.",
     detail: "Dusun Getas adalah jantung Desa Getas — lokasi balai desa, kantor pelayanan, dan pusat kegiatan masyarakat. Dusun ini menjadi titik pusat seluruh aktivitas administratif dan sosial kemasyarakatan.",
     keunggulan: ["Pusat pemerintahan desa", "Pasar desa setiap Minggu", "Lapangan olahraga utama"],
-    galeri: ["https://images.unsplash.com/photo-1646928232133-8b2e82546057?w=600&h=400&fit=crop&auto=format","https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=600&h=400&fit=crop&auto=format","https://images.unsplash.com/photo-1497366216548-37526070297c?w=600&h=400&fit=crop&auto=format"],
+    galeri: ["https://images.unsplash.com/photo-1646928232133-8b2e82546057?w=600&h=400&fit=crop&auto=format", "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=600&h=400&fit=crop&auto=format", "https://images.unsplash.com/photo-1497366216548-37526070297c?w=600&h=400&fit=crop&auto=format"],
   },
   {
     name: "Truko", rw: "RW 08", rt: 2, penduduk: 362, luas: "1,2 km²",
@@ -69,7 +69,7 @@ export const DUSUN = [
     desc: "Dusun nelayan kecil di bantaran sungai yang tenang.",
     detail: "Truko berbatasan langsung dengan sungai dan dikenal sebagai dusun dengan pemandangan sungai paling indah. Aktivitas warga di tepi sungai menciptakan suasana pedesaan autentik yang menjadi daya tarik tersendiri.",
     keunggulan: ["Tepi sungai paling indah", "Spot foto sunset terbaik", "Kuliner pecel lele khas"],
-    galeri: ["https://images.unsplash.com/photo-1709025876683-b252a617ab17?w=600&h=400&fit=crop&auto=format","https://images.unsplash.com/photo-1561774711-b0fa364863b7?w=600&h=400&fit=crop&auto=format","https://images.unsplash.com/photo-1643215721864-cd4c354ac298?w=600&h=400&fit=crop&auto=format"],
+    galeri: ["https://images.unsplash.com/photo-1709025876683-b252a617ab17?w=600&h=400&fit=crop&auto=format", "https://images.unsplash.com/photo-1561774711-b0fa364863b7?w=600&h=400&fit=crop&auto=format", "https://images.unsplash.com/photo-1643215721864-cd4c354ac298?w=600&h=400&fit=crop&auto=format"],
   },
   {
     name: "Sanggar", rw: "RW 09", rt: 2, penduduk: 334, luas: "1,3 km²",
@@ -78,7 +78,7 @@ export const DUSUN = [
     desc: "Sentra seni budaya dan pertunjukan tradisional desa.",
     detail: "Sanggar adalah dusun dengan tradisi seni budaya paling kuat. Kelompok seni kuda lumping, rebana, dan wayang kulit aktif berlatih di sini. Setiap malam Jumat diadakan pentas seni kecil yang terbuka untuk umum.",
     keunggulan: ["Kelompok seni kuda lumping", "Pentas budaya rutin", "Sanggar tari tradisional"],
-    galeri: ["https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=600&h=400&fit=crop&auto=format","https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=600&h=400&fit=crop&auto=format","https://images.unsplash.com/photo-1552664730-d307ca884978?w=600&h=400&fit=crop&auto=format"],
+    galeri: ["https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=600&h=400&fit=crop&auto=format", "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=600&h=400&fit=crop&auto=format", "https://images.unsplash.com/photo-1552664730-d307ca884978?w=600&h=400&fit=crop&auto=format"],
   },
   {
     name: "Banjaran", rw: "RW 10", rt: 3, penduduk: 694, luas: "1,5 km²",
@@ -87,7 +87,7 @@ export const DUSUN = [
     desc: "Dusun paling hijau — dikelilingi kebun kopi dan cengkeh.",
     detail: "Banjaran adalah dusun terbesar sekaligus terhijau di Desa Getas. Kebun kopi arabika dan cengkeh menyelimuti hampir seluruh wilayahnya. Produk kopi arabika Banjaran sudah dikenal di tingkat nasional.",
     keunggulan: ["Kebun kopi arabika terluas", "Produksi cengkeh terbesar", "Dusun terbesar berpenduduk"],
-    galeri: ["https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?w=600&h=400&fit=crop&auto=format","https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=600&h=400&fit=crop&auto=format","https://images.unsplash.com/photo-1601493700631-2b16ec4b4716?w=600&h=400&fit=crop&auto=format"],
+    galeri: ["https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?w=600&h=400&fit=crop&auto=format", "https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=600&h=400&fit=crop&auto=format", "https://images.unsplash.com/photo-1601493700631-2b16ec4b4716?w=600&h=400&fit=crop&auto=format"],
   },
 ];
 export type DusunData = typeof DUSUN[0];

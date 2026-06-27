@@ -28,19 +28,26 @@ export default function KebudayaanSection() {
               className={`relative rounded-2xl overflow-hidden cursor-pointer group bg-[#dcfce7] ${item.span}`}>
               <img src={item.img} alt={item.judul}
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-              <div className="absolute inset-0 bg-gradient-to-t from-[#052e16]/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300" />
+              
+              {/* Permanent overlay gradient for text contrast */}
+              <div className="absolute inset-0 bg-gradient-to-t from-[#052e16]/80 via-[#052e16]/10 to-transparent transition-all duration-300" />
+              
               {/* always-visible category pill */}
-              <div className="absolute top-2.5 left-2.5">
-                <span className="px-2 py-0.5 rounded-full bg-white/90 backdrop-blur-sm text-[#16a34a] text-[10px] font-bold shadow">
+              <div className="absolute top-3 left-3 z-10">
+                <span className="px-2.5 py-0.5 rounded-full bg-white/95 backdrop-blur-sm text-[#16a34a] text-[9px] font-extrabold shadow-sm">
                   {item.cat}
                 </span>
               </div>
-              {/* hover reveal */}
-              <div className="absolute inset-0 flex flex-col justify-end p-4 opacity-0 group-hover:opacity-100 transition-all duration-300">
-                <div className="font-bold text-white text-sm leading-tight drop-shadow mb-1"
+              
+              {/* text content overlay */}
+              <div className="absolute inset-0 flex flex-col justify-end p-4 z-10">
+                <div className="font-bold text-white text-sm sm:text-base leading-tight drop-shadow mb-1"
                   style={{ fontFamily: "Poppins, sans-serif" }}>{item.judul}</div>
-                {item.span && (
-                  <p className="text-white/80 text-xs leading-relaxed line-clamp-2"
+                {item.span ? (
+                  <p className="text-white/85 text-[11px] leading-relaxed line-clamp-2 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-300"
+                    style={{ fontFamily: "Inter, sans-serif" }}>{item.desc}</p>
+                ) : (
+                  <p className="text-white/85 text-[10px] leading-relaxed line-clamp-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
                     style={{ fontFamily: "Inter, sans-serif" }}>{item.desc}</p>
                 )}
               </div>
@@ -55,12 +62,12 @@ export default function KebudayaanSection() {
             { icon: "🎨", title: "Workshop Batik Tulis", jadwal: "Sabtu–Minggu, 08.00–12.00 WIB" },
             { icon: "🎭", title: "Pentas Seni Malam Jumat", jadwal: "Setiap Jumat malam di Dusun Sanggar" },
           ].map(c => (
-            <div key={c.title} className="flex items-center gap-4 bg-[#f0fdf4] border border-[#bbf7d0] rounded-2xl p-4 hover:border-[#16a34a]/40 hover:shadow-md transition-all">
+            <div key={c.title} className="flex items-center gap-4 bg-[#f0fdf4]/50 border border-[#bbf7d0]/40 rounded-2xl p-4.5 hover:border-[#16a34a] hover:shadow-lg transition-all duration-300 hover:-translate-y-0.5">
               <div className="text-3xl flex-shrink-0">{c.icon}</div>
               <div>
                 <div className="font-bold text-[#052e16] text-sm" style={{ fontFamily: "Poppins, sans-serif" }}>{c.title}</div>
-                <div className="text-[#4b7a55] text-xs mt-0.5 flex items-center gap-1" style={{ fontFamily: "Inter, sans-serif" }}>
-                  <Clock size={10} /> {c.jadwal}
+                <div className="text-[#4b7a55] text-xs mt-1 flex items-center gap-1" style={{ fontFamily: "Inter, sans-serif" }}>
+                  <Clock size={10} className="text-[#16a34a]" /> {c.jadwal}
                 </div>
               </div>
             </div>
