@@ -4,9 +4,10 @@
   --color-primary: #00a651;
   --color-primary-light: #e6f6eb;
   --color-primary-hover: #008a43;
+  --font-sans: "Inter", system-ui, sans-serif;
 }
 
 body {
-  background-color: #f0fdf4; /* Light green background as seen in design */
+  background-color: #f0fdf4;
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
 }
