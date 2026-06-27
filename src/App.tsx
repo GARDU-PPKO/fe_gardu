@@ -7,12 +7,15 @@ import DusunPage from "./components/sections/DusunPage";
 import TourPackages from "./components/sections/TourPackages";
 import UMKMSection from "./components/sections/UMKMSection";
 import KebudayaanSection from "./components/sections/KebudayaanSection";
+import StatistikSection from "./components/sections/StatistikSection";
+import ARSection from "./components/sections/ARSection";
+import KontakSection from "./components/sections/KontakSection";
 import { PACKAGES } from "./data/mockData";
 import type { DusunData } from "./data/mockData";
 
-export const LogoGardu = "https://ui-avatars.com/api/?name=DG&background=16a34a&color=fff";
+import LogoGarduImg from "./assets/Logo_Gardu_V2.png";
 
-
+export const LogoGardu = LogoGarduImg;
 
 export default function App() {
   const [selectedDusun, setSelectedDusun] = useState<DusunData | null>(null);
@@ -28,9 +31,12 @@ export default function App() {
       ) : (
         <main>
           <Hero onSelectDusun={setSelectedDusun} />
+          <ARSection />
           <TourPackages onBook={(pkg) => setBookingPkg(pkg)} />
           <UMKMSection />
           <KebudayaanSection />
+          <StatistikSection />
+          <KontakSection />
         </main>
       )}
 
@@ -52,7 +58,7 @@ export default function App() {
             </p>
             <a href="https://wa.me/6281234567890?text=Halo%20Admin,%20saya%20ingin%20pesan%20paket%20wisata"
                target="_blank" rel="noopener noreferrer"
-               className="w-full py-3 bg-green-600 hover:bg-green-700 text-white rounded-xl font-bold flex items-center justify-center gap-2 transition"
+               className="w-full py-3 bg-green-600 hover:bg-green-700 text-white rounded-full font-bold flex items-center justify-center gap-2 transition"
                style={{ fontFamily: "Poppins, sans-serif" }}>
               <MessageSquare size={16} />
               Hubungi via WhatsApp

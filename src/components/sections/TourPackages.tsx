@@ -1,9 +1,6 @@
 import { CheckCircle, Ticket } from "lucide-react";
 import { PACKAGES } from "../../data/mockData";
 
-
-
-
 export default function TourPackages({ onBook }: { onBook: (pkg: typeof PACKAGES[0]) => void }) {
   return (
     <section id="paket" className="py-16 px-4 sm:px-8 bg-white">
@@ -27,7 +24,7 @@ export default function TourPackages({ onBook }: { onBook: (pkg: typeof PACKAGES
               ))}
             </div>
             <button onClick={() => onBook(PACKAGES[0])}
-              className="flex items-center gap-2 px-5 py-3 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-xl transition shadow-md shadow-green-200"
+              className="flex items-center gap-2 px-5 py-3 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-full transition shadow-md shadow-green-200"
               style={{ fontFamily: "Poppins, sans-serif" }}>
               <Ticket size={16} /> Pesan Sekarang
             </button>
@@ -61,7 +58,7 @@ export default function TourPackages({ onBook }: { onBook: (pkg: typeof PACKAGES
                       {p.minPerson === p.maxPerson ? `Min. ${p.minPerson}` : `${p.minPerson}–${p.maxPerson} org`}
                     </span>
                   </div>
-                  <button className="w-full py-2 bg-green-600 hover:bg-green-700 text-white text-xs font-bold rounded-xl transition flex items-center justify-center gap-1.5"
+                  <button className="w-full py-2 bg-green-600 hover:bg-green-700 text-white text-xs font-bold rounded-full transition flex items-center justify-center gap-1.5"
                     style={{ fontFamily: "Poppins, sans-serif" }}>
                     <Ticket size={12} /> Pesan Paket Ini
                   </button>

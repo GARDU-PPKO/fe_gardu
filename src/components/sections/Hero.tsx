@@ -2,12 +2,9 @@ import { Users, Briefcase, Mountain, Info, Waves, TreePine } from "lucide-react"
 import DusunSlider from "./DusunSlider";
 import { DUSUN } from "../../data/mockData";
 
-
 const scrollTo = (href: string) => {
   document.querySelector(href)?.scrollIntoView({ behavior: "smooth" });
 };
-
-
 
 export default function Hero({ onSelectDusun }: { onSelectDusun: (d: typeof DUSUN[0]) => void }) {
   return (
@@ -40,13 +37,13 @@ export default function Hero({ onSelectDusun }: { onSelectDusun: (d: typeof DUSU
             </h1>
             <div className="flex flex-wrap items-center gap-3">
               <button onClick={() => scrollTo("#wisata")}
-                className="flex items-center gap-2 px-5 py-2.5 bg-white text-[#0a1f0f] text-sm font-bold rounded-xl hover:bg-[#dcfce7] transition shadow-lg"
+                className="flex items-center gap-2 px-5 py-2.5 bg-white text-[#0a1f0f] text-sm font-bold rounded-full hover:bg-[#dcfce7] transition shadow-lg"
                 style={{ fontFamily: "Poppins, sans-serif" }}>
                 <Waves size={16} className="text-green-600" />
                 Jelajahi Wisata Tubing
               </button>
               <button onClick={() => scrollTo("#layanan")}
-                className="flex items-center gap-2 px-5 py-2.5 bg-white/15 backdrop-blur-sm border border-white/30 text-white text-sm font-semibold rounded-xl hover:bg-white/25 transition"
+                className="flex items-center gap-2 px-5 py-2.5 bg-white/15 backdrop-blur-sm border border-white/30 text-white text-sm font-semibold rounded-full hover:bg-white/25 transition"
                 style={{ fontFamily: "Poppins, sans-serif" }}>
                 Layanan Online
               </button>

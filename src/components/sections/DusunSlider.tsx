@@ -29,7 +29,7 @@ export default function DusunSlider({ onSelect }: { onSelect: (d: typeof DUSUN[0
     <div className="mt-7">
       <style>{`
         .dusun-track::-webkit-scrollbar { display: none; }
-        .dusun-card { transition: transform 0.35s cubic-bezier(.22,1,.36,1), box-shadow 0.35s ease, border-color 0.25s ease; }
+        .dusun-card { transition: transform 0.35s cubic-bezier(.22,1,.36,1), box-shadow 0.4s ease, border-color 0.3s ease; }
         .dusun-card:hover { transform: translateY(-8px) scale(1.03); }
         .dusun-card .card-img { transition: height 0.35s cubic-bezier(.22,1,.36,1); }
         .dusun-card:hover .card-img { height: 11rem; }
@@ -64,7 +64,7 @@ export default function DusunSlider({ onSelect }: { onSelect: (d: typeof DUSUN[0
 
         {DUSUN.map((d) => (
           <div key={d.name}
-            className="dusun-card flex-shrink-0 w-60 rounded-2xl overflow-hidden border border-[#bbf7d0] bg-white shadow-md hover:shadow-2xl hover:border-[#16a34a]/50 cursor-pointer"
+            className="dusun-card flex-shrink-0 w-60 rounded-3xl overflow-hidden border border-gray-100 bg-white shadow-[0_4px_20px_rgb(0,0,0,0.04)] hover:shadow-[0_12px_35px_rgb(22,163,74,0.15)] hover:border-green-200 cursor-pointer"
             style={{ scrollSnapAlign: "start" }}
             onClick={() => onSelect(d)}>
 
@@ -78,13 +78,13 @@ export default function DusunSlider({ onSelect }: { onSelect: (d: typeof DUSUN[0
               <div className="absolute inset-0 bg-gradient-to-t from-[#052e16]/70 via-[#052e16]/10 to-transparent" />
 
               {/* RW badge */}
-              <div className="absolute top-2.5 left-2.5 px-2 py-0.5 rounded-full bg-white/90 backdrop-blur-sm text-[#16a34a] text-[10px] font-bold shadow">
+              <div className="absolute top-3 left-3 px-3 py-1 rounded-full bg-white text-[#16a34a] text-[10px] font-black shadow-sm tracking-wide">
                 {d.rw}
               </div>
 
               {/* "Lihat Detail" pill — appears on hover */}
-              <div className="tag-row absolute top-2.5 right-2.5 px-2 py-0.5 rounded-full bg-[#16a34a] text-white text-[10px] font-bold shadow flex items-center gap-1">
-                <Eye size={9} /> Detail
+              <div className="tag-row absolute top-3 right-3 px-2.5 py-1 rounded-full bg-black/40 backdrop-blur-md border border-white/20 text-white text-[10px] font-bold shadow-sm flex items-center gap-1">
+                <Eye size={10} /> Detail
               </div>
 
               {/* name */}
@@ -123,7 +123,7 @@ export default function DusunSlider({ onSelect }: { onSelect: (d: typeof DUSUN[0
                     </div>
                   ))}
                 </div>
-                <button className="mt-2.5 w-full py-2 bg-[#16a34a] hover:bg-[#15803d] text-white text-[11px] font-bold rounded-xl transition flex items-center justify-center gap-1.5"
+                <button className="mt-2.5 w-full py-2 bg-[#16a34a] hover:bg-[#15803d] text-white text-[11px] font-bold rounded-full transition flex items-center justify-center gap-1.5"
                   style={{ fontFamily: "Poppins, sans-serif" }}>
                   <ArrowRight size={11} /> Lihat Selengkapnya
                 </button>

@@ -2,9 +2,6 @@ import { useState } from "react";
 import { MessageSquare, Leaf } from "lucide-react";
 import { CATS, PRODUCTS } from "../../data/mockData";
 
-
-
-
 export default function UMKMSection() {
   const [cat, setCat] = useState("Semua");
   const filtered = PRODUCTS.filter(p => cat === "Semua" || p.cat === cat);
@@ -20,7 +17,7 @@ export default function UMKMSection() {
           <div className="flex gap-2 flex-wrap">
             {CATS.map(c => (
               <button key={c} onClick={() => setCat(c)}
-                className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all ${cat === c ? "bg-[#052e16] text-white" : "bg-white border border-[#bbf7d0] text-[#166534] hover:border-[#16a34a]"}`}
+                className={`px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all ${cat === c ? "bg-[#052e16] text-white" : "bg-white border border-[#bbf7d0] text-[#166534] hover:border-[#16a34a]"}`}
                 style={{ fontFamily: "Inter, sans-serif" }}>
                 {c}
               </button>
@@ -42,7 +39,7 @@ export default function UMKMSection() {
                 <div className="text-[#16a34a] font-bold text-sm mb-3">{p.price}</div>
                 <a href={`https://wa.me/${p.wa}?text=Halo, saya tertarik dengan produk ${encodeURIComponent(p.name)}`}
                   target="_blank" rel="noopener noreferrer"
-                  className="w-full py-2 bg-green-600 hover:bg-green-700 text-white text-xs font-semibold rounded-lg transition flex items-center justify-center gap-1.5">
+                  className="w-full py-2 bg-green-600 hover:bg-green-700 text-white text-xs font-semibold rounded-full transition flex items-center justify-center gap-1.5">
                   <MessageSquare size={12} /> Hubungi WhatsApp
                 </a>
               </div>
