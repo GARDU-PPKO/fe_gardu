@@ -31,8 +31,8 @@ export default function DusunSlider({ onSelect }: { onSelect: (d: typeof DUSUN[0
         .dusun-track::-webkit-scrollbar { display: none; }
         .dusun-card { transition: transform 0.35s cubic-bezier(.22,1,.36,1), box-shadow 0.4s ease, border-color 0.3s ease; }
         .dusun-card:hover { transform: translateY(-8px) scale(1.03); }
-        .dusun-card .card-img { transition: height 0.35s cubic-bezier(.22,1,.36,1); }
-        .dusun-card:hover .card-img { height: 11rem; }
+        .dusun-card img { transition: transform 0.5s cubic-bezier(.22,1,.36,1); }
+        .dusun-card:hover img { transform: scale(1.08); }
         .dusun-card .reveal { max-height: 0; overflow: hidden; transition: max-height 0.35s cubic-bezier(.22,1,.36,1), opacity 0.3s ease; opacity: 0; }
         .dusun-card:hover .reveal { max-height: 120px; opacity: 1; }
         .dusun-card .tag-row { transition: opacity 0.2s ease; opacity: 0; }
@@ -59,31 +59,30 @@ export default function DusunSlider({ onSelect }: { onSelect: (d: typeof DUSUN[0
 
       {/* track */}
       <div ref={trackRef} onScroll={updateState}
-        className="dusun-track flex gap-3 overflow-x-auto pb-4"
+        className="dusun-track flex gap-4 overflow-x-auto py-4 items-start h-[390px]"
         style={{ scrollSnapType: "x mandatory", scrollbarWidth: "none" }}>
 
         {DUSUN.map((d) => (
           <div key={d.name}
-            className="dusun-card flex-shrink-0 w-60 rounded-3xl overflow-hidden border border-gray-100 bg-white shadow-[0_4px_20px_rgb(0,0,0,0.04)] hover:shadow-[0_12px_35px_rgb(22,163,74,0.15)] hover:border-green-200 cursor-pointer"
+            className="dusun-card flex-shrink-0 w-60 rounded-2xl overflow-hidden border border-gray-100 bg-white shadow-[0_4px_20px_rgb(0,0,0,0.04)] hover:shadow-[0_12px_35px_rgb(22,163,74,0.15)] hover:border-green-200 cursor-pointer"
             style={{ scrollSnapAlign: "start" }}
             onClick={() => onSelect(d)}>
 
-            {/* image — grows on hover via CSS */}
-            <div className="card-img relative h-32 overflow-hidden bg-[#dcfce7]">
+            {/* image */}
+            <div className="card-img relative h-36 overflow-hidden bg-[#dcfce7]">
               <img src={d.thumb} alt={d.name}
                 className="w-full h-full object-cover"
-                style={{ transition: "transform 0.5s ease" }}
               />
               {/* darker overlay on hover */}
               <div className="absolute inset-0 bg-gradient-to-t from-[#052e16]/70 via-[#052e16]/10 to-transparent" />
 
               {/* RW badge */}
-              <div className="absolute top-3 left-3 px-3 py-1 rounded-full bg-white text-[#16a34a] text-[10px] font-black shadow-sm tracking-wide">
+              <div className="absolute top-4 left-4 px-3 py-1 rounded-full bg-white text-[#16a34a] text-[10px] font-black shadow-sm tracking-wide">
                 {d.rw}
               </div>
 
               {/* "Lihat Detail" pill — appears on hover */}
-              <div className="tag-row absolute top-3 right-3 px-2.5 py-1 rounded-full bg-black/40 backdrop-blur-md border border-white/20 text-white text-[10px] font-bold shadow-sm flex items-center gap-1">
+              <div className="tag-row absolute top-4 right-4 px-2.5 py-1 rounded-full bg-black/40 backdrop-blur-md border border-white/20 text-white text-[10px] font-bold shadow-sm flex items-center gap-1">
                 <Eye size={10} /> Detail
               </div>
 
