@@ -1,4 +1,4 @@
-import { LogoGardu } from "../../App";
+import LogoGardu from "../../assets/Logo_Gardu_V2.png";
 
 export default function Footer() {
   const scrollTo = (href: string) => {

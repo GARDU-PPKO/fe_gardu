@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Menu, X, Camera, Ticket } from "lucide-react";
-import { LogoGardu } from "../../App";
+import LogoGardu from "../../assets/Logo_Gardu_V2.png";
 
 const scrollTo = (href: string) => {
   document.querySelector(href)?.scrollIntoView({ behavior: "smooth" });
