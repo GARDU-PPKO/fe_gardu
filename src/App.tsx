@@ -32,7 +32,6 @@ export default function App() {
         <DusunPage dusun={selectedDusun} onClose={() => setSelectedDusun(null)} />
       ) : (
         <main>
-<<<<<<< HEAD
           <Hero />
           <TourPackages onBook={(pkg) => setBookingPkg(pkg)} />
           
