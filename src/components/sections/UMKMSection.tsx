@@ -64,7 +64,6 @@ export default function UMKMSection() {
                     Beli via WhatsApp
                   </a>
                 </div>
-
               </div>
             );
           })}

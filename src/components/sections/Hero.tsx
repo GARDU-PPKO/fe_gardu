@@ -1,6 +1,5 @@
 import { Users, Briefcase, Mountain, Waves, TreePine } from "lucide-react";
 
-
 const scrollTo = (href: string) => {
   document.querySelector(href)?.scrollIntoView({ behavior: "smooth" });
 };

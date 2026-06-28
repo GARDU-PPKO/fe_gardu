@@ -1,13 +1,10 @@
 import { useState, useEffect } from "react";
 import { Menu, X, Camera, Ticket } from "lucide-react";
-import { LogoGardu } from "../../App";
-
+import LogoGardu from "../../assets/Logo_Gardu_V2.png";
 
 const scrollTo = (href: string) => {
   document.querySelector(href)?.scrollIntoView({ behavior: "smooth" });
 };
-
-
 
 const NAV = [
   { label: "Beranda",  href: "#hero" },
@@ -35,16 +32,21 @@ export default function Navbar({ onOpenBooking }: { onOpenBooking: () => void })
         <div className="flex items-center gap-3 flex-shrink-0">
           <button onClick={() => scrollTo("#hero")} className="flex items-center gap-2 flex-shrink-0">
             <img src={LogoGardu} alt="Logo Desa Getas" className="w-8 h-8 object-contain" />
-            <span className="font-bold text-[#0a1f0f] text-sm tracking-wide hidden sm:block" style={{ fontFamily: "Poppins, sans-serif" }}>
-              DESA<span className="text-[#16a34a]">GETAS</span>
-            </span>
+            <div className="hidden sm:flex flex-col items-start">
+              <span className="font-bold text-[#0a1f0f] text-sm tracking-wide leading-none" style={{ fontFamily: "Poppins, sans-serif" }}>
+                DESA<span className="text-[#16a34a]">GETAS</span>
+              </span>
+              <span className="text-gray-500 text-[9px] mt-0.5 tracking-wider font-medium" style={{ fontFamily: "Inter, sans-serif" }}>
+                Kec. Singorojo · Kendal
+              </span>
+            </div>
           </button>
 
           {/* AR Explore — prominent left button */}
           <button onClick={() => scrollTo("#ar")}
-            className="hidden sm:flex items-center gap-1.5 pl-3 pr-3.5 py-1.5 rounded-xl border border-[#bbf7d0] bg-white hover:bg-[#dcfce7] hover:border-[#16a34a]/50 transition-all group shadow-sm"
+            className="hidden sm:flex items-center gap-1.5 pl-3 pr-3.5 py-1.5 rounded-full border border-[#bbf7d0] bg-white hover:bg-[#dcfce7] hover:border-[#16a34a]/50 transition-all group shadow-sm"
             style={{ fontFamily: "Inter, sans-serif" }}>
-            <div className="w-5 h-5 rounded-md bg-gradient-to-br from-[#16a34a] to-[#4ade80] flex items-center justify-center flex-shrink-0">
+            <div className="w-5 h-5 rounded-full bg-gradient-to-br from-[#16a34a] to-[#4ade80] flex items-center justify-center flex-shrink-0">
               <Camera size={11} className="text-white" />
             </div>
             <span className="text-xs font-bold text-[#16a34a]">AR Explore</span>
@@ -72,7 +74,7 @@ export default function Navbar({ onOpenBooking }: { onOpenBooking: () => void })
             <Ticket size={14} />
             Pesan Sekarang
           </button>
-          <button onClick={() => setOpen(!open)} className="md:hidden w-9 h-9 flex items-center justify-center rounded-lg text-[#166534] hover:bg-[#dcfce7] transition">
+          <button onClick={() => setOpen(!open)} className="md:hidden w-9 h-9 flex items-center justify-center rounded-full text-[#166534] hover:bg-[#dcfce7] transition">
             {open ? <X size={18} /> : <Menu size={18} />}
           </button>
         </div>
@@ -82,12 +84,12 @@ export default function Navbar({ onOpenBooking }: { onOpenBooking: () => void })
       {open && (
         <div className={`absolute top-full left-0 right-0 mt-2 mx-2 bg-white border border-[#bbf7d0]/40 shadow-xl rounded-2xl p-4 space-y-1 md:hidden z-50`}>
           <button onClick={() => { scrollTo("#ar"); setOpen(false); }}
-            className="w-full text-left px-4 py-2.5 text-sm font-bold text-[#16a34a] hover:bg-[#dcfce7] rounded-lg transition flex items-center gap-2">
+            className="w-full text-left px-4 py-2.5 text-sm font-bold text-[#16a34a] hover:bg-[#dcfce7] rounded-full transition flex items-center gap-2">
             <Camera size={14} /> AR Explore
           </button>
           {NAV.map(l => (
             <button key={l.label} onClick={() => { scrollTo(l.href); setOpen(false); }}
-              className="w-full text-left px-4 py-2.5 text-sm text-[#166534] hover:text-[#16a34a] hover:bg-[#dcfce7] rounded-lg transition"
+              className="w-full text-left px-4 py-2.5 text-sm text-[#166534] hover:text-[#16a34a] hover:bg-[#dcfce7] rounded-full transition"
               style={{ fontFamily: "Inter, sans-serif" }}>
               {l.label}
             </button>

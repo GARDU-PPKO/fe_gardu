@@ -2,9 +2,6 @@ import { useState } from "react";
 import { X, Clock } from "lucide-react";
 import { BUDAYA_ITEMS } from "../../data/mockData";
 
-
-
-
 export default function KebudayaanSection() {
   const [lb, setLb] = useState<{ img: string; judul: string; desc: string; cat: string } | null>(null);
 

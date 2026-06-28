@@ -43,10 +43,10 @@ export default function DusunSlider({ onSelect }: { onSelect: (d: typeof DUSUN[0
     <div className="mt-7">
       <style>{`
         .dusun-track::-webkit-scrollbar { display: none; }
-        .dusun-card { transition: transform 0.35s cubic-bezier(.22,1,.36,1), box-shadow 0.35s ease, border-color 0.25s ease; }
+        .dusun-card { transition: transform 0.35s cubic-bezier(.22,1,.36,1), box-shadow 0.4s ease, border-color 0.3s ease; }
         .dusun-card:hover { transform: translateY(-8px) scale(1.03); }
-        .dusun-card .card-img { transition: height 0.35s cubic-bezier(.22,1,.36,1); }
-        .dusun-card:hover .card-img { height: 11rem; }
+        .dusun-card img { transition: transform 0.5s cubic-bezier(.22,1,.36,1); }
+        .dusun-card:hover img { transform: scale(1.08); }
         .dusun-card .reveal { max-height: 0; overflow: hidden; transition: max-height 0.35s cubic-bezier(.22,1,.36,1), opacity 0.3s ease; opacity: 0; }
         .dusun-card:hover .reveal { max-height: 120px; opacity: 1; }
         .dusun-card .tag-row { transition: opacity 0.2s ease; opacity: 0; }
