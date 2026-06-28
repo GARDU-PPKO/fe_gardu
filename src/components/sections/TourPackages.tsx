@@ -1,10 +1,7 @@
 import { CheckCircle, Ticket } from "lucide-react";
-import { useNavigate } from "react-router-dom";
 import { PACKAGES } from "../../data/mockData";
 
-export default function TourPackages({ onBook }: { onBook?: () => void }) {
-  const navigate = useNavigate();
-  const handleBook = onBook ?? (() => navigate('/booking/package'));
+export default function TourPackages({ onBook }: { onBook: (pkg: typeof PACKAGES[0]) => void }) {
   return (
     <section id="paket" className="py-16 px-4 sm:px-8 bg-white">
       <div className="max-w-7xl mx-auto">
@@ -26,7 +23,7 @@ export default function TourPackages({ onBook }: { onBook?: () => void }) {
                 </div>
               ))}
             </div>
-            <button onClick={handleBook}
+            <button onClick={() => onBook(PACKAGES[0])}
               className="flex items-center gap-2 px-5 py-3 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-full transition shadow-md shadow-green-200"
               style={{ fontFamily: "Poppins, sans-serif" }}>
               <Ticket size={16} /> Pesan Sekarang
@@ -37,7 +34,7 @@ export default function TourPackages({ onBook }: { onBook?: () => void }) {
           <div className="grid sm:grid-cols-2 gap-5">
             {PACKAGES.map(p => (
               <div key={p.name} className={`bg-white rounded-2xl overflow-hidden shadow-sm transition-all duration-300 cursor-pointer flex flex-col h-full group ${p.badge === "Terpopuler" ? "border-2 border-green-500 shadow-md shadow-green-100/50 hover:shadow-xl hover:border-green-500 scale-[1.01]" : "border border-[#bbf7d0] hover:shadow-lg hover:border-green-300"}`}
-                onClick={handleBook}>
+                onClick={() => onBook(p)}>
                 <div className="relative h-40 bg-[#bbf7d0] overflow-hidden">
                   <img src={p.img} alt={p.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
