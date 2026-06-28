@@ -1,7 +1,17 @@
-import { MapPin, Phone, Mail, Clock, Globe } from "lucide-react";
+import { useState } from "react";
+import { MapPin, Phone, Mail, Clock, Globe, ChevronDown, ChevronUp } from "lucide-react";
 import { FaFacebook, FaInstagram, FaYoutube } from "react-icons/fa";
 
+const FAQS = [
+  { q: "Bagaimana akses jalan menuju lokasi tubing?", a: "Akses jalan menuju Desa Getas sudah beraspal baik dan dapat dilalui oleh kendaraan roda dua maupun roda empat (mobil pribadi & minibus/elf)." },
+  { q: "Apakah wisata tubing aman untuk pemula & anak-anak?", a: "Sangat aman! Seluruh peserta wajib mengenakan perlengkapan keselamatan standar (helm & pelampung) serta didampingi oleh pemandu berpengalaman di setiap rombongan." },
+  { q: "Apakah harus melakukan pemesanan (booking) terlebih dahulu?", a: "Untuk hari kerja biasa (weekdays), Anda bisa memesan langsung. Namun untuk akhir pekan (weekends) atau paket rombongan, kami sangat menyarankan untuk booking minimal H-3 via WhatsApp." },
+  { q: "Bagaimana cara melakukan pembayaran?", a: "Pembayaran dapat dilakukan melalui transfer bank setelah konfirmasi pemesanan dengan admin via WhatsApp, atau tunai (cash) langsung di lokasi saat hari kedatangan." },
+];
+
 export default function KontakSection() {
+  const [openFaqIdx, setOpenFaqIdx] = useState<number | null>(0);
+
   return (
     <section id="kontak" className="py-20 px-4 sm:px-8 bg-white">
       <div className="max-w-7xl mx-auto">
@@ -10,61 +20,78 @@ export default function KontakSection() {
             Hubungi Kami
           </span>
           <h2 className="text-3xl md:text-4xl font-bold text-[#0a1f0f]" style={{ fontFamily: "Poppins, sans-serif" }}>
-            Kontak & Lokasi
+            Kontak & Pertanyaan Umum
           </h2>
         </div>
 
-        <div className="grid lg:grid-cols-2 gap-8 items-start">
+        <div className="grid lg:grid-cols-2 gap-10 items-start">
           {/* Left: Info */}
-          <div className="space-y-3">
+          <div className="space-y-3.5">
             {[
               { icon: MapPin, title: "Alamat", desc: "Jl. Raya Getas No. 1, Kec. Singorojo, Kab. Kendal 51382" },
-              { icon: Phone, title: "Telepon", desc: "(0294) 381-XXX" },
+              { icon: Phone, title: "Telepon", desc: "+62 812-3456-7890" },
               { icon: Mail, title: "Email", desc: "desagetas@kendalkab.go.id" },
-              { icon: Clock, title: "Jam Pelayanan", desc: "Senin–Jumat: 08.00–15.00 WIB" },
+              { icon: Clock, title: "Jam Pelayanan Kantor", desc: "Senin–Jumat: 08.00–15.00 WIB" },
             ].map((item, idx) => (
-              <div key={idx} className="flex gap-4 p-4 sm:p-5 rounded-2xl bg-[#f0fdf4] border border-[#bbf7d0]/60 items-center">
+              <div key={idx} className="flex gap-4 p-4.5 rounded-2xl bg-[#f0fdf4]/50 border border-[#bbf7d0]/40 items-center hover:border-green-400 hover:bg-[#f0fdf4]/70 transition-all duration-300">
                 <div className="w-10 h-10 rounded-full bg-[#dcfce7] text-[#16a34a] flex items-center justify-center flex-shrink-0">
                   <item.icon size={18} />
                 </div>
                 <div>
-                  <h4 className="font-medium text-gray-500 text-xs mb-0.5" style={{ fontFamily: "Inter, sans-serif" }}>{item.title}</h4>
+                  <h4 className="font-bold text-gray-400 text-[10px] uppercase tracking-wide mb-0.5" style={{ fontFamily: "Inter, sans-serif" }}>{item.title}</h4>
                   <p className="text-[#0a1f0f] text-sm font-semibold whitespace-pre-line leading-snug">{item.desc}</p>
                 </div>
               </div>
             ))}
             
             {/* Social Media */}
-            <div className="flex flex-col gap-2.5 p-4 sm:p-5 rounded-2xl bg-[#f0fdf4] border border-[#bbf7d0]/60">
-               <h4 className="font-medium text-gray-500 text-xs" style={{ fontFamily: "Inter, sans-serif" }}>Media Sosial</h4>
+            <div className="flex flex-col gap-2.5 p-4.5 rounded-2xl bg-[#f0fdf4]/50 border border-[#bbf7d0]/40 hover:border-green-400 transition-all duration-300">
+               <h4 className="font-bold text-gray-400 text-[10px] uppercase tracking-wide" style={{ fontFamily: "Inter, sans-serif" }}>Media Sosial Resmi</h4>
                <div className="flex gap-3">
-                 <a href="#" className="w-8 h-8 rounded-full border border-[#bbf7d0] bg-white flex items-center justify-center text-[#16a34a] hover:bg-[#16a34a] hover:text-white transition-colors">
+                 <a href="#" aria-label="Facebook" className="w-8 h-8 rounded-full border border-[#bbf7d0] bg-white flex items-center justify-center text-[#16a34a] hover:bg-[#16a34a] hover:text-white transition-colors active:scale-95 shadow-sm">
                    <FaFacebook size={14} />
                  </a>
-                 <a href="#" className="w-8 h-8 rounded-full border border-[#bbf7d0] bg-white flex items-center justify-center text-[#16a34a] hover:bg-[#16a34a] hover:text-white transition-colors">
+                 <a href="#" aria-label="Instagram" className="w-8 h-8 rounded-full border border-[#bbf7d0] bg-white flex items-center justify-center text-[#16a34a] hover:bg-[#16a34a] hover:text-white transition-colors active:scale-95 shadow-sm">
                    <FaInstagram size={14} />
                  </a>
-                 <a href="#" className="w-8 h-8 rounded-full border border-[#bbf7d0] bg-white flex items-center justify-center text-[#16a34a] hover:bg-[#16a34a] hover:text-white transition-colors">
+                 <a href="#" aria-label="YouTube" className="w-8 h-8 rounded-full border border-[#bbf7d0] bg-white flex items-center justify-center text-[#16a34a] hover:bg-[#16a34a] hover:text-white transition-colors active:scale-95 shadow-sm">
                    <FaYoutube size={14} />
                  </a>
-                 <a href="#" className="w-8 h-8 rounded-full border border-[#bbf7d0] bg-white flex items-center justify-center text-[#16a34a] hover:bg-[#16a34a] hover:text-white transition-colors">
+                 <a href="#" aria-label="Website" className="w-8 h-8 rounded-full border border-[#bbf7d0] bg-white flex items-center justify-center text-[#16a34a] hover:bg-[#16a34a] hover:text-white transition-colors active:scale-95 shadow-sm">
                    <Globe size={14} />
                  </a>
                </div>
             </div>
           </div>
 
-          {/* Right: Map */}
-          <div className="h-full min-h-[400px] rounded-3xl overflow-hidden border border-gray-200 shadow-sm relative">
-             <iframe 
-                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d63321.43981180295!2d110.22271835!3d-7.173873499999999!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2e707dc871e05d01%3A0x5027a76e3568c00!2sGetas%2C%20Kec.%20Singorojo%2C%20Kabupaten%20Kendal%2C%20Jawa%20Tengah!5e0!3m2!1sid!2sid!4v1700000000000!5m2!1sid!2sid"
-                width="100%" 
-                height="100%" 
-                style={{ border: 0, position: 'absolute', top: 0, left: 0 }} 
-                allowFullScreen={true} 
-                loading="lazy" 
-                referrerPolicy="no-referrer-when-downgrade"
-             ></iframe>
+          {/* Right: FAQ Accordion */}
+          <div className="bg-green-50/20 border border-[#bbf7d0]/40 rounded-3xl p-6 sm:p-8 shadow-sm">
+            <h3 className="text-lg font-bold text-[#052e16] mb-4" style={{ fontFamily: "Poppins, sans-serif" }}>Pertanyaan yang Sering Diajukan</h3>
+            <div className="space-y-3">
+              {FAQS.map((faq, idx) => {
+                const isOpen = openFaqIdx === idx;
+                return (
+                  <div key={idx} className="border-b border-[#bbf7d0]/30 pb-3 last:border-0 last:pb-0">
+                    <button
+                      onClick={() => setOpenFaqIdx(isOpen ? null : idx)}
+                      className="w-full flex items-center justify-between text-left py-2 gap-3"
+                    >
+                      <span className="text-[#052e16] font-bold text-xs sm:text-sm hover:text-[#16a34a] transition-colors" style={{ fontFamily: "Poppins, sans-serif" }}>{faq.q}</span>
+                      {isOpen ? (
+                        <ChevronUp size={16} className="text-[#16a34a] flex-shrink-0" />
+                      ) : (
+                        <ChevronDown size={16} className="text-gray-400 flex-shrink-0" />
+                      )}
+                    </button>
+                    {isOpen && (
+                      <p className="text-[#4b7a55] text-xs leading-relaxed mt-2 animate-fadeIn" style={{ fontFamily: "Inter, sans-serif" }}>
+                        {faq.a}
+                      </p>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
           </div>
         </div>
       </div>
