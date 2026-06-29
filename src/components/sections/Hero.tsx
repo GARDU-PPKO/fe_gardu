@@ -1,27 +1,45 @@
-import { Users, Briefcase, Mountain, Waves, TreePine } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Users, Briefcase, Home, Mountain, Waves, TreePine } from "lucide-react";
+import { getDusun } from "../../services/dusun.service";
+import { getSettings, getVillageStats } from "../../services/village.service";
+import type { Dusun, Setting, VillageStat } from "../../types";
 
 const scrollTo = (href: string) => {
   document.querySelector(href)?.scrollIntoView({ behavior: "smooth" });
 };
 
 export default function Hero() {
+  const [settings, setSettings] = useState<Record<string, string>>({});
+  const [stats, setStats] = useState<VillageStat[]>([]);
+  const [heroImage, setHeroImage] = useState("");
+
+  useEffect(() => {
+    getSettings('nama_desa').then(res => {
+      setSettings(Object.fromEntries(res.data.map((item: Setting) => [item.key, item.value])));
+    });
+    getVillageStats().then(res => setStats(res.data.slice(0, 4)));
+    getDusun().then(res => {
+      const firstDusun = res.data.find((item: Dusun) => item.hero_img);
+      setHeroImage(firstDusun?.hero_img ?? firstDusun?.thumbnail ?? "");
+    });
+  }, []);
+
+  const villageName = settings.nama_desa ?? "";
+  const statIcons = [Users, Home, Briefcase, Mountain, TreePine];
+
   return (
     <section id="hero" className="pt-20 pb-8 px-4 sm:px-8 bg-white">
       <div className="max-w-7xl mx-auto">
         {/* framed hero image — WANDER style */}
         <div className="relative rounded-3xl overflow-hidden bg-[#052e16]" style={{ height: "clamp(320px, 55vw, 600px)" }}>
-          <img
-            src="https://images.unsplash.com/photo-1719380959727-b240fc7c77de?w=1400&h=700&fit=crop&auto=format"
-            alt="Sungai mengalir di tengah hutan hijau Desa Getas"
-            className="w-full h-full object-cover opacity-80"
-          />
+          {heroImage && <img src={heroImage} alt={villageName} className="w-full h-full object-cover opacity-80" />}
           {/* gradient overlay */}
           <div className="absolute inset-0 bg-gradient-to-t from-[#0a1f0f]/95 via-[#0a1f0f]/40 to-[#0a1f0f]/10" />
 
           {/* Big title like WANDER */}
           <div className="absolute inset-0 flex flex-col justify-end p-8 sm:p-12 pb-14 sm:pb-16">
             <p className="text-white/80 text-xs sm:text-sm font-medium mb-2 tracking-widest uppercase" style={{ fontFamily: "Inter, sans-serif" }}>
-              Kecamatan Singorojo · Kabupaten Kendal
+              {villageName}
             </p>
             <h1
               className="font-black text-white leading-none mb-5"
@@ -31,7 +49,7 @@ export default function Hero() {
                 letterSpacing: "-0.02em",
                 textShadow: "0 4px 40px rgba(0,0,0,0.4)",
               }}>
-              GETAS
+              {villageName.replace(/^Desa\s+/i, '').toUpperCase()}
             </h1>
             <div className="flex flex-wrap items-center gap-3">
               <button onClick={() => scrollTo("#paket")}
@@ -69,22 +87,19 @@ export default function Hero() {
 
         {/* ── Profil sekilas — merged into beranda ── */}
         <div className="mt-5 grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
-          {[
-            { label: "Wisatawan / Tahun", value: "8.500+", icon: Mountain },
-            { label: "UMKM Aktif",        value: "62 unit", icon: Briefcase },
-            { label: "Total Penduduk",     value: "4.287",   icon: Users },
-            { label: "Luas Wilayah",       value: "12,4 km²",icon: TreePine },
-          ].map(s => (
+          {stats.map((s, index) => {
+            const Icon = statIcons[index] ?? Users;
+            return (
             <div key={s.label} className="bg-white border border-[#bbf7d0] rounded-2xl p-4 flex items-center gap-3 shadow-sm hover:shadow-md transition-shadow">
               <div className="w-9 h-9 rounded-xl bg-[#dcfce7] flex items-center justify-center flex-shrink-0">
-                <s.icon size={17} className="text-[#16a34a]" />
+                <Icon size={17} className="text-[#16a34a]" />
               </div>
               <div>
-                <div className="font-bold text-[#052e16] text-sm leading-tight" style={{ fontFamily: "Poppins, sans-serif" }}>{s.value}</div>
+                <div className="font-bold text-[#052e16] text-sm leading-tight" style={{ fontFamily: "Poppins, sans-serif" }}>{s.nilai}{s.satuan ? ` ${s.satuan}` : ''}</div>
                 <div className="text-[#4b7a55] text-xs" style={{ fontFamily: "Inter, sans-serif" }}>{s.label}</div>
               </div>
             </div>
-          ))}
+          )})}
         </div>
       </div>
     </section>

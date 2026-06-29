@@ -24,7 +24,8 @@ const BookingSummary: React.FC<BookingSummaryProps> = ({
       {/* Summary Card */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
         {/* Cover Image Placeholder */}
-        <div className="h-32 bg-gray-200 relative">
+        <div className="h-32 bg-gray-200 relative overflow-hidden">
+          {selectedPackage?.image && <img src={selectedPackage.image} alt={selectedPackage.name} className="w-full h-full object-cover" />}
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
           <div className="absolute bottom-4 left-4 text-white font-semibold">
             {selectedPackage ? selectedPackage.name : 'Pilih Paket'}

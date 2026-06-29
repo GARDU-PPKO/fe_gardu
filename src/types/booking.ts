@@ -7,6 +7,9 @@ export interface Package {
   tag?: string;
   minParticipants?: number;
   maxParticipants?: number;
+  image?: string;
+  duration?: string;
+  includes?: string[];
 }
 
 export interface UserDetails {
