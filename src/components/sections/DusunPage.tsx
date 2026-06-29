@@ -1,9 +1,22 @@
 import { useState, useEffect } from "react";
 import { Users, Home, Star, ChevronLeft, Leaf, TreePine } from "lucide-react";
-import type { DusunData } from "../../data/mockData";
+import { getDusunDetail } from "../../services/dusun.service";
+import type { Dusun } from "../../types";
 
-export default function DusunPage({ dusun, onClose }: { dusun: DusunData; onClose: () => void }) {
+export default function DusunPage({ dusun, onClose }: { dusun: Dusun; onClose: () => void }) {
   const [activeImg, setActiveImg] = useState(0);
+  const [detail, setDetail] = useState<Dusun>(dusun);
+
+  useEffect(() => {
+    if (!dusun.galleries || dusun.galleries.length === 0) {
+      getDusunDetail(dusun.id).then(res => setDetail(res.data));
+    }
+  }, [dusun.id]);
+
+  const galleries = detail.galleries ?? [];
+  const allImages = galleries.length > 0
+    ? galleries.map(g => g.image_url)
+    : [detail.hero_img].filter(Boolean);
 
   useEffect(() => {
     document.body.style.overflow = "hidden";
@@ -15,19 +28,17 @@ export default function DusunPage({ dusun, onClose }: { dusun: DusunData; onClos
 
       {/* Hero image */}
       <div className="relative h-64 sm:h-80 flex-shrink-0 bg-[#dcfce7] overflow-hidden">
-        <img src={dusun.galeri[activeImg]} alt={dusun.name}
+        <img src={allImages[activeImg] || detail.hero_img} alt={dusun.nama}
           className="w-full h-full object-cover transition-opacity duration-500" />
         <div className="absolute inset-0 bg-gradient-to-t from-[#052e16]/80 via-[#052e16]/20 to-transparent" />
 
-        {/* back button */}
         <button onClick={onClose}
           className="absolute top-4 left-4 flex items-center gap-2 px-3.5 py-2 bg-white/90 backdrop-blur-sm rounded-xl text-[#052e16] text-sm font-semibold hover:bg-white transition shadow-lg">
           <ChevronLeft size={16} /> Kembali
         </button>
 
-        {/* gallery dots */}
         <div className="absolute top-4 right-4 flex gap-1.5">
-          {dusun.galeri.map((_, i) => (
+          {allImages.map((_, i) => (
             <button key={i} onClick={() => setActiveImg(i)}
               className={`rounded-full transition-all ${activeImg === i ? "w-6 h-2 bg-white" : "w-2 h-2 bg-white/50"}`} />
           ))}
@@ -42,15 +53,15 @@ export default function DusunPage({ dusun, onClose }: { dusun: DusunData; onClos
                 <span className="text-white text-xs font-bold uppercase tracking-wide">Desa Getas · {dusun.rw}</span>
               </div>
               <h1 className="text-4xl sm:text-5xl font-black text-white leading-none" style={{ fontFamily: "Poppins, sans-serif" }}>
-                {dusun.name}
+                {dusun.nama}
               </h1>
             </div>
             {/* quick stats */}
             <div className="hidden sm:flex gap-4 pb-1">
               {[
-                { icon: Users, label: "Penduduk", val: dusun.penduduk.toLocaleString("id-ID") },
-                { icon: Home,  label: "RT",        val: String(dusun.rt) },
-                { icon: Leaf,  label: "Luas",      val: dusun.luas },
+                { icon: Users, label: "Penduduk", val: dusun.jumlah_penduduk.toLocaleString("id-ID") },
+                { icon: Home,  label: "RT",        val: String(dusun.jumlah_rt) },
+                { icon: Leaf,  label: "Luas",      val: dusun.luas_wilayah },
               ].map(s => (
                 <div key={s.label} className="text-center">
                   <div className="text-white font-black text-lg leading-none" style={{ fontFamily: "Poppins, sans-serif" }}>{s.val}</div>
@@ -62,15 +73,16 @@ export default function DusunPage({ dusun, onClose }: { dusun: DusunData; onClos
         </div>
       </div>
 
-      {/* Thumbnail strip */}
-      <div className="flex-shrink-0 flex gap-2 px-6 py-3 bg-[#f0fdf4] border-b border-[#bbf7d0] overflow-x-auto">
-        {dusun.galeri.map((src, i) => (
-          <button key={i} onClick={() => setActiveImg(i)}
-            className={`flex-shrink-0 w-16 h-10 rounded-lg overflow-hidden border-2 transition-all ${activeImg === i ? "border-[#16a34a] shadow-md" : "border-transparent opacity-60 hover:opacity-90"}`}>
-            <img src={src} alt="" className="w-full h-full object-cover" />
-          </button>
-        ))}
-      </div>
+      {allImages.length > 1 && (
+        <div className="flex-shrink-0 flex gap-2 px-6 py-3 bg-[#f0fdf4] border-b border-[#bbf7d0] overflow-x-auto">
+          {allImages.map((src, i) => (
+            <button key={i} onClick={() => setActiveImg(i)}
+              className={`flex-shrink-0 w-16 h-10 rounded-lg overflow-hidden border-2 transition-all ${activeImg === i ? "border-[#16a34a] shadow-md" : "border-transparent opacity-60 hover:opacity-90"}`}>
+              <img src={src} alt="" className="w-full h-full object-cover" />
+            </button>
+          ))}
+        </div>
+      )}
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto">
@@ -81,9 +93,9 @@ export default function DusunPage({ dusun, onClose }: { dusun: DusunData; onClos
             {/* mobile stats */}
             <div className="sm:hidden grid grid-cols-3 gap-3 mb-6">
               {[
-                { icon: Users, label: "Penduduk", val: dusun.penduduk.toLocaleString("id-ID") + " jiwa" },
-                { icon: Home,  label: "RT",       val: dusun.rt + " RT · " + dusun.rw },
-                { icon: Leaf,  label: "Luas",     val: dusun.luas },
+                { icon: Users, label: "Penduduk", val: dusun.jumlah_penduduk.toLocaleString("id-ID") + " jiwa" },
+                { icon: Home,  label: "RT",       val: dusun.jumlah_rt + " RT · " + dusun.rw },
+                { icon: Leaf,  label: "Luas",     val: dusun.luas_wilayah },
               ].map(s => (
                 <div key={s.label} className="bg-[#f0fdf4] border border-[#bbf7d0] rounded-2xl p-3 text-center">
                   <s.icon size={16} className="text-[#16a34a] mx-auto mb-1" />
@@ -96,10 +108,10 @@ export default function DusunPage({ dusun, onClose }: { dusun: DusunData; onClos
             {/* Description */}
             <div className="mb-6">
               <h2 className="text-xl font-bold text-[#052e16] mb-3" style={{ fontFamily: "Poppins, sans-serif" }}>
-                Tentang Dusun {dusun.name}
+                Tentang Dusun {dusun.nama}
               </h2>
               <p className="text-[#4b7a55] leading-relaxed" style={{ fontFamily: "Inter, sans-serif" }}>
-                {dusun.detail}
+                {detail.detail || detail.deskripsi}
               </p>
             </div>
 
@@ -109,12 +121,12 @@ export default function DusunPage({ dusun, onClose }: { dusun: DusunData; onClos
                 Keunggulan & Daya Tarik
               </h3>
               <div className="grid sm:grid-cols-3 gap-3">
-                {dusun.keunggulan.map((k) => (
-                  <div key={k} className="bg-white border border-[#bbf7d0] rounded-2xl p-4 shadow-sm hover:shadow-md hover:border-green-300 transition-all">
+                {(detail.keunggulan ?? []).map((k) => (
+                  <div key={k.keunggulan} className="bg-white border border-[#bbf7d0] rounded-2xl p-4 shadow-sm hover:shadow-md hover:border-green-300 transition-all">
                     <div className="w-8 h-8 rounded-xl bg-[#dcfce7] flex items-center justify-center mb-3">
                       <Star size={14} className="text-[#16a34a]" />
                     </div>
-                    <p className="text-[#052e16] text-sm font-medium leading-snug" style={{ fontFamily: "Inter, sans-serif" }}>{k}</p>
+                    <p className="text-[#052e16] text-sm font-medium leading-snug" style={{ fontFamily: "Inter, sans-serif" }}>{k.keunggulan}</p>
                   </div>
                 ))}
               </div>
@@ -125,8 +137,8 @@ export default function DusunPage({ dusun, onClose }: { dusun: DusunData; onClos
               <h3 className="text-base font-bold text-[#052e16] mb-3" style={{ fontFamily: "Poppins, sans-serif" }}>Lokasi</h3>
               <div className="rounded-2xl overflow-hidden border border-[#bbf7d0] h-48 shadow-sm">
                 <iframe
-                  title={`Peta Dusun ${dusun.name}`}
-                  src={`https://maps.google.com/maps?q=Dusun+${dusun.name},+Desa+Getas,+Singorojo,+Kendal&output=embed&z=14`}
+                  title={`Peta Dusun ${dusun.nama}`}
+                  src={`https://maps.google.com/maps?q=Dusun+${dusun.nama},+Desa+Getas,+Singorojo,+Kendal&output=embed&z=14`}
                   className="w-full h-full border-0"
                   allowFullScreen loading="lazy"
                 />
@@ -140,11 +152,11 @@ export default function DusunPage({ dusun, onClose }: { dusun: DusunData; onClos
             <div className="bg-white rounded-2xl border border-[#bbf7d0] p-5 shadow-sm">
               <div className="text-xs font-bold uppercase tracking-widest text-[#4b7a55] mb-4">Info Dusun</div>
               {[
-                { label: "Nama Dusun",   val: dusun.name },
+                { label: "Nama Dusun",   val: dusun.nama },
                 { label: "Wilayah RW",  val: dusun.rw },
-                { label: "Jumlah RT",   val: dusun.rt + " RT" },
-                { label: "Penduduk",    val: dusun.penduduk.toLocaleString("id-ID") + " jiwa" },
-                { label: "Luas",        val: dusun.luas },
+                { label: "Jumlah RT",   val: dusun.jumlah_rt + " RT" },
+                { label: "Penduduk",    val: dusun.jumlah_penduduk.toLocaleString("id-ID") + " jiwa" },
+                { label: "Luas",        val: dusun.luas_wilayah },
                 { label: "Desa",        val: "Getas, Singorojo" },
                 { label: "Kabupaten",   val: "Kendal, Jawa Tengah" },
               ].map(r => (

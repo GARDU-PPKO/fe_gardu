@@ -3,12 +3,13 @@ import { useNavigate } from 'react-router-dom';
 import BookingLayout from '../../components/layout/BookingLayout';
 import BookingSummary from '../../components/booking/BookingSummary';
 import { useBooking } from '../../hooks/useBooking';
-
-const WA_NUMBER = '6281234567890';
+import { getSettings } from '../../services/village.service';
+import type { Setting } from '../../types';
 
 const BookingPayment: React.FC = () => {
   const navigate = useNavigate();
   const { bookingData, resetBooking } = useBooking();
+  const [waNumber, setWaNumber] = React.useState('');
 
   useEffect(() => {
     if (!bookingData.selectedPackage || !bookingData.userDetails.fullName) {
@@ -16,7 +17,15 @@ const BookingPayment: React.FC = () => {
     }
   }, [bookingData, navigate]);
 
+  useEffect(() => {
+    getSettings('wa_admin').then(res => {
+      const wa = res.data.find((item: Setting) => item.key === 'wa_admin');
+      setWaNumber(wa?.value ?? '');
+    });
+  }, []);
+
   const handleConfirm = () => {
+    if (!waNumber) return;
     const { selectedPackage, date, session, participants, userDetails } = bookingData;
 
     const lines = [
@@ -37,7 +46,7 @@ const BookingPayment: React.FC = () => {
       `Mohon konfirmasi ketersediaan dan infokan pembayaran. Terima kasih!`,
     ].filter(Boolean).join('\n');
 
-    const waUrl = `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(lines)}`;
+    const waUrl = `https://wa.me/${waNumber}?text=${encodeURIComponent(lines)}`;
     resetBooking();
     window.open(waUrl, '_blank');
     navigate('/');
@@ -115,18 +124,12 @@ const BookingPayment: React.FC = () => {
           <div className="bg-green-50 border border-green-200 p-5 rounded-xl space-y-3">
             <h3 className="font-bold text-green-700 text-xs tracking-wide">TERMASUK DALAM PAKET</h3>
             <div className="grid grid-cols-2 gap-3 text-sm text-green-800">
-              <div className="flex items-center gap-2">
-                <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
-                <span>Pelampung & helm</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
-                <span>Pemandu lokal</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
-                <span>Air minum</span>
-              </div>
+              {selectedPackage?.includes?.map(item => (
+                <div key={item} className="flex items-center gap-2">
+                  <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                  <span>{item}</span>
+                </div>
+              ))}
             </div>
           </div>
 
@@ -152,6 +155,7 @@ const BookingPayment: React.FC = () => {
             <BookingSummary 
               buttonText="Konfirmasi Pesanan" 
               onButtonClick={handleConfirm}
+              buttonDisabled={!waNumber}
               showPaymentInfo={true}
             />
           </div>

@@ -1,13 +1,20 @@
+import { useEffect, useState } from "react";
 import { Users, Home, Briefcase, Mountain, TreePine } from "lucide-react";
+import { getVillageStats } from "../../services/village.service";
+import type { VillageStat } from "../../types";
+
+const ICON_MAP: Record<string, typeof Users> = {
+  users: Users, home: Home, briefcase: Briefcase, mountain: Mountain, treepine: TreePine,
+};
 
 export default function StatistikSection() {
-  const stats = [
-    { icon: Users, value: "4.287", unit: "jiwa", label: "Total Penduduk" },
-    { icon: Home, value: "1.156", unit: "KK", label: "Jumlah KK" },
-    { icon: Briefcase, value: "62", unit: "unit", label: "UMKM Aktif" },
-    { icon: Mountain, value: "8.500+", unit: "", label: "Wisatawan/Tahun" },
-    { icon: TreePine, value: "12,4", unit: "km²", label: "Luas Wilayah" },
-  ];
+  const [stats, setStats] = useState<VillageStat[]>([]);
+
+  useEffect(() => {
+    getVillageStats().then(res => setStats(res.data));
+  }, []);
+
+  if (stats.length === 0) return null;
 
   return (
     <section className="py-20 px-4 sm:px-8 bg-white border-t border-[#bbf7d0]/20">
@@ -18,20 +25,23 @@ export default function StatistikSection() {
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-          {stats.map((stat, idx) => (
-            <div key={idx} className="bg-green-50/20 border border-[#bbf7d0]/40 rounded-2xl p-6 flex flex-col items-center justify-center text-center shadow-sm hover:shadow-md hover:border-green-400/50 transition-all duration-300 hover:-translate-y-0.5">
-              <div className="w-12 h-12 rounded-full bg-green-100/50 flex items-center justify-center mb-4 text-[#16a34a]">
-                <stat.icon size={20} />
+          {stats.map((stat) => {
+            const Icon = (stat.icon && ICON_MAP[stat.icon.toLowerCase()]) || Users;
+            return (
+              <div key={stat.id} className="bg-green-50/20 border border-[#bbf7d0]/40 rounded-2xl p-6 flex flex-col items-center justify-center text-center shadow-sm hover:shadow-md hover:border-green-400/50 transition-all duration-300 hover:-translate-y-0.5">
+                <div className="w-12 h-12 rounded-full bg-green-100/50 flex items-center justify-center mb-4 text-[#16a34a]">
+                  <Icon size={20} />
+                </div>
+                <div className="font-bold text-[#052e16] text-xl sm:text-2xl mb-1 flex items-baseline gap-1" style={{ fontFamily: "Poppins, sans-serif" }}>
+                  {stat.nilai}
+                  {stat.satuan && <span className="text-green-600 text-xs sm:text-sm font-semibold">{stat.satuan}</span>}
+                </div>
+                <div className="text-[#4b7a55] text-xs sm:text-sm font-medium" style={{ fontFamily: "Inter, sans-serif" }}>
+                  {stat.label}
+                </div>
               </div>
-              <div className="font-bold text-[#052e16] text-xl sm:text-2xl mb-1 flex items-baseline gap-1" style={{ fontFamily: "Poppins, sans-serif" }}>
-                {stat.value}
-                {stat.unit && <span className="text-green-600 text-xs sm:text-sm font-semibold">{stat.unit}</span>}
-              </div>
-              <div className="text-[#4b7a55] text-xs sm:text-sm font-medium" style={{ fontFamily: "Inter, sans-serif" }}>
-                {stat.label}
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </section>

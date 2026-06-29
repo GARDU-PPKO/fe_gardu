@@ -4,46 +4,35 @@ import BookingLayout from '../../components/layout/BookingLayout';
 import PackageCard from '../../components/booking/PackageCard';
 import BookingSummary from '../../components/booking/BookingSummary';
 import { useBooking } from '../../hooks/useBooking';
+import { getBookingSessions } from '../../services/booking.service';
+import { getTourPackages } from '../../services/tour-package.service';
 import type { Package } from '../../types/booking';
-
-const PACKAGES: Package[] = [
-  {
-    id: 'pkg-1',
-    name: 'Tubing Adventure',
-    description: 'Menyusuri Sungai Blukar sepanjang 1,5 km dengan arus alami.',
-    price: 75000,
-    unit: 'orang',
-    tag: 'Terpopuler'
-  },
-  {
-    id: 'pkg-2',
-    name: 'River Exploration',
-    description: 'Eksplorasi sungai bersama guide berpengalaman dan safety equipment lengkap.',
-    price: 95000,
-    unit: 'orang'
-  },
-  {
-    id: 'pkg-3',
-    name: 'Family Package',
-    description: 'Paket keluarga lengkap — tubing, makan siang, foto dokumentasi.',
-    price: 250000,
-    unit: 'grup',
-    tag: 'Promo'
-  },
-  {
-    id: 'pkg-4',
-    name: 'Group Package',
-    description: 'Paket rombongan minimal 20 orang dengan guide dan makan siang.',
-    price: 65000,
-    unit: 'orang',
-    minParticipants: 20,
-    maxParticipants: 100
-  }
-];
+import type { BookingSession, TourPackage } from '../../types';
 
 const BookingPackage: React.FC = () => {
   const navigate = useNavigate();
   const { bookingData, updatePackage, updateSchedule } = useBooking();
+  const [packages, setPackages] = useState<Package[]>([]);
+  const [sessions, setSessions] = useState<BookingSession[]>([]);
+
+  useEffect(() => {
+    getTourPackages().then(res => {
+      const mapped: Package[] = res.data.map((p: TourPackage) => ({
+        id: String(p.id),
+        name: p.nama,
+        description: p.deskripsi,
+        price: Number(p.harga),
+        unit: p.satuan === 'orang' ? 'orang' : 'grup',
+        tag: p.tag ?? undefined,
+        minParticipants: p.min_participants ?? undefined,
+        maxParticipants: p.max_participants ?? undefined,
+        image: p.gambar,
+        duration: p.durasi,
+        includes: p.includes?.map(item => item.item) ?? [],
+      }));
+      setPackages(mapped);
+    });
+  }, []);
   
   const [localDate, setLocalDate] = useState(bookingData.date);
   const [localSession, setLocalSession] = useState(bookingData.session);
@@ -53,8 +42,20 @@ const BookingPackage: React.FC = () => {
   const minParticipants = currentPackage?.minParticipants || 1;
   const maxParticipants = currentPackage?.maxParticipants || 10;
 
+  useEffect(() => {
+    if (!currentPackage || !localDate) {
+      setSessions([]);
+      return;
+    }
+
+    getBookingSessions({ package_id: Number(currentPackage.id), tanggal: localDate }).then(res => {
+      setSessions(res.data.filter(item => item.kuota > item.terisi));
+    });
+  }, [currentPackage, localDate]);
+
   const handleSelectPackage = (pkg: Package) => {
     updatePackage(pkg);
+    setLocalSession('');
     const min = pkg.minParticipants || 1;
     const max = pkg.maxParticipants || 10;
     if (localParticipants < min) setLocalParticipants(min);
@@ -89,7 +90,7 @@ const BookingPackage: React.FC = () => {
               <h2 className="text-lg font-bold text-[#052e16]">Pilih Paket Wisata</h2>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {PACKAGES.map((pkg) => (
+              {packages.map((pkg) => (
                 <PackageCard
                   key={pkg.id}
                   pkg={pkg}
@@ -129,10 +130,12 @@ const BookingPackage: React.FC = () => {
                     onChange={(e) => setLocalSession(e.target.value)}
                     className="w-full px-4 py-2.5 rounded-lg border border-green-200 focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition-shadow appearance-none bg-white text-sm"
                   >
-                    <option value="" disabled>Pilih sesi...</option>
-                    <option value="Pagi (07.00 - 09.00)">Pagi (07.00 - 09.00)</option>
-                    <option value="Siang (10.00 - 12.00)">Siang (10.00 - 12.00)</option>
-                    <option value="Sore (14.00 - 16.00)">Sore (14.00 - 16.00)</option>
+                    <option value="" disabled>{currentPackage && localDate ? 'Pilih sesi...' : 'Pilih paket dan tanggal terlebih dahulu'}</option>
+                    {sessions.map(session => (
+                      <option key={session.id} value={session.sesi}>
+                        {session.sesi} - tersisa {session.kuota - session.terisi} kuota
+                      </option>
+                    ))}
                   </select>
                 </div>
               </div>

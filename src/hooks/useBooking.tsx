@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useCallback } from 'react';
+import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import type { ReactNode } from 'react';
 import type { BookingState, Package, UserDetails } from '../types/booking';
 
@@ -25,9 +25,25 @@ interface BookingContextType {
 }
 
 const BookingContext = createContext<BookingContextType | undefined>(undefined);
+const STORAGE_KEY = 'desa_getas_booking';
+
+function getInitialBookingState(): BookingState {
+  if (typeof window === 'undefined') return INITIAL_BOOKING_STATE;
+
+  try {
+    const stored = window.localStorage.getItem(STORAGE_KEY);
+    return stored ? { ...INITIAL_BOOKING_STATE, ...JSON.parse(stored) } : INITIAL_BOOKING_STATE;
+  } catch {
+    return INITIAL_BOOKING_STATE;
+  }
+}
 
 export const BookingProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [bookingData, setBookingData] = useState<BookingState>(INITIAL_BOOKING_STATE);
+  const [bookingData, setBookingData] = useState<BookingState>(getInitialBookingState);
+
+  useEffect(() => {
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(bookingData));
+  }, [bookingData]);
 
   const updatePackage = useCallback((pkg: Package) => {
     setBookingData((prev) => ({ ...prev, selectedPackage: pkg }));
@@ -46,6 +62,7 @@ export const BookingProvider: React.FC<{ children: ReactNode }> = ({ children })
 
   const resetBooking = useCallback(() => {
     setBookingData(INITIAL_BOOKING_STATE);
+    window.localStorage.removeItem(STORAGE_KEY);
   }, []);
 
   return (
