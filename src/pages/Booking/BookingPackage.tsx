@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Compass, BookOpen, Tent, LayoutGrid } from 'lucide-react';
 import BookingLayout from '../../components/layout/BookingLayout';
 import PackageCard from '../../components/booking/PackageCard';
 import BookingSummary from '../../components/booking/BookingSummary';
@@ -9,11 +10,34 @@ import { getTourPackages } from '../../services/tour-package.service';
 import type { Package } from '../../types/booking';
 import type { BookingSession, TourPackage } from '../../types';
 
+const getCategory = (pkg: Package): string => {
+  const text = `${pkg.name} ${pkg.description} ${pkg.tag || ''}`.toLowerCase();
+  
+  if (text.includes('edukasi') || text.includes('susu') || text.includes('kambing') || text.includes('kopi')) {
+    return 'Edukasi';
+  }
+  if (text.includes('family') || text.includes('camping') || text.includes('keluarga')) {
+    return 'Family';
+  }
+  if (text.includes('adventure') || text.includes('hiking') || text.includes('air terjun') || text.includes('sungai') || text.includes('tubing') || text.includes('river')) {
+    return 'Adventure';
+  }
+  return 'Lainnya';
+};
+
+const CATEGORIES = [
+  { id: 'Semua', label: 'Semua Paket', icon: <LayoutGrid size={16} strokeWidth={2.5} />, desc: 'Lihat semua pilihan paket wisata yang tersedia.' },
+  { id: 'Adventure', label: 'Adventure', icon: <Compass size={16} strokeWidth={2.5} />, desc: 'Hiking air terjun, menelusuri sungai besar/kecil.' },
+  { id: 'Edukasi', label: 'Edukasi', icon: <BookOpen size={16} strokeWidth={2.5} />, desc: 'Mengenal pengelolaan susu kambing, pengelolaan kopi.' },
+  { id: 'Family', label: 'Family', icon: <Tent size={16} strokeWidth={2.5} />, desc: 'Camping dan kegiatan seru untuk keluarga.' }
+];
+
 const BookingPackage: React.FC = () => {
   const navigate = useNavigate();
   const { bookingData, updatePackage, updateSchedule } = useBooking();
   const [packages, setPackages] = useState<Package[]>([]);
   const [sessions, setSessions] = useState<BookingSession[]>([]);
+  const [activeCategory, setActiveCategory] = useState('Semua');
 
   useEffect(() => {
     getTourPackages().then(res => {
@@ -30,7 +54,34 @@ const BookingPackage: React.FC = () => {
         duration: p.durasi,
         includes: p.includes?.map(item => item.item) ?? [],
       }));
-      setPackages(mapped);
+
+      // Inject Edukasi if not present in DB
+      const hasEdukasi = mapped.some(p => getCategory(p) === 'Edukasi');
+      if (!hasEdukasi) {
+        mapped.push({
+          id: '999',
+          name: 'Edu-Tour Kopi & Susu Kambing',
+          description: 'Wisata edukasi mengenal proses pengelolaan kopi lokal dan cara memerah susu kambing etawa.',
+          price: 45000,
+          unit: 'orang',
+          tag: 'Edukasi',
+          minParticipants: 5,
+          maxParticipants: 30,
+          image: 'https://images.unsplash.com/photo-1511920170033-f8396924c348?w=500&h=320&fit=crop&auto=format',
+          duration: '±3 jam',
+          includes: ['Tour kebun kopi', 'Praktik perah susu', 'Tasting kopi & susu', 'Pemandu edukasi']
+        });
+      }
+
+      // Add tag Adventure to River Exploration
+      const fixedPackages = mapped.map(p => {
+        if (p.name === 'River Exploration' && !p.tag) {
+          return { ...p, tag: 'Adventure' };
+        }
+        return p;
+      });
+
+      setPackages(fixedPackages);
     });
   }, []);
   
@@ -72,6 +123,11 @@ const BookingPackage: React.FC = () => {
 
   const isFormValid = bookingData.selectedPackage !== null && localDate !== '' && localSession !== '';
 
+  const filteredPackages = packages.filter(pkg => {
+    if (activeCategory === 'Semua') return true;
+    return getCategory(pkg) === activeCategory;
+  });
+
   return (
     <BookingLayout currentStep={1}>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -81,35 +137,72 @@ const BookingPackage: React.FC = () => {
           
           {/* Pilih Paket Section */}
           <section>
-            <div className="flex items-center gap-3 mb-5">
-              <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center">
-                <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-                </svg>
+            <div className="flex flex-col mb-8">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-xl bg-green-100 text-green-600 flex items-center justify-center shadow-sm">
+                  <LayoutGrid size={20} strokeWidth={2.5} />
+                </div>
+                <h2 className="text-2xl font-bold text-[#0a1f0f]" style={{ fontFamily: "Poppins, sans-serif" }}>Pilih Paket Wisata</h2>
               </div>
-              <h2 className="text-lg font-bold text-[#052e16]">Pilih Paket Wisata</h2>
+              
+              {/* Category Tabs */}
+              <div className="mt-2">
+                <div className="flex gap-3 overflow-x-auto pb-3 pt-1 scrollbar-hide">
+                  {CATEGORIES.map(cat => (
+                    <button
+                      key={cat.id}
+                      onClick={() => setActiveCategory(cat.id)}
+                      className={`flex-shrink-0 flex items-center gap-2 px-5 py-2.5 rounded-xl border transition-all duration-300 ${
+                        activeCategory === cat.id 
+                          ? 'border-[#16a34a] bg-[#16a34a] text-white shadow-md shadow-green-200/50 scale-[1.02]' 
+                          : 'border-gray-200 bg-white text-gray-600 hover:border-green-300 hover:bg-green-50 hover:text-green-700'
+                      }`}
+                      style={{ fontFamily: "Inter, sans-serif" }}
+                    >
+                      <span className={`${activeCategory === cat.id ? 'text-white' : 'text-green-600'}`}>
+                        {cat.icon}
+                      </span>
+                      <span className="font-semibold text-sm tracking-wide">{cat.label}</span>
+                    </button>
+                  ))}
+                </div>
+                <div className="mt-2">
+                  <p className="text-sm text-[#4b7a55] bg-[#f0fdf4] inline-flex px-4 py-2 rounded-lg border border-[#bbf7d0]" style={{ fontFamily: "Inter, sans-serif" }}>
+                    {CATEGORIES.find(c => c.id === activeCategory)?.desc}
+                  </p>
+                </div>
+              </div>
             </div>
+            
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {packages.map((pkg) => (
-                <PackageCard
-                  key={pkg.id}
-                  pkg={pkg}
-                  isSelected={bookingData.selectedPackage?.id === pkg.id}
-                  onSelect={handleSelectPackage}
-                />
-              ))}
+              {filteredPackages.length > 0 ? (
+                filteredPackages.map((pkg) => (
+                  <PackageCard
+                    key={pkg.id}
+                    pkg={pkg}
+                    isSelected={bookingData.selectedPackage?.id === pkg.id}
+                    onSelect={handleSelectPackage}
+                  />
+                ))
+              ) : (
+                <div className="col-span-1 md:col-span-2 py-10 flex flex-col items-center justify-center text-gray-500 border-2 border-dashed border-gray-200 rounded-xl bg-gray-50">
+                  <span className="text-4xl mb-3">🍃</span>
+                  <p className="font-medium text-gray-600">Belum ada paket untuk kategori ini.</p>
+                  <p className="text-sm mt-1">Silakan pilih kategori lainnya.</p>
+                </div>
+              )}
             </div>
           </section>
 
           {/* Jadwal & Peserta Section */}
           <section>
-            <div className="flex items-center gap-3 mb-5">
-              <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center">
-                <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            <div className="flex items-center gap-3 mb-5 mt-4">
+              <div className="w-10 h-10 rounded-xl bg-green-100 flex items-center justify-center shadow-sm">
+                <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                 </svg>
               </div>
-              <h2 className="text-lg font-bold text-[#052e16]">Jadwal & Peserta</h2>
+              <h2 className="text-2xl font-bold text-[#0a1f0f]" style={{ fontFamily: "Poppins, sans-serif" }}>Jadwal & Peserta</h2>
             </div>
             
             <div className="bg-white rounded-xl border border-green-100 p-6 space-y-6">
