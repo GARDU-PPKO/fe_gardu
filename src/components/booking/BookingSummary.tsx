@@ -22,41 +22,51 @@ const BookingSummary: React.FC<BookingSummaryProps> = ({
   return (
     <div className="flex flex-col space-y-4">
       {/* Summary Card */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+      <div className="bg-white rounded-3xl shadow-sm border border-blue-100/80 overflow-hidden">
         {/* Cover Image Placeholder */}
-        <div className="h-32 bg-gray-200 relative overflow-hidden">
-          {selectedPackage?.image && <img src={selectedPackage.image} alt={selectedPackage.name} className="w-full h-full object-cover" />}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
-          <div className="absolute bottom-4 left-4 text-white font-semibold">
+        <div className="h-36 bg-gray-200 relative overflow-hidden">
+          {selectedPackage?.image ? (
+            <img src={selectedPackage.image} alt={selectedPackage.name} className="w-full h-full object-cover" />
+          ) : (
+            <div className="w-full h-full bg-gradient-to-tr from-[#182CC1]/30 to-[#8B5A2B]/20 flex items-center justify-center text-xs text-gray-500 font-medium">Belum Dipilih</div>
+          )}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
+          <div className="absolute bottom-3.5 left-5 right-5 text-white font-black text-lg truncate drop-shadow-md" style={{ fontFamily: "Poppins, sans-serif" }}>
             {selectedPackage ? selectedPackage.name : 'Pilih Paket'}
           </div>
         </div>
         
-        <div className="p-5 space-y-4">
-          <h3 className="font-bold text-gray-800 text-sm tracking-wide">RINGKASAN PESANAN</h3>
+        <div className="p-6 space-y-4">
+          <h3 className="font-extrabold text-[#1E293B] text-xs tracking-wider uppercase" style={{ fontFamily: "Poppins, sans-serif" }}>RINGKASAN PESANAN</h3>
           
-          <div className="space-y-3 text-sm">
-            <div className="flex justify-between">
-              <span className="text-gray-500">Paket</span>
-              <span className="font-medium text-right max-w-[150px]">{selectedPackage ? selectedPackage.name : '-'}</span>
+          <div className="space-y-3 text-xs sm:text-sm font-medium" style={{ fontFamily: "Inter, sans-serif" }}>
+            <div className="flex justify-between items-center">
+              <span className="text-gray-400">Paket</span>
+              <span className="text-[#1E293B] font-bold text-right max-w-[170px] truncate">{selectedPackage ? selectedPackage.name : '-'}</span>
             </div>
-            <div className="flex justify-between">
-              <span className="text-gray-500">Tanggal</span>
-              <span className="font-medium text-right">{date || '-'}</span>
+            <div className="flex justify-between items-center">
+              <span className="text-gray-400">Tanggal</span>
+              <span className="text-[#1E293B] font-bold text-right">{date || '—'}</span>
             </div>
-            <div className="flex justify-between">
-              <span className="text-gray-500">Sesi</span>
-              <span className="font-medium text-right">{session || '-'}</span>
+            <div className="flex justify-between items-center">
+              <span className="text-gray-400">Sesi</span>
+              <span className="text-[#1E293B] font-bold text-right">{session || 'Pagi'}</span>
             </div>
-            <div className="flex justify-between">
-              <span className="text-gray-500">Peserta</span>
-              <span className="font-medium text-right">{participants} orang</span>
+            <div className="flex justify-between items-center">
+              <span className="text-gray-400">Peserta</span>
+              <span className="text-[#1E293B] font-bold text-right">{participants} orang</span>
             </div>
+            {selectedPackage?.duration && (
+              <div className="flex justify-between items-center">
+                <span className="text-gray-400">Durasi</span>
+                <span className="text-[#1E293B] font-bold text-right">±2 jam</span>
+              </div>
+            )}
           </div>
           
           <div className="pt-4 border-t border-gray-100 flex justify-between items-center">
-            <span className="font-bold text-gray-800">Total</span>
-            <span className="font-bold text-primary text-lg">
+            <span className="font-black text-[#1E293B] text-base" style={{ fontFamily: "Poppins, sans-serif" }}>Total</span>
+            <span className="font-black text-[#182CC1] text-lg sm:text-xl" style={{ fontFamily: "Poppins, sans-serif" }}>
               Rp {total.toLocaleString('id-ID')}
             </span>
           </div>
@@ -64,17 +74,20 @@ const BookingSummary: React.FC<BookingSummaryProps> = ({
       </div>
 
       {showPaymentInfo && (
-        <div className="bg-white p-5 rounded-xl border border-gray-100 shadow-sm space-y-3">
-          <h3 className="font-bold text-gray-800 text-xs tracking-wide">INFORMASI PEMBAYARAN</h3>
-          <ul className="text-xs text-gray-600 space-y-2">
-            <li className="flex items-start">
-              <span className="mr-2">💳</span> Pembayaran dilakukan <strong>di lokasi</strong> saat kedatangan.
+        <div className="bg-[#EFF2FC] p-5 rounded-2xl border border-blue-200/60 shadow-xs space-y-3">
+          <h3 className="font-extrabold text-[#182CC1] text-xs tracking-wide uppercase" style={{ fontFamily: "Poppins, sans-serif" }}>INFORMASI PEMBAYARAN</h3>
+          <ul className="text-xs text-gray-700 space-y-2.5 font-medium" style={{ fontFamily: "Inter, sans-serif" }}>
+            <li className="flex items-start gap-2.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#182CC1] mt-1.5 flex-shrink-0" />
+              <span>Pembayaran dilakukan <strong className="text-[#1E293B]">di lokasi</strong> saat kedatangan.</span>
             </li>
-            <li className="flex items-start">
-              <span className="mr-2">📱</span> Konfirmasi booking via <strong>WhatsApp</strong> setelah submit.
+            <li className="flex items-start gap-2.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#182CC1] mt-1.5 flex-shrink-0" />
+              <span>Konfirmasi booking via <strong className="text-[#1E293B]">WhatsApp</strong> setelah submit.</span>
             </li>
-            <li className="flex items-start">
-              <span className="mr-2">❌</span> Pembatalan gratis <strong>H-1</strong> sebelum tanggal kunjungan.
+            <li className="flex items-start gap-2.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-red-500 mt-1.5 flex-shrink-0" />
+              <span>Pembatalan gratis <strong className="text-[#1E293B]">H-1</strong> sebelum tanggal kunjungan.</span>
             </li>
           </ul>
         </div>
@@ -84,23 +97,25 @@ const BookingSummary: React.FC<BookingSummaryProps> = ({
       <button
         onClick={onButtonClick}
         disabled={buttonDisabled}
-        className={`w-full py-3 rounded-lg font-bold text-white transition-colors flex items-center justify-center space-x-2 ${
+        className={`w-full py-4 rounded-2xl font-bold text-sm text-white transition-all duration-300 flex items-center justify-center space-x-2.5 active:scale-95 ${
           buttonDisabled
-            ? 'bg-primary/50 cursor-not-allowed'
-            : 'bg-primary hover:bg-primary-hover shadow-md shadow-primary/20'
+            ? 'bg-[#94A3B8]/70 text-white cursor-not-allowed shadow-none font-semibold'
+            : 'bg-[#182CC1] hover:bg-[#122190] shadow-lg shadow-[#182CC1]/30 hover:shadow-xl'
         }`}
+        style={{ fontFamily: "Poppins, sans-serif" }}
       >
         <span>{buttonText}</span>
-        {!showPaymentInfo && <span>→</span>}
+        {!showPaymentInfo && <span className="text-base leading-none">→</span>}
       </button>
 
       {/* Back to Home Button placeholder for layout matching */}
       {showPaymentInfo && (
         <button
-          className="w-full py-3 rounded-lg font-medium text-gray-600 border border-gray-200 bg-white hover:bg-gray-50 transition-colors"
+          className="w-full py-3.5 rounded-2xl font-bold text-sm text-[#182CC1] border-2 border-blue-200 bg-white hover:bg-blue-50/80 transition-all duration-300 shadow-xs active:scale-95"
           onClick={() => window.history.back()}
+          style={{ fontFamily: "Poppins, sans-serif" }}
         >
-          ← Kembali
+          ← Ubah Data
         </button>
       )}
     </div>
@@ -108,3 +123,4 @@ const BookingSummary: React.FC<BookingSummaryProps> = ({
 };
 
 export default BookingSummary;
+

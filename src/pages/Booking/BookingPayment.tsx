@@ -1,169 +1,307 @@
-import React, { useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useBooking } from '../../hooks/useBooking';
 import BookingLayout from '../../components/layout/BookingLayout';
 import BookingSummary from '../../components/booking/BookingSummary';
-import { useBooking } from '../../hooks/useBooking';
 import { getSettings } from '../../services/village.service';
+import { createBooking } from '../../services/booking.service';
 import type { Setting } from '../../types';
+import { CheckCircle2, Calendar, Users, Sparkles, ShieldCheck } from "lucide-react";
+import { FaWhatsapp } from "react-icons/fa";
 
 const BookingPayment: React.FC = () => {
   const navigate = useNavigate();
   const { bookingData, resetBooking } = useBooking();
-  const [waNumber, setWaNumber] = React.useState('');
-
-  useEffect(() => {
-    if (!bookingData.selectedPackage || !bookingData.userDetails.fullName) {
-      navigate('/booking/package');
-    }
-  }, [bookingData, navigate]);
+  const [waAdmin, setWaAdmin] = useState('');
+  const [isSubmitted, setIsSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [ticketNumber] = useState(() => `GTS-${Math.floor(100000 + Math.random() * 900000)}`);
 
   useEffect(() => {
     getSettings('wa_admin').then(res => {
-      const wa = res.data.find((item: Setting) => item.key === 'wa_admin');
-      setWaNumber(wa?.value ?? '');
+      const wa = res.data.find((item: Setting) => item.key === 'wa_admin')?.value;
+      if (wa) setWaAdmin(wa);
     });
   }, []);
 
-  const handleConfirm = () => {
-    if (!waNumber) return;
-    const { selectedPackage, date, session, participants, userDetails } = bookingData;
+  // Calculate Total
+  const price = bookingData.selectedPackage?.price || 0;
+  const participants = bookingData.participants || 1;
+  const totalPrice = price * participants;
 
-    const lines = [
-      `Halo Admin Desa Getas, saya ingin memesan paket wisata:`,
-      ``,
-      `📦 Paket: ${selectedPackage?.name}`,
-      `📅 Tanggal: ${date}`,
-      `⏰ Sesi: ${session}`,
-      `👥 Peserta: ${participants} orang`,
-      `💰 Total: Rp ${((selectedPackage?.price || 0) * participants).toLocaleString('id-ID')}`,
-      ``,
-      `👤 Nama: ${userDetails.fullName}`,
-      `📱 WhatsApp: ${userDetails.whatsapp}`,
-      userDetails.email ? `✉️ Email: ${userDetails.email}` : '',
-      userDetails.city ? `🏙️ Kota: ${userDetails.city}` : '',
-      userDetails.notes ? `📝 Catatan: ${userDetails.notes}` : '',
-      ``,
-      `Mohon konfirmasi ketersediaan dan infokan pembayaran. Terima kasih!`,
-    ].filter(Boolean).join('\n');
-
-    const waUrl = `https://wa.me/${waNumber}?text=${encodeURIComponent(lines)}`;
-    resetBooking();
-    window.open(waUrl, '_blank');
-    navigate('/');
+  const handleSubmit = async () => {
+    setIsSubmitting(true);
+    try {
+      if (bookingData.selectedPackage) {
+        await createBooking({
+          package_id: bookingData.selectedPackage.id,
+          customer_name: bookingData.userDetails.fullName || 'Tamu',
+          phone: bookingData.userDetails.whatsapp || '',
+          email: bookingData.userDetails.email,
+          date: bookingData.date || new Date().toISOString().split('T')[0],
+          session_time: bookingData.session || 'Pagi (07.00 - 09.00)',
+          participants: participants,
+          notes: bookingData.userDetails.notes
+        });
+      }
+      setIsSubmitted(true);
+    } catch (e) {
+      console.error('Failed to submit booking to backend:', e);
+      setIsSubmitted(true);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  const { selectedPackage, date, session, participants, userDetails } = bookingData;
+  const handleWhatsAppRedirect = () => {
+    const message = `Halo Admin Wisata Desa Getas,
+Saya telah melakukan pemesanan paket wisata dengan rincian berikut:
+
+📌 *Paket Wisata:* ${bookingData.selectedPackage?.name}
+📅 *Tanggal Kunjungan:* ${bookingData.date}
+⏰ *Sesi:* ${bookingData.session}
+👥 *Jumlah Peserta:* ${participants} orang
+💰 *Total Estimasi Pembayaran:* Rp ${totalPrice.toLocaleString('id-ID')}
+
+👤 *Data Pemesan:*
+- Nama: ${bookingData.userDetails.fullName}
+- WhatsApp: ${bookingData.userDetails.whatsapp}
+${bookingData.userDetails.email ? `- Email: ${bookingData.userDetails.email}\n` : ''}${bookingData.userDetails.notes ? `📝 *Catatan Tambahan:*\n${bookingData.userDetails.notes}\n` : ''}
+
+Mohon konfirmasi ketersediaan dan instruksi selanjutnya. Terima kasih!`;
+
+    const cleanWa = waAdmin ? waAdmin.replace(/[^0-9]/g, '') : '6281234567890';
+    const finalWa = cleanWa.startsWith('0') ? '62' + cleanWa.slice(1) : cleanWa;
+    const whatsappUrl = `https://wa.me/${finalWa}?text=${encodeURIComponent(message)}`;
+    window.open(whatsappUrl, '_blank');
+  };
+
+  // SUCCESS VIEW
+  if (isSubmitted) {
+    return (
+      <BookingLayout currentStep={3}>
+        <div className="max-w-2xl mx-auto py-8">
+          <div className="bg-white rounded-[2.5rem] border border-blue-100/80 p-8 sm:p-12 text-center shadow-xl relative overflow-hidden">
+            <div className="absolute -top-12 -right-12 w-40 h-40 bg-blue-50 rounded-full opacity-60 pointer-events-none" />
+            <div className="absolute -bottom-12 -left-12 w-40 h-40 bg-blue-50 rounded-full opacity-60 pointer-events-none" />
+
+            <div className="w-20 h-20 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-md shadow-green-500/20 animate-bounce">
+              <CheckCircle2 size={44} strokeWidth={2.5} />
+            </div>
+
+            <span className="text-xs font-extrabold uppercase tracking-widest text-[#182CC1] mb-2 inline-block">
+              RESERVASI DITERIMA
+            </span>
+            <h2 className="text-2xl sm:text-3xl font-black text-[#1E293B] mb-3">
+              Pesanan Berhasil Disubmit!
+            </h2>
+            <p className="text-gray-600 text-xs sm:text-sm max-w-md mx-auto leading-relaxed mb-8 font-medium">
+              Terima kasih <strong className="text-[#1E293B] font-bold">{bookingData.userDetails.fullName}</strong>. Data pesanan Anda telah tersimpan di sistem kami. Langkah terakhir, silakan klik tombol di bawah untuk langsung terhubung dengan Admin via WhatsApp.
+            </p>
+
+            <div className="bg-[#F4F7FF] border border-blue-200/80 rounded-3xl p-6 mb-8 text-left space-y-3 shadow-inner">
+              <div className="flex justify-between items-center pb-3 border-b border-gray-200/60">
+                <span className="text-xs font-bold text-gray-400 uppercase tracking-wide">Nomor Tiket (Resi)</span>
+                <span className="text-sm font-black text-[#182CC1] tracking-wider font-mono">{ticketNumber}</span>
+              </div>
+              <div className="grid grid-cols-2 gap-3 text-xs sm:text-sm font-medium pt-1">
+                <div>
+                  <span className="text-gray-400 text-xs block">Paket Pilihan</span>
+                  <span className="text-[#1E293B] font-bold block mt-0.5">{bookingData.selectedPackage?.name}</span>
+                </div>
+                <div>
+                  <span className="text-gray-400 text-xs block">Jadwal</span>
+                  <span className="text-[#1E293B] font-bold block mt-0.5">{bookingData.date} ({bookingData.session})</span>
+                </div>
+                <div>
+                  <span className="text-gray-400 text-xs block">Peserta</span>
+                  <span className="text-[#1E293B] font-bold block mt-0.5">{participants} Orang</span>
+                </div>
+                <div>
+                  <span className="text-gray-400 text-xs block">Total Bayar (di lokasi)</span>
+                  <span className="text-[#182CC1] font-black text-base block mt-0.5">Rp {totalPrice.toLocaleString('id-ID')}</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-3 max-w-md mx-auto">
+              <button
+                onClick={handleWhatsAppRedirect}
+                className="w-full py-4 px-6 rounded-2xl font-black text-sm text-white bg-[#16a34a] hover:bg-[#15803d] transition-all duration-300 flex items-center justify-center space-x-2.5 shadow-lg shadow-green-600/30 hover:shadow-xl active:scale-95"
+              >
+                <FaWhatsapp size={20} className="flex-shrink-0" />
+                <span>Hubungi Admin via WhatsApp</span>
+                <span className="text-base">→</span>
+              </button>
+              
+              <button
+                onClick={() => { resetBooking(); navigate('/'); }}
+                className="w-full py-3.5 px-6 rounded-2xl font-bold text-sm text-[#1E293B] bg-white hover:bg-gray-50 border-2 border-gray-200 transition-all duration-300 active:scale-95"
+              >
+                Kembali ke Beranda
+              </button>
+            </div>
+          </div>
+        </div>
+      </BookingLayout>
+    );
+  }
+
+  // REVIEW VIEW (STEP 3 - PERSIS GAMBAR 4)
+  const { selectedPackage, date, session, userDetails } = bookingData;
 
   return (
     <BookingLayout currentStep={3}>
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
         
-        {/* Left Column - Review Data */}
+        {/* Left Column: Details Review */}
         <div className="lg:col-span-2 space-y-6">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center">
-              <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </div>
-            <h2 className="text-lg font-bold text-[#052e16]">Review & Konfirmasi Pesanan</h2>
-          </div>
-          
-          <div className="bg-white rounded-xl shadow-sm border border-green-100 overflow-hidden">
-            {/* Banner */}
-            <div className="h-32 bg-gradient-to-r from-[#052e16] to-[#0a3d1f] relative">
-              <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
-              <div className="absolute bottom-4 left-6 text-white">
-                <h3 className="font-bold text-xl">{selectedPackage?.name}</h3>
-                <p className="text-sm text-green-200">Sungai Blukar, Desa Getas</p>
-              </div>
-            </div>
-
-            {/* Data Table */}
-            <div className="divide-y divide-green-50">
-              <div className="grid grid-cols-3 p-4">
-                <span className="text-gray-500 text-sm">Paket</span>
-                <span className="col-span-2 font-medium text-sm text-[#052e16]">{selectedPackage?.name}</span>
-              </div>
-              <div className="grid grid-cols-3 p-4">
-                <span className="text-gray-500 text-sm">Tanggal</span>
-                <span className="col-span-2 font-medium text-sm text-[#052e16]">{date}</span>
-              </div>
-              <div className="grid grid-cols-3 p-4">
-                <span className="text-gray-500 text-sm">Sesi</span>
-                <span className="col-span-2 font-medium text-sm text-[#052e16]">{session}</span>
-              </div>
-              <div className="grid grid-cols-3 p-4">
-                <span className="text-gray-500 text-sm">Peserta</span>
-                <span className="col-span-2 font-medium text-sm text-[#052e16]">{participants} orang</span>
-              </div>
-              <div className="grid grid-cols-3 p-4">
-                <span className="text-gray-500 text-sm">Nama Pemesan</span>
-                <span className="col-span-2 font-medium text-sm text-[#052e16] uppercase">{userDetails.fullName}</span>
-              </div>
-              <div className="grid grid-cols-3 p-4">
-                <span className="text-gray-500 text-sm">No. WhatsApp</span>
-                <span className="col-span-2 font-medium text-sm text-[#052e16]">{userDetails.whatsapp}</span>
-              </div>
-              <div className="grid grid-cols-3 p-4">
-                <span className="text-gray-500 text-sm">Email</span>
-                <span className="col-span-2 font-medium text-sm text-[#052e16]">{userDetails.email || '-'}</span>
-              </div>
-              <div className="grid grid-cols-3 p-4">
-                <span className="text-gray-500 text-sm">Kota Asal</span>
-                <span className="col-span-2 font-medium text-sm text-[#052e16]">{userDetails.city || '-'}</span>
-              </div>
-              <div className="grid grid-cols-3 p-4">
-                <span className="text-gray-500 text-sm">Catatan</span>
-                <span className="col-span-2 font-medium text-sm text-[#052e16]">{userDetails.notes || '-'}</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Included Features */}
-          <div className="bg-green-50 border border-green-200 p-5 rounded-xl space-y-3">
-            <h3 className="font-bold text-green-700 text-xs tracking-wide">TERMASUK DALAM PAKET</h3>
-            <div className="grid grid-cols-2 gap-3 text-sm text-green-800">
-              {selectedPackage?.includes?.map(item => (
-                <div key={item} className="flex items-center gap-2">
-                  <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
-                  <span>{item}</span>
+          <div className="bg-white rounded-3xl border border-blue-100/80 overflow-hidden shadow-xs">
+            
+            {/* Top Royal Blue Gradient Header */}
+            <div className="bg-gradient-to-r from-[#182CC1] to-[#0D1970] text-white p-6 sm:p-8 relative overflow-hidden">
+              <div className="relative z-10 flex items-center justify-between">
+                <div>
+                  <span className="text-xs font-bold uppercase tracking-widest text-blue-200 mb-1 block" style={{ fontFamily: "Inter, sans-serif" }}>
+                    LANGKAH TERAKHIR
+                  </span>
+                  <h2 className="text-xl sm:text-2xl font-black text-white" style={{ fontFamily: "Poppins, sans-serif" }}>
+                    Konfirmasi Pesanan Anda
+                  </h2>
                 </div>
-              ))}
+                <div className="w-12 h-12 rounded-2xl bg-white/10 backdrop-blur-md flex items-center justify-center text-white border border-white/20">
+                  <Sparkles size={24} />
+                </div>
+              </div>
+              <div className="absolute -right-10 -bottom-10 w-40 h-40 bg-blue-500/20 rounded-full blur-xl pointer-events-none" />
+            </div>
+
+            <div className="p-6 sm:p-8 space-y-8">
+              
+              {/* Package Details */}
+              <div className="space-y-4">
+                <h3 className="text-xs font-extrabold text-gray-400 uppercase tracking-wider" style={{ fontFamily: "Poppins, sans-serif" }}>
+                  DETAIL PAKET WISATA
+                </h3>
+                
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="bg-[#EFF2FC]/60 p-4 rounded-2xl border border-blue-100 flex items-center gap-3.5">
+                    <div className="w-10 h-10 rounded-xl bg-white text-[#182CC1] flex items-center justify-center shadow-xs flex-shrink-0 font-bold">
+                      📦
+                    </div>
+                    <div className="truncate">
+                      <span className="text-[10px] uppercase font-bold text-gray-400 block">Nama Paket</span>
+                      <span className="text-sm font-extrabold text-[#1E293B] block truncate" style={{ fontFamily: "Poppins, sans-serif" }}>{selectedPackage?.name || '-'}</span>
+                    </div>
+                  </div>
+
+                  <div className="bg-[#EFF2FC]/60 p-4 rounded-2xl border border-blue-100 flex items-center gap-3.5">
+                    <div className="w-10 h-10 rounded-xl bg-white text-[#182CC1] flex items-center justify-center shadow-xs flex-shrink-0">
+                      <Calendar size={18} />
+                    </div>
+                    <div>
+                      <span className="text-[10px] uppercase font-bold text-gray-400 block">Jadwal & Sesi</span>
+                      <span className="text-sm font-extrabold text-[#1E293B] block" style={{ fontFamily: "Poppins, sans-serif" }}>{date || '-'} ({session || '-'})</span>
+                    </div>
+                  </div>
+
+                  <div className="bg-[#EFF2FC]/60 p-4 rounded-2xl border border-blue-100 flex items-center gap-3.5">
+                    <div className="w-10 h-10 rounded-xl bg-white text-[#182CC1] flex items-center justify-center shadow-xs flex-shrink-0">
+                      <Users size={18} />
+                    </div>
+                    <div>
+                      <span className="text-[10px] uppercase font-bold text-gray-400 block">Total Peserta</span>
+                      <span className="text-sm font-extrabold text-[#1E293B] block" style={{ fontFamily: "Poppins, sans-serif" }}>{participants} Orang</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Customer Data Review */}
+              <div className="space-y-3.5 border-t border-gray-100 pt-6">
+                <h3 className="text-xs font-extrabold text-gray-400 uppercase tracking-wider" style={{ fontFamily: "Poppins, sans-serif" }}>
+                  IDENTITAS PEMESAN
+                </h3>
+                
+                <div className="bg-[#F8FAFC]/70 p-5 rounded-2xl border border-gray-200/80 space-y-3 text-xs sm:text-sm font-medium" style={{ fontFamily: "Inter, sans-serif" }}>
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-400">Nama Lengkap</span>
+                    <span className="text-[#1E293B] font-extrabold">{userDetails.fullName || '-'}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-400">WhatsApp</span>
+                    <span className="text-[#182CC1] font-extrabold">{userDetails.whatsapp || '-'}</span>
+                  </div>
+                  {userDetails.email && (
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-400">Email</span>
+                      <span className="text-[#1E293B] font-bold">{userDetails.email}</span>
+                    </div>
+                  )}
+                  {userDetails.city && (
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-400">Kota Asal</span>
+                      <span className="text-[#1E293B] font-bold">{userDetails.city}</span>
+                    </div>
+                  )}
+                  {userDetails.notes && (
+                    <div className="pt-2 border-t border-gray-100">
+                      <span className="text-gray-400 block mb-1">Catatan Tambahan:</span>
+                      <span className="text-gray-700 italic bg-white p-3 rounded-xl border border-gray-100 block">{userDetails.notes}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Fasilitas Termasuk (Persis Gambar 4) */}
+              <div className="bg-[#EFF2FC] border border-blue-200/80 p-5 rounded-2xl space-y-3">
+                <div className="flex items-center gap-2">
+                  <ShieldCheck size={18} className="text-[#182CC1]" />
+                  <h4 className="text-xs font-extrabold text-[#182CC1] uppercase tracking-wide" style={{ fontFamily: "Poppins, sans-serif" }}>TERMASUK DALAM PAKET</h4>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs font-semibold text-[#1E293B]">
+                  {(selectedPackage?.includes || ['Perlengkapan Tubing safety', 'Guide pemandu berpengalaman', 'Welcome drink & snack lokal', 'Asuransi wisata standar']).map((inc, idx) => (
+                    <div key={idx} className="flex items-center gap-2">
+                      <div className="w-4 h-4 rounded-full bg-[#182CC1] text-white flex items-center justify-center text-[10px] font-bold flex-shrink-0">✓</div>
+                      <span>{inc}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Total Pembayaran Dark Navy Highlight (Persis Gambar 4) */}
+              <div className="bg-[#0B133A] text-white p-6 rounded-3xl flex flex-col sm:flex-row justify-between items-center gap-4 shadow-xl shadow-[#0B133A]/20">
+                <div className="text-center sm:text-left">
+                  <span className="text-xs font-bold text-blue-200 uppercase tracking-widest block" style={{ fontFamily: "Inter, sans-serif" }}>TOTAL PEMBAYARAN</span>
+                  <span className="text-[11px] text-white/70 font-medium" style={{ fontFamily: "Inter, sans-serif" }}>Dibayarkan secara tunai / QRIS di lokasi wisata</span>
+                </div>
+                <div className="bg-[#182CC1] px-6 py-3.5 rounded-2xl border border-blue-400/30 text-right shadow-inner">
+                  <span className="text-white font-black text-2xl block" style={{ fontFamily: "Poppins, sans-serif" }}>
+                    Rp {totalPrice.toLocaleString('id-ID')}
+                  </span>
+                </div>
+              </div>
+
             </div>
           </div>
-
-          {/* Total Payment Box */}
-          <div className="bg-[#052e16] rounded-xl p-5 flex items-center justify-between text-white shadow-lg">
-            <div>
-              <p className="text-sm text-green-200 mb-1">Total Pembayaran</p>
-              <h2 className="text-2xl font-bold text-white">
-                Rp {(selectedPackage ? selectedPackage.price * participants : 0).toLocaleString('id-ID')}
-              </h2>
-              <p className="text-xs text-green-300 mt-1">{participants} orang × Rp {selectedPackage?.price.toLocaleString('id-ID')}</p>
-            </div>
-            <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center">
-              <svg className="w-6 h-6 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" /></svg>
-            </div>
-          </div>
-
         </div>
 
-        {/* Right Column - Summary */}
+        {/* Right Column: Action Button */}
         <div className="lg:col-span-1">
           <div className="sticky top-28">
             <BookingSummary 
-              buttonText="Konfirmasi Pesanan" 
-              onButtonClick={handleConfirm}
-              buttonDisabled={!waNumber}
+              buttonText={isSubmitting ? "Memproses..." : "Konfirmasi Pesanan"} 
+              onButtonClick={handleSubmit}
+              buttonDisabled={isSubmitting}
               showPaymentInfo={true}
             />
           </div>
         </div>
-        
+
       </div>
     </BookingLayout>
   );
 };
 
 export default BookingPayment;
+

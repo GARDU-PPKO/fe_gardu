@@ -4,45 +4,88 @@ import { useNavigate } from "react-router-dom";
 import { getTourPackages } from "../../services/tour-package.service";
 import type { TourPackage } from "../../types";
 
+const FALLBACK_PACKAGES: TourPackage[] = [
+  {
+    id: 1,
+    nama: "Tubing Adventure",
+    durasi: "±2 jam",
+    harga: 75000,
+    satuan: "orang",
+    tag: "Terpopuler",
+    min_participants: 1,
+    max_participants: 10,
+    gambar: "https://images.unsplash.com/photo-1546058914-5000137323f0?w=500&h=320&fit=crop&auto=format",
+    deskripsi: "Menyusuri Sungai Blukar sepanjang 1,5 km dengan arus alami.",
+    is_active: true,
+    created_by: 1,
+    created_at: "",
+    updated_at: ""
+  },
+  {
+    id: 2,
+    nama: "River Exploration",
+    durasi: "±3 jam",
+    harga: 95000,
+    satuan: "orang",
+    tag: null,
+    min_participants: 1,
+    max_participants: 8,
+    gambar: "https://images.unsplash.com/photo-1561774711-b0fa364863b7?w=500&h=320&fit=crop&auto=format",
+    deskripsi: "Eksplorasi sungai bersama guide berpengalaman dan safety equipment lengkap.",
+    is_active: true,
+    created_by: 1,
+    created_at: "",
+    updated_at: ""
+  },
+  {
+    id: 3,
+    nama: "Family Package",
+    durasi: "½ hari",
+    harga: 250000,
+    satuan: "grup",
+    tag: "Promo",
+    min_participants: 2,
+    max_participants: 6,
+    gambar: "https://images.unsplash.com/photo-1520329612326-d6038d1395a1?w=500&h=320&fit=crop&auto=format",
+    deskripsi: "Paket keluarga lengkap — tubing, makan siang, foto dokumentasi.",
+    is_active: true,
+    created_by: 1,
+    created_at: "",
+    updated_at: ""
+  },
+  {
+    id: 4,
+    nama: "Group Package",
+    durasi: "½ hari",
+    harga: 65000,
+    satuan: "orang",
+    tag: null,
+    min_participants: 20,
+    max_participants: 100,
+    gambar: "https://images.unsplash.com/photo-1643215721864-cd4c354ac298?w=500&h=320&fit=crop&auto=format",
+    deskripsi: "Paket rombongan minimal 20 orang dengan guide dan makan siang.",
+    is_active: true,
+    created_by: 1,
+    created_at: "",
+    updated_at: ""
+  }
+];
+
 export default function TourPackages() {
   const navigate = useNavigate();
-  const [packages, setPackages] = useState<TourPackage[]>([]);
+  const [packages, setPackages] = useState<TourPackage[]>(FALLBACK_PACKAGES);
 
   useEffect(() => {
-    getTourPackages().then(res => {
-      const pkgs = [...res.data];
-      const hasEdukasi = pkgs.some(p => p.nama.toLowerCase().includes('kopi') || p.nama.toLowerCase().includes('susu') || (p.tag && p.tag.toLowerCase() === 'edukasi'));
-      if (!hasEdukasi) {
-        pkgs.push({
-          id: 999,
-          nama: 'Edu-Tour Kopi & Susu Kambing',
-          deskripsi: 'Wisata edukasi mengenal proses pengelolaan kopi lokal dan cara memerah susu kambing etawa.',
-          harga: 45000,
-          satuan: 'orang',
-          tag: 'Edukasi',
-          durasi: '±3 jam',
-          min_participants: 5,
-          max_participants: 30,
-          gambar: 'https://images.unsplash.com/photo-1511920170033-f8396924c348?w=500&h=320&fit=crop&auto=format',
-          includes: [
-            { id: 1, package_id: 999, item: 'Tour kebun kopi', urutan: 1 },
-            { id: 2, package_id: 999, item: 'Praktik perah susu', urutan: 2 },
-            { id: 3, package_id: 999, item: 'Tasting kopi & susu', urutan: 3 },
-            { id: 4, package_id: 999, item: 'Pemandu edukasi', urutan: 4 }
-          ],
-          is_active: true, created_by: 1, created_at: '', updated_at: ''
-        });
-      }
-      // Add tag Adventure to River Exploration
-      const fixedPackages = pkgs.map(p => {
-        if (p.nama === 'River Exploration' && !p.tag) {
-          return { ...p, tag: 'Adventure' };
+    getTourPackages()
+      .then(res => {
+        if (res?.data && res.data.length > 0) {
+          // Batasi maksimal 4 paket agar grid kanan-kiri (2x2) tetap sempurna dan tidak memanjang
+          setPackages(res.data.slice(0, 4));
         }
-        return p;
+      })
+      .catch(() => {
+        // Biarkan menggunakan data fallback jika API gagal / tidak aktif
       });
-
-      setPackages(fixedPackages);
-    });
   }, []);
 
   return (
@@ -51,72 +94,67 @@ export default function TourPackages() {
         <div className="grid lg:grid-cols-[380px_1fr] gap-14 items-center">
           {/* Left text */}
           <div>
-            <span className="text-xs font-bold uppercase tracking-widest text-green-600" style={{ fontFamily: "Inter, sans-serif" }}>Paket Wisata</span>
-            <h2 className="text-2xl sm:text-3xl font-bold text-[#0a1f0f] mt-2 mb-4 leading-tight" style={{ fontFamily: "Poppins, sans-serif" }}>
+            <span className="text-xs font-bold uppercase tracking-widest text-[#182cc1]" style={{ fontFamily: "Inter, sans-serif" }}>Paket Wisata</span>
+            <h2 className="text-2xl sm:text-3xl font-bold text-[#091540] mt-2 mb-4 leading-tight" style={{ fontFamily: "Poppins, sans-serif" }}>
               Paket Tubing Seru<br />untuk Semua
             </h2>
-            <p className="text-[#4b7a55] text-sm leading-relaxed mb-6" style={{ fontFamily: "Inter, sans-serif" }}>
+            <p className="text-[#3d518c] text-sm leading-relaxed mb-6" style={{ fontFamily: "Inter, sans-serif" }}>
               Pilih paket yang sesuai — dari petualangan solo hingga liburan keluarga besar. Semua dilengkapi peralatan keselamatan standar dan panduan profesional.
             </p>
             <div className="space-y-3 mb-8">
               {["Helm & pelampung keselamatan tersedia", "Pemandu berlisensi nasional", "Dokumentasi foto & video", "Area parkir luas & toilet bersih"].map(f => (
-                <div key={f} className="flex items-center gap-2.5 text-sm text-[#0a1f0f]" style={{ fontFamily: "Inter, sans-serif" }}>
-                  <CheckCircle size={14} className="text-green-500 flex-shrink-0" />
+                <div key={f} className="flex items-center gap-2.5 text-sm text-[#091540]" style={{ fontFamily: "Inter, sans-serif" }}>
+                  <CheckCircle size={14} className="text-[#182cc1] flex-shrink-0" />
                   {f}
                 </div>
               ))}
             </div>
             <button onClick={() => navigate('/booking/package')}
-              className="flex items-center gap-2 px-5 py-3 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-full transition shadow-md shadow-green-200"
+              className="flex items-center gap-2.5 px-6 py-3 bg-[#182cc1] hover:bg-[#1524a3] text-white font-semibold rounded-full transition shadow-md shadow-[#c5d0ff]"
               style={{ fontFamily: "Poppins, sans-serif" }}>
               <Ticket size={16} /> Pesan Sekarang
             </button>
           </div>
 
-          {/* Right cards — 2×2 grid showing all 4 packages */}
-          <div className="grid sm:grid-cols-2 gap-5">
+          {/* Right cards - 2x2 grid */}
+          <div className="grid sm:grid-cols-2 gap-4">
             {packages.map(p => (
-              <div key={p.id} className={`bg-white rounded-2xl overflow-hidden shadow-sm transition-all duration-300 cursor-pointer flex flex-col h-full group ${p.tag === "Terpopuler" ? "border-2 border-green-500 shadow-md shadow-green-100/50 hover:shadow-xl hover:border-green-500 scale-[1.01]" : "border border-[#bbf7d0] hover:shadow-lg hover:border-green-300"}`}
+              <div key={p.id} className="bg-white rounded-2xl overflow-hidden shadow-sm border border-[#c5d0ff] group hover:shadow-lg hover:border-[#abd2fa] transition-all cursor-pointer flex flex-col h-full"
                 onClick={() => navigate('/booking/package')}>
-                <div className="relative h-56 bg-gray-100 overflow-hidden">
+                <div className="relative h-40 bg-[#c5d0ff] overflow-hidden flex-shrink-0">
                   <img src={p.gambar} alt={p.nama} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
                   {p.tag && p.tag.toLowerCase() !== "promo" && (
-                    <span className={`absolute top-4 left-4 text-xs font-extrabold px-3 py-1 rounded-full shadow-md ${p.tag === "Terpopuler" ? "bg-amber-500 text-white" : "bg-[#16a34a] text-white"}`}>
+                    <span className="absolute top-2 left-2 text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#182cc1] text-white shadow">
                       {p.tag}
                     </span>
                   )}
-                  <div className="absolute bottom-4 left-4 pr-4">
-                    <span className="text-white font-black text-2xl drop-shadow-lg leading-tight" style={{ fontFamily: "Poppins, sans-serif" }}>{p.nama}</span>
+                  {p.tag && p.tag.toLowerCase() === "promo" && (
+                    <span className="absolute top-2 left-2 text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500 text-white shadow">
+                      {p.tag}
+                    </span>
+                  )}
+                  <div className="absolute bottom-2 left-3">
+                    <span className="text-white font-bold text-sm drop-shadow" style={{ fontFamily: "Poppins, sans-serif" }}>{p.nama}</span>
                   </div>
                 </div>
-                <div className="p-5 flex flex-col flex-1">
-                  <p className="text-gray-600 text-sm mb-4 leading-relaxed" style={{ fontFamily: "Inter, sans-serif" }}>{p.deskripsi}</p>
-
-                  <div className="flex flex-wrap gap-x-4 gap-y-2 mb-6 mt-1 border-t border-dashed border-[#bbf7d0]/60 pt-4">
-                    {p.includes?.slice(0, 3).map(inc => (
-                      <div key={inc.item} className="flex items-center gap-1.5 text-xs font-medium text-gray-500" style={{ fontFamily: "Inter, sans-serif" }}>
-                        <div className="w-1.5 h-1.5 rounded-full bg-green-500" />
-                        {inc.item}
-                      </div>
-                    ))}
+                <div className="p-4 flex flex-col flex-1 justify-between">
+                  <div>
+                    <p className="text-[#3d518c] text-xs mb-3 leading-relaxed" style={{ fontFamily: "Inter, sans-serif" }}>{p.deskripsi}</p>
                   </div>
-
-                  <div className="mt-auto">
-                    <div className="flex items-center justify-between mb-5">
+                  <div>
+                    <div className="flex items-center justify-between mb-3 pt-2">
                       <div>
-                        <div className="text-[#16a34a] font-black text-2xl sm:text-3xl leading-none">{`Rp ${Number(p.harga).toLocaleString('id-ID')}`}</div>
-                        <div className="text-gray-500 text-xs mt-2 font-medium">{p.satuan === 'orang' ? "per orang" : "per grup"} · {p.durasi}</div>
+                        <span className="text-[#182cc1] font-bold text-sm">{`Rp ${Number(p.harga).toLocaleString('id-ID')}`}</span>
+                        <span className="text-[#3d518c] text-[10px] ml-1">{p.satuan === 'orang' ? "/orang" : "/grup"} · {p.durasi}</span>
                       </div>
-                      <span className="text-xs font-bold text-green-700 bg-green-50 border border-green-200 px-3 py-1.5 rounded-full">
+                      <span className="text-[10px] text-[#3d518c] bg-[#eef2ff] border border-[#c5d0ff] px-2 py-0.5 rounded-full">
                         {p.min_participants === p.max_participants ? `Min. ${p.min_participants}` : `${p.min_participants}–${p.max_participants} org`}
                       </span>
                     </div>
-                    <button className="w-full py-3 bg-[#16a34a] hover:bg-[#15803d] text-white text-sm font-bold rounded-xl transition duration-300 flex items-center justify-center gap-2 group/btn active:scale-95 shadow-md shadow-green-200/50"
+                    <button className="w-full py-2.5 bg-[#182cc1] hover:bg-[#1524a3] text-white text-xs font-bold rounded-full transition flex items-center justify-center gap-1.5 shadow-xs"
                       style={{ fontFamily: "Poppins, sans-serif" }}>
-                      <Ticket size={16} className="group-hover/btn:rotate-12 transition-transform" /> 
-                      Pesan Paket Ini
-                      <span className="opacity-0 group-hover/btn:opacity-100 group-hover/btn:translate-x-1 transition-all duration-300">&rarr;</span>
+                      <Ticket size={12} /> Pesan Paket Ini
                     </button>
                   </div>
                 </div>
