@@ -1,101 +1,69 @@
 import { useEffect, useState } from "react";
-import { MapPin, Phone, Globe, ChevronDown, ChevronUp } from "lucide-react";
+import { MapPin, Phone, Mail, Clock, Globe } from "lucide-react";
 import { FaFacebook, FaInstagram, FaYoutube } from "react-icons/fa";
-import { getSettings, getVillageProfile } from "../../services/village.service";
-import type { Setting, VillageProfile } from "../../types";
+import { getSettings } from "../../services/village.service";
+import type { Setting } from "../../types";
 
 export default function KontakSection() {
-  const [openFaqIdx, setOpenFaqIdx] = useState<number | null>(0);
   const [settings, setSettings] = useState<Record<string, string>>({});
-  const [faqs, setFaqs] = useState<VillageProfile[]>([]);
 
   useEffect(() => {
-    getSettings('alamat_desa,wa_admin').then(res => {
+    getSettings('alamat_desa,wa_admin,email_desa,jam_pelayanan').then(res => {
       setSettings(Object.fromEntries(res.data.map((item: Setting) => [item.key, item.value])));
     });
-    getVillageProfile().then(res => setFaqs(res.data));
   }, []);
 
   const contactItems = [
-    { icon: MapPin, title: "Alamat", desc: settings.alamat_desa },
-    { icon: Phone, title: "WhatsApp", desc: settings.wa_admin },
-  ].filter(item => item.desc);
+    { icon: MapPin, title: "Alamat", desc: settings.alamat_desa || "Jl. Raya Getas No. 1, Kec. Singorojo, Kab. Kendal 51382" },
+    { icon: Phone, title: "Telepon", desc: settings.wa_admin || "(0294) 381-XXX" },
+    { icon: Mail, title: "Email", desc: settings.email_desa || "desagetas@kendalkab.go.id" },
+    { icon: Clock, title: "Jam Pelayanan", desc: settings.jam_pelayanan || "Senin–Jumat: 08.00–15.00 WIB" },
+  ];
 
   return (
-    <section id="kontak" className="py-20 px-4 sm:px-8 bg-white">
+    <section id="kontak" className="py-16 px-4 sm:px-8 bg-white">
       <div className="max-w-7xl mx-auto">
-        <div className="text-center mb-12">
-          <span className="text-xs font-bold uppercase tracking-widest text-[#16a34a] mb-2 block" style={{ fontFamily: "Inter, sans-serif" }}>
-            Hubungi Kami
-          </span>
-          <h2 className="text-3xl md:text-4xl font-bold text-[#0a1f0f]" style={{ fontFamily: "Poppins, sans-serif" }}>
-            Kontak & Pertanyaan Umum
-          </h2>
+        <div className="text-center mb-10">
+          <span className="text-xs font-bold uppercase tracking-widest text-[#182cc1]" style={{ fontFamily: "Inter, sans-serif" }}>Hubungi Kami</span>
+          <h2 className="text-2xl sm:text-3xl font-bold text-[#091540] mt-1" style={{ fontFamily: "Poppins, sans-serif" }}>Kontak & Lokasi</h2>
         </div>
-
-        <div className="grid lg:grid-cols-2 gap-10 items-start">
-          {/* Left: Info */}
-          <div className="space-y-3.5">
-            {contactItems.map((item, idx) => (
-              <div key={idx} className="flex gap-4 p-4.5 rounded-2xl bg-[#f0fdf4]/50 border border-[#bbf7d0]/40 items-center hover:border-green-400 hover:bg-[#f0fdf4]/70 transition-all duration-300">
-                <div className="w-10 h-10 rounded-full bg-[#dcfce7] text-[#16a34a] flex items-center justify-center flex-shrink-0">
-                  <item.icon size={18} />
+        <div className="grid lg:grid-cols-2 gap-8">
+          <div className="space-y-4">
+            {contactItems.map(c => (
+              <div key={c.title} className="flex items-start gap-4 p-4 rounded-2xl border border-[#c5d0ff] bg-[#eef2ff]">
+                <div className="w-10 h-10 rounded-full bg-[#e8edff] flex items-center justify-center flex-shrink-0">
+                  <c.icon size={18} className="text-[#182cc1]" />
                 </div>
                 <div>
-                  <h4 className="font-bold text-gray-400 text-[10px] uppercase tracking-wide mb-0.5" style={{ fontFamily: "Inter, sans-serif" }}>{item.title}</h4>
-                  <p className="text-[#0a1f0f] text-sm font-semibold whitespace-pre-line leading-snug">{item.desc}</p>
+                  <div className="text-[#3d518c] text-xs mb-0.5" style={{ fontFamily: "Inter, sans-serif" }}>{c.title}</div>
+                  <div className="text-[#091540] text-sm font-medium" style={{ fontFamily: "Inter, sans-serif" }}>{c.desc}</div>
                 </div>
               </div>
             ))}
-            
-            {/* Social Media */}
-            <div className="flex flex-col gap-2.5 p-4.5 rounded-2xl bg-[#f0fdf4]/50 border border-[#bbf7d0]/40 hover:border-green-400 transition-all duration-300">
-               <h4 className="font-bold text-gray-400 text-[10px] uppercase tracking-wide" style={{ fontFamily: "Inter, sans-serif" }}>Media Sosial Resmi</h4>
-               <div className="flex gap-3">
-                  <a aria-label="Facebook" className="w-8 h-8 rounded-full border border-[#bbf7d0] bg-white flex items-center justify-center text-[#16a34a] hover:bg-[#16a34a] hover:text-white transition-colors active:scale-95 shadow-sm">
-                   <FaFacebook size={14} />
-                 </a>
-                  <a aria-label="Instagram" className="w-8 h-8 rounded-full border border-[#bbf7d0] bg-white flex items-center justify-center text-[#16a34a] hover:bg-[#16a34a] hover:text-white transition-colors active:scale-95 shadow-sm">
-                   <FaInstagram size={14} />
-                 </a>
-                  <a aria-label="YouTube" className="w-8 h-8 rounded-full border border-[#bbf7d0] bg-white flex items-center justify-center text-[#16a34a] hover:bg-[#16a34a] hover:text-white transition-colors active:scale-95 shadow-sm">
-                   <FaYoutube size={14} />
-                 </a>
-                  <a aria-label="Website" className="w-8 h-8 rounded-full border border-[#bbf7d0] bg-white flex items-center justify-center text-[#16a34a] hover:bg-[#16a34a] hover:text-white transition-colors active:scale-95 shadow-sm">
-                   <Globe size={14} />
-                 </a>
-               </div>
+            <div className="p-4 rounded-2xl border border-[#c5d0ff] bg-[#eef2ff]">
+              <div className="text-[#3d518c] text-xs mb-3" style={{ fontFamily: "Inter, sans-serif" }}>Media Sosial</div>
+              <div className="flex gap-3">
+                {[
+                  { Icon: FaFacebook, aria: "Facebook" },
+                  { Icon: FaInstagram, aria: "Instagram" },
+                  { Icon: FaYoutube, aria: "YouTube" },
+                  { Icon: Globe, aria: "Website" }
+                ].map(({ Icon, aria }, i) => (
+                  <button key={i} aria-label={aria} className="w-9 h-9 rounded-full border border-[#c5d0ff] bg-white flex items-center justify-center text-[#3d518c] hover:border-[#182cc1] hover:text-[#182cc1] transition shadow-xs">
+                    <Icon size={15} />
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
-
-          {/* Right: FAQ Accordion */}
-          <div className="bg-green-50/20 border border-[#bbf7d0]/40 rounded-3xl p-6 sm:p-8 shadow-sm">
-            <h3 className="text-lg font-bold text-[#052e16] mb-4" style={{ fontFamily: "Poppins, sans-serif" }}>Pertanyaan yang Sering Diajukan</h3>
-            <div className="space-y-3">
-              {faqs.map((faq, idx) => {
-                const isOpen = openFaqIdx === idx;
-                return (
-                  <div key={idx} className="border-b border-[#bbf7d0]/30 pb-3 last:border-0 last:pb-0">
-                    <button
-                      onClick={() => setOpenFaqIdx(isOpen ? null : idx)}
-                      className="w-full flex items-center justify-between text-left py-2 gap-3"
-                    >
-                      <span className="text-[#052e16] font-bold text-xs sm:text-sm hover:text-[#16a34a] transition-colors" style={{ fontFamily: "Poppins, sans-serif" }}>{faq.judul}</span>
-                      {isOpen ? (
-                        <ChevronUp size={16} className="text-[#16a34a] flex-shrink-0" />
-                      ) : (
-                        <ChevronDown size={16} className="text-gray-400 flex-shrink-0" />
-                      )}
-                    </button>
-                    {isOpen && (
-                      <p className="text-[#4b7a55] text-xs leading-relaxed mt-2 animate-fadeIn" style={{ fontFamily: "Inter, sans-serif" }}>
-                        {faq.konten}
-                      </p>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
+          <div className="rounded-2xl overflow-hidden border border-[#c5d0ff] shadow-sm h-80 lg:h-auto">
+            <iframe
+              title="Peta Desa Getas"
+              src="https://maps.google.com/maps?q=Desa+Getas,+Kecamatan+Singorojo,+Kabupaten+Kendal,+Jawa+Tengah&t=&z=14&ie=UTF8&iwloc=&output=embed"
+              className="w-full h-full border-0"
+              allowFullScreen
+              loading="lazy"
+            />
           </div>
         </div>
       </div>

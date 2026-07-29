@@ -95,8 +95,8 @@ const BookingPackage: React.FC = () => {
 
   useEffect(() => {
     if (!currentPackage || !localDate) {
-      setSessions([]);
-      return;
+      const timer = setTimeout(() => setSessions([]), 0);
+      return () => clearTimeout(timer);
     }
 
     getBookingSessions({ package_id: Number(currentPackage.id), tanggal: localDate }).then(res => {
@@ -130,51 +130,48 @@ const BookingPackage: React.FC = () => {
 
   return (
     <BookingLayout currentStep={1}>
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
         
         {/* Left Column - Form/Selection */}
         <div className="lg:col-span-2 space-y-10">
           
           {/* Pilih Paket Section */}
           <section>
-            <div className="flex flex-col mb-8">
-              <div className="flex items-center gap-3 mb-3">
-                <div className="w-10 h-10 rounded-xl bg-green-100 text-green-600 flex items-center justify-center shadow-sm">
-                  <LayoutGrid size={20} strokeWidth={2.5} />
-                </div>
-                <h2 className="text-2xl font-bold text-[#0a1f0f]" style={{ fontFamily: "Poppins, sans-serif" }}>Pilih Paket Wisata</h2>
+            <div className="flex flex-col mb-7">
+              <div className="flex items-center gap-3 mb-4">
+                <h2 className="text-xl md:text-2xl font-extrabold text-[#1E293B]" style={{ fontFamily: "Poppins, sans-serif" }}>Pilih Paket</h2>
               </div>
               
               {/* Category Tabs */}
-              <div className="mt-2">
-                <div className="flex gap-3 overflow-x-auto pb-3 pt-1 scrollbar-hide">
+              <div>
+                <div className="flex gap-2.5 overflow-x-auto pb-2 scrollbar-hide">
                   {CATEGORIES.map(cat => (
                     <button
                       key={cat.id}
                       onClick={() => setActiveCategory(cat.id)}
-                      className={`flex-shrink-0 flex items-center gap-2 px-5 py-2.5 rounded-xl border transition-all duration-300 ${
+                      className={`flex-shrink-0 flex items-center gap-2 px-5 py-2.5 rounded-2xl border transition-all duration-300 ${
                         activeCategory === cat.id 
-                          ? 'border-[#16a34a] bg-[#16a34a] text-white shadow-md shadow-green-200/50 scale-[1.02]' 
-                          : 'border-gray-200 bg-white text-gray-600 hover:border-green-300 hover:bg-green-50 hover:text-green-700'
+                          ? 'border-[#182CC1] bg-[#182CC1] text-white shadow-md shadow-[#182CC1]/30 font-bold scale-[1.02]' 
+                          : 'border-gray-200/80 bg-white text-gray-600 hover:border-[#182CC1]/40 hover:bg-blue-50/50 hover:text-[#182CC1] font-semibold'
                       }`}
-                      style={{ fontFamily: "Inter, sans-serif" }}
+                      style={{ fontFamily: "Poppins, sans-serif" }}
                     >
-                      <span className={`${activeCategory === cat.id ? 'text-white' : 'text-green-600'}`}>
+                      <span className={`${activeCategory === cat.id ? 'text-white' : 'text-[#182CC1]'}`}>
                         {cat.icon}
                       </span>
-                      <span className="font-semibold text-sm tracking-wide">{cat.label}</span>
+                      <span className="text-xs sm:text-sm tracking-wide">{cat.label}</span>
                     </button>
                   ))}
                 </div>
-                <div className="mt-2">
-                  <p className="text-sm text-[#4b7a55] bg-[#f0fdf4] inline-flex px-4 py-2 rounded-lg border border-[#bbf7d0]" style={{ fontFamily: "Inter, sans-serif" }}>
+                <div className="mt-3">
+                  <p className="text-xs sm:text-sm text-[#182CC1] bg-[#EFF2FC] inline-flex px-4 py-2.5 rounded-xl border border-blue-200/80 font-medium" style={{ fontFamily: "Inter, sans-serif" }}>
                     {CATEGORIES.find(c => c.id === activeCategory)?.desc}
                   </p>
                 </div>
               </div>
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               {filteredPackages.length > 0 ? (
                 filteredPackages.map((pkg) => (
                   <PackageCard
@@ -185,75 +182,86 @@ const BookingPackage: React.FC = () => {
                   />
                 ))
               ) : (
-                <div className="col-span-1 md:col-span-2 py-10 flex flex-col items-center justify-center text-gray-500 border-2 border-dashed border-gray-200 rounded-xl bg-gray-50">
-                  <span className="text-4xl mb-3">🍃</span>
-                  <p className="font-medium text-gray-600">Belum ada paket untuk kategori ini.</p>
-                  <p className="text-sm mt-1">Silakan pilih kategori lainnya.</p>
+                <div className="col-span-1 md:col-span-2 py-12 flex flex-col items-center justify-center text-gray-500 border-2 border-dashed border-gray-200 rounded-3xl bg-white">
+                  <span className="text-4xl mb-3">🌊</span>
+                  <p className="font-bold text-[#1E293B]">Belum ada paket wisata untuk kategori ini.</p>
+                  <p className="text-xs mt-1 text-gray-400">Silakan pilih kategori petualangan atau edukasi lainnya.</p>
                 </div>
               )}
             </div>
           </section>
 
           {/* Jadwal & Peserta Section */}
-          <section>
-            <div className="flex items-center gap-3 mb-5 mt-4">
-              <div className="w-10 h-10 rounded-xl bg-green-100 flex items-center justify-center shadow-sm">
-                <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                </svg>
-              </div>
-              <h2 className="text-2xl font-bold text-[#0a1f0f]" style={{ fontFamily: "Poppins, sans-serif" }}>Jadwal & Peserta</h2>
+          <section className="pt-2">
+            <div className="flex items-center gap-3 mb-5">
+              <h2 className="text-xl md:text-2xl font-extrabold text-[#1E293B]" style={{ fontFamily: "Poppins, sans-serif" }}>Jadwal & Peserta</h2>
             </div>
             
-            <div className="bg-white rounded-xl border border-green-100 p-6 space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-1.5">
-                  <label className="block text-sm font-bold text-[#052e16]">Tanggal Kunjungan <span className="text-red-500">*</span></label>
+            <div className="bg-white rounded-3xl border border-blue-100/80 p-6 sm:p-8 space-y-6 shadow-xs">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <label className="block text-xs sm:text-sm font-extrabold text-[#1E293B]" style={{ fontFamily: "Poppins, sans-serif" }}>Tanggal Kunjungan <span className="text-red-500">*</span></label>
                   <input 
                     type="date" 
                     value={localDate}
                     onChange={(e) => setLocalDate(e.target.value)}
-                    className="w-full px-4 py-2.5 rounded-lg border border-green-200 focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition-shadow text-sm"
+                    className="w-full px-4 py-3.5 rounded-2xl border border-gray-200 focus:ring-2 focus:ring-[#182CC1] focus:border-[#182CC1] outline-none transition-all text-sm text-[#1E293B] font-semibold bg-[#F8FAFC]/50 hover:border-[#182CC1]/40"
+                    style={{ fontFamily: "Inter, sans-serif" }}
                   />
                 </div>
-                <div className="space-y-1.5">
-                  <label className="block text-sm font-bold text-[#052e16]">Sesi Waktu <span className="text-red-500">*</span></label>
+                <div className="space-y-2">
+                  <label className="block text-xs sm:text-sm font-extrabold text-[#1E293B]" style={{ fontFamily: "Poppins, sans-serif" }}>Sesi Waktu <span className="text-red-500">*</span></label>
                   <select
                     value={localSession}
                     onChange={(e) => setLocalSession(e.target.value)}
-                    className="w-full px-4 py-2.5 rounded-lg border border-green-200 focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition-shadow appearance-none bg-white text-sm"
+                    className="w-full px-4 py-3.5 rounded-2xl border border-gray-200 focus:ring-2 focus:ring-[#182CC1] focus:border-[#182CC1] outline-none transition-all appearance-none bg-white text-sm font-semibold text-[#1E293B] hover:border-[#182CC1]/40"
+                    style={{ fontFamily: "Inter, sans-serif" }}
                   >
-                    <option value="" disabled>{currentPackage && localDate ? 'Pilih sesi...' : 'Pilih paket dan tanggal terlebih dahulu'}</option>
-                    {sessions.map(session => (
-                      <option key={session.id} value={session.sesi}>
-                        {session.sesi} - tersisa {session.kuota - session.terisi} kuota
-                      </option>
-                    ))}
+                    <option value="" disabled>{currentPackage && localDate ? 'Pogi (07.00 - 09.00)' : 'Pagi (07.00 - 09.00)'}</option>
+                    {sessions.length > 0 ? (
+                      sessions.map(session => (
+                        <option key={session.id} value={session.sesi}>
+                          {session.sesi} (tersisa {session.kuota - session.terisi} kuota)
+                        </option>
+                      ))
+                    ) : (
+                      <>
+                        <option value="Pagi (07.00 - 09.00)">Pagi (07.00 - 09.00)</option>
+                        <option value="Siang (10.00 - 12.00)">Siang (10.00 - 12.00)</option>
+                        <option value="Sore (14.00 - 16.00)">Sore (14.00 - 16.00)</option>
+                      </>
+                    )}
                   </select>
                 </div>
               </div>
 
-              <div className="space-y-1.5">
-                <label className="block text-sm font-bold text-[#052e16]">
-                  Jumlah Peserta <span className="text-gray-400 font-normal text-xs">(min. {minParticipants}, maks. {maxParticipants})</span>
+              <div className="space-y-2.5 pt-2 border-t border-gray-100">
+                <label className="block text-xs sm:text-sm font-extrabold text-[#1E293B]" style={{ fontFamily: "Poppins, sans-serif" }}>
+                  Jumlah Peserta <span className="text-[#182CC1] font-semibold text-xs">(min. {minParticipants}, maks. {maxParticipants})</span>
                 </label>
-                <div className="flex items-center gap-4">
-                  <button 
-                    onClick={() => setLocalParticipants(Math.max(minParticipants, localParticipants - 1))}
-                    disabled={localParticipants <= minParticipants}
-                    className="w-10 h-10 rounded-full border-2 border-green-600 text-green-600 flex items-center justify-center hover:bg-green-50 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-                  >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" /></svg>
-                  </button>
-                  <span className="font-bold text-2xl w-8 text-center text-[#052e16]">{localParticipants}</span>
-                  <button 
-                    onClick={() => setLocalParticipants(Math.min(maxParticipants, localParticipants + 1))}
-                    disabled={localParticipants >= maxParticipants}
-                    className="w-10 h-10 rounded-full border-2 border-green-600 text-green-600 flex items-center justify-center hover:bg-green-50 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-                  >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
-                  </button>
-                  <span className="text-gray-500 text-sm">orang</span>
+                <div className="flex items-center justify-between sm:justify-start gap-6 pt-1">
+                  <div className="flex items-center gap-5">
+                    <button 
+                      onClick={() => setLocalParticipants(Math.max(minParticipants, localParticipants - 1))}
+                      disabled={localParticipants <= minParticipants}
+                      type="button"
+                      className="w-11 h-11 rounded-full border-2 border-[#182CC1] text-[#182CC1] flex items-center justify-center hover:bg-[#EFF2FC] active:scale-90 transition-all disabled:opacity-30 disabled:cursor-not-allowed shadow-xs font-black text-xl"
+                    >
+                      –
+                    </button>
+                    <div className="flex items-baseline gap-1.5 min-w-[70px] justify-center">
+                      <span className="font-black text-2xl sm:text-3xl text-[#1E293B]" style={{ fontFamily: "Poppins, sans-serif" }}>{localParticipants}</span>
+                      <span className="text-gray-400 font-medium text-sm" style={{ fontFamily: "Inter, sans-serif" }}>orang</span>
+                    </div>
+                    <button 
+                      onClick={() => setLocalParticipants(Math.min(maxParticipants, localParticipants + 1))}
+                      disabled={localParticipants >= maxParticipants}
+                      type="button"
+                      className="w-11 h-11 rounded-full border-2 border-[#182CC1] text-[#182CC1] flex items-center justify-center hover:bg-[#EFF2FC] active:scale-90 transition-all disabled:opacity-30 disabled:cursor-not-allowed shadow-xs font-black text-xl"
+                    >
+                      +
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -263,15 +271,15 @@ const BookingPackage: React.FC = () => {
 
         {/* Right Column - Summary */}
         <div className="lg:col-span-1">
-          <div className="sticky top-28">
+          <div className="sticky top-28 space-y-3">
             <BookingSummary 
               buttonText="Lanjut ke Data Pemesan" 
               onButtonClick={handleNext}
               buttonDisabled={!isFormValid}
             />
             {!isFormValid && (
-              <p className="text-xs text-center text-gray-500 mt-3">
-                Lengkapi pilihan paket & jadwal terlebih dahulu
+              <p className="text-xs text-center font-semibold text-gray-400 mt-2" style={{ fontFamily: "Inter, sans-serif" }}>
+                Pilih tanggal kunjungan terlebih dahulu
               </p>
             )}
           </div>
@@ -283,3 +291,4 @@ const BookingPackage: React.FC = () => {
 };
 
 export default BookingPackage;
+

@@ -1,56 +1,67 @@
+import { ExternalLink, Zap } from "lucide-react";
 import LogoGardu from "../../assets/Logo_Gardu_V2.png";
+
+const NAV = [
+  { label: "Beranda", href: "#hero" },
+  { label: "Paket", href: "#paket" },
+  { label: "UMKM", href: "#umkm" },
+  { label: "Budaya", href: "#budaya" },
+  { label: "Kontak", href: "#kontak" },
+];
 
 export default function Footer() {
   const scrollTo = (href: string) => {
     document.querySelector(href)?.scrollIntoView({ behavior: "smooth" });
   };
+
   return (
-    <footer className="bg-[#052e16] text-white pt-16 pb-8 px-4 sm:px-8 mt-auto border-t border-[#16a34a]/20">
-      <div className="max-w-7xl mx-auto grid sm:grid-cols-2 lg:grid-cols-4 gap-12 lg:gap-8">
-        <div className="lg:col-span-2 pr-8">
-          <div className="flex items-center gap-3 mb-4">
-            <img src={LogoGardu} alt="Logo Desa Getas" className="w-10 h-10 object-contain" />
-            <div className="flex flex-col">
-              <span className="font-bold text-xl tracking-wide leading-none" style={{ fontFamily: "Poppins, sans-serif" }}>
-                DESA<span className="text-[#16a34a]">GETAS</span>
-              </span>
-              <span className="text-white/60 text-[10px] mt-1 tracking-wider" style={{ fontFamily: "Inter, sans-serif" }}>Kec. Singorojo · Kendal</span>
+    <footer className="bg-[#091540] text-white px-4 sm:px-8 py-12 mt-auto">
+      <div className="max-w-7xl mx-auto">
+        <div className="grid md:grid-cols-4 gap-8 mb-10">
+          <div className="md:col-span-2">
+            <div className="flex items-center gap-3 mb-4">
+              <img src={LogoGardu} alt="Logo Desa Getas" className="h-12 w-auto object-contain" />
+              <div>
+                <div className="font-black text-white text-lg leading-tight" style={{ fontFamily: "Poppins, sans-serif" }}>
+                  DESA WISATA <span className="text-[#7692ff]">GETAS</span>
+                </div>
+                <div className="text-white/50 text-xs mt-0.5" style={{ fontFamily: "Inter, sans-serif" }}>Kec. Singorojo · Kendal</div>
+              </div>
+            </div>
+            <p className="text-white/50 text-sm leading-relaxed max-w-xs" style={{ fontFamily: "Inter, sans-serif" }}>
+              Mewujudkan desa yang maju, transparan, dan berdaya saing berbasis teknologi digital dan kearifan lokal.
+            </p>
+          </div>
+          <div>
+            <h4 className="font-semibold mb-4 text-sm" style={{ fontFamily: "Poppins, sans-serif" }}>Navigasi</h4>
+            <div className="space-y-2">
+              {NAV.map(l => (
+                <button key={l.label} onClick={() => scrollTo(l.href)}
+                  className="block text-white/50 hover:text-white text-sm transition text-left" style={{ fontFamily: "Inter, sans-serif" }}>
+                  {l.label}
+                </button>
+              ))}
             </div>
           </div>
-          <p className="text-white/70 text-sm leading-relaxed max-w-sm" style={{ fontFamily: "Inter, sans-serif" }}>
-            Mewujudkan desa yang maju, transparan, dan berdaya saing berbasis teknologi digital dan kearifan lokal.
+          <div>
+            <h4 className="font-semibold mb-4 text-sm" style={{ fontFamily: "Poppins, sans-serif" }}>Tautan</h4>
+            <div className="space-y-2">
+              {["Pemerintah Kab. Kendal", "Pemprov Jawa Tengah", "Portal LAPOR!", "PPID Desa"].map(l => (
+                <div key={l} className="flex items-center gap-1.5 text-white/50 hover:text-white text-sm cursor-pointer transition" style={{ fontFamily: "Inter, sans-serif" }}>
+                  <ExternalLink size={11} />{l}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+        <div className="border-t border-white/10 pt-6 flex flex-col sm:flex-row items-center justify-between gap-3">
+          <p className="text-white/30 text-xs" style={{ fontFamily: "Inter, sans-serif" }}>
+            © 2025 Pemerintah Desa Getas, Kab. Kendal. Seluruh hak dilindungi.
           </p>
+          <div className="flex items-center gap-2 text-white/30 text-xs" style={{ fontFamily: "Inter, sans-serif" }}>
+            <Zap size={11} className="text-[#7692ff]" />Desa Digital Kendal 2025
+          </div>
         </div>
-        
-        <div>
-          <h4 className="font-bold mb-5 text-sm" style={{ fontFamily: "Poppins, sans-serif" }}>Navigasi</h4>
-          <ul className="text-white/70 text-sm space-y-3" style={{ fontFamily: "Inter, sans-serif" }}>
-            <li><button onClick={() => scrollTo("#hero")} className="hover:text-white transition">Beranda</button></li>
-            <li><button onClick={() => scrollTo("#paket")} className="hover:text-white transition">Paket</button></li>
-            <li><button onClick={() => scrollTo("#umkm")} className="hover:text-white transition">UMKM</button></li>
-            <li><button onClick={() => scrollTo("#budaya")} className="hover:text-white transition">Budaya</button></li>
-            <li><button onClick={() => scrollTo("#kontak")} className="hover:text-white transition">Kontak</button></li>
-          </ul>
-        </div>
-        
-        <div>
-          <h4 className="font-bold mb-5 text-sm" style={{ fontFamily: "Poppins, sans-serif" }}>Tautan</h4>
-          <ul className="text-white/70 text-sm space-y-3" style={{ fontFamily: "Inter, sans-serif" }}>
-            <li><a href="#" className="hover:text-white transition flex items-center gap-2">↗ Pemerintah Kab. Kendal</a></li>
-            <li><a href="#" className="hover:text-white transition flex items-center gap-2">↗ Pemprov Jawa Tengah</a></li>
-            <li><a href="#" className="hover:text-white transition flex items-center gap-2">↗ Portal LAPOR!</a></li>
-            <li><a href="#" className="hover:text-white transition flex items-center gap-2">↗ PPID Desa</a></li>
-          </ul>
-        </div>
-      </div>
-      
-      <div className="max-w-7xl mx-auto mt-16 pt-6 border-t border-white/10 flex flex-col md:flex-row items-center justify-between gap-4">
-        <p className="text-white/50 text-xs" style={{ fontFamily: "Inter, sans-serif" }}>
-          &copy; 2025 Pemerintah Desa Getas, Kab. Kendal. Seluruh hak dilindungi.
-        </p>
-        <p className="text-white/50 text-xs flex items-center gap-2" style={{ fontFamily: "Inter, sans-serif" }}>
-          ✧ Desa Digital Kendal 2025
-        </p>
       </div>
     </footer>
   );
