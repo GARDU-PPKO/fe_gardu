@@ -7,11 +7,11 @@ const scrollTo = (href: string) => {
 };
 
 const NAV = [
-  { label: "Beranda",  href: "#hero" },
-  { label: "Paket",    href: "#paket" },
-  { label: "UMKM",     href: "#umkm" },
-  { label: "Budaya",   href: "#budaya" },
-  { label: "Kontak",   href: "#kontak" },
+  { label: "Beranda", href: "#hero" },
+  { label: "Paket", href: "#paket" },
+  { label: "UMKM", href: "#umkm" },
+  { label: "Budaya", href: "#budaya" },
+  { label: "Kontak", href: "#kontak" },
 ];
 
 export default function Navbar({ onOpenBooking }: { onOpenBooking: () => void }) {
@@ -29,29 +29,29 @@ export default function Navbar({ onOpenBooking }: { onOpenBooking: () => void })
 
         {/* ── Left: Logo + AR Explore ── */}
         <div className="flex items-center gap-3 flex-shrink-0">
-          <button onClick={() => scrollTo("#hero")} className="flex items-center gap-2 flex-shrink-0 text-left">
+          <button onClick={() => scrollTo("#hero")} className="flex items-center gap-2 flex-shrink-0">
             <img src={LogoGardu} alt="Logo Desa Getas" className="h-11 w-auto object-contain" />
             <div className="hidden sm:block">
               <div className="font-black text-[#091540] text-sm leading-tight" style={{ fontFamily: "Poppins, sans-serif" }}>
                 DESA WISATA <span className="text-[#182cc1]">GETAS</span>
               </div>
-              <div className="text-[#3d518c] text-[9px] leading-tight tracking-wide">Kec. Singorojo · Kendal</div>
+              <div className="text-[#3d518c] text-[9px] leading-tight tracking-wide text-left">Kec. Singorojo · Kendal</div>
             </div>
           </button>
 
-          {/* AR Explore — prominent left button (capsule style with circle icon bg) */}
+          {/* AR Explore — prominent left button */}
           <button onClick={() => scrollTo("#ar")}
-            className="hidden sm:flex items-center gap-2 pl-2 pr-4 py-1.5 rounded-full border border-[#c5d0ff] bg-white hover:bg-[#e8edff] hover:border-[#182cc1]/50 transition-all group shadow-sm"
+            className="hidden sm:flex items-center gap-1.5 pl-3 pr-3.5 py-1.5 rounded-full border border-[#c5d0ff] bg-white hover:bg-[#e8edff] hover:border-[#182cc1]/50 transition-all group shadow-sm"
             style={{ fontFamily: "Inter, sans-serif" }}>
-            <div className="w-6 h-6 rounded-full bg-gradient-to-br from-[#182cc1] to-[#7692ff] flex items-center justify-center flex-shrink-0 shadow-xs">
-              <Camera size={13} className="text-white transition-transform group-hover:scale-110" />
+            <div className="w-5 h-5 rounded-full bg-gradient-to-br from-[#182cc1] to-[#7692ff] flex items-center justify-center flex-shrink-0">
+              <Camera size={11} className="text-white" />
             </div>
             <span className="text-xs font-bold text-[#182cc1]">AR Explore</span>
             <div className="w-1.5 h-1.5 rounded-full bg-[#7692ff] animate-pulse" />
           </button>
         </div>
 
-        {/* ── Centre: Nav links (Wisata removed) ── */}
+        {/* ── Centre: Nav links ── */}
         <div className="hidden md:flex items-center gap-0.5 flex-1 justify-center">
           {NAV.map(l => (
             <button key={l.label} onClick={() => scrollTo(l.href)}
@@ -62,10 +62,10 @@ export default function Navbar({ onOpenBooking }: { onOpenBooking: () => void })
           ))}
         </div>
 
-        {/* ── Right: Pesan Sekarang (capsule) ── */}
+        {/* ── Right: Pesan Sekarang ── */}
         <div className="flex items-center gap-2 flex-shrink-0">
           <button onClick={onOpenBooking}
-            className="hidden sm:flex items-center gap-1.5 px-5 py-2 bg-[#182cc1] hover:bg-[#1524a3] text-white text-sm font-bold rounded-full transition shadow-md shadow-[#c5d0ff]/60"
+            className="hidden sm:flex items-center gap-1.5 px-4 py-2 bg-[#182cc1] hover:bg-[#1524a3] text-white text-sm font-bold rounded-full transition shadow-md shadow-[#c5d0ff]/60"
             style={{ fontFamily: "Poppins, sans-serif" }}>
             <Ticket size={14} />
             Pesan Sekarang

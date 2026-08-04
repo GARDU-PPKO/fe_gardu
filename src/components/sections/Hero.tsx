@@ -15,12 +15,12 @@ const ICON_MAP: Record<string, typeof Users> = {
 };
 
 const DEFAULT_STATS = [
-  { label: "Wisatawan / Tahun", value: "8.500+",   icon: Mountain   },
-  { label: "UMKM Aktif",        value: "62 unit",  icon: Briefcase  },
-  { label: "Total Penduduk",    value: "4.287",    icon: Users      },
-  { label: "Luas Wilayah",      value: "12,4 km²", icon: TreePine   },
-  { label: "Jumlah Dusun",      value: "10 Dusun", icon: Building2  },
-  { label: "Kode Pos",          value: "51382",    icon: Hash       },
+  { label: "Wisatawan / Tahun", value: "8.500+", icon: Mountain },
+  { label: "UMKM Aktif", value: "62 unit", icon: Briefcase },
+  { label: "Total Penduduk", value: "4.287", icon: Users },
+  { label: "Luas Wilayah", value: "12,4 km²", icon: TreePine },
+  { label: "Jumlah Dusun", value: "10 Dusun", icon: Building2 },
+  { label: "Kode Pos", value: "51382", icon: Hash },
 ];
 
 export default function Hero({ onSelectDusun }: { onSelectDusun: (d: Dusun) => void }) {
@@ -46,8 +46,8 @@ export default function Hero({ onSelectDusun }: { onSelectDusun: (d: Dusun) => v
   }, []);
 
   const villageName = settings.nama_desa ?? "DESA WISATA GETAS";
-  const displayTitle = villageName.toUpperCase().includes("GETAS") 
-    ? "DESA WISATA GETAS" 
+  const displayTitle = villageName.toUpperCase().includes("GETAS")
+    ? "DESA WISATA GETAS"
     : villageName.toUpperCase();
 
   const statItems = stats.length >= 6 ? stats.map(s => {
@@ -89,13 +89,13 @@ export default function Hero({ onSelectDusun }: { onSelectDusun: (d: Dusun) => v
             </h1>
             <div className="flex flex-wrap items-center gap-3">
               <button onClick={() => scrollTo("#paket")}
-                className="flex items-center gap-2.5 px-6 py-3 bg-white text-[#091540] text-sm font-bold rounded-full hover:bg-[#e8edff] transition shadow-lg"
+                className="flex items-center gap-2 px-5 py-2.5 bg-white text-[#091540] text-sm font-bold rounded-full hover:bg-[#e8edff] transition shadow-lg"
                 style={{ fontFamily: "Poppins, sans-serif" }}>
                 <Waves size={16} className="text-[#182cc1]" />
                 Jelajahi Wisata Tubing
               </button>
               <button onClick={() => scrollTo("#kontak")}
-                className="flex items-center gap-2 px-6 py-3 bg-white/15 backdrop-blur-sm border border-white/30 text-white text-sm font-semibold rounded-full hover:bg-white/25 transition"
+                className="flex items-center gap-2 px-5 py-2.5 bg-white/15 backdrop-blur-sm border border-white/30 text-white text-sm font-semibold rounded-full hover:bg-white/25 transition"
                 style={{ fontFamily: "Poppins, sans-serif" }}>
                 Layanan Online
               </button>

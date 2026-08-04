@@ -163,6 +163,7 @@ export default function DusunSlider({ onSelect }: { onSelect: (d: Dusun) => void
   const [canPrev, setCanPrev] = useState(false);
   const [canNext, setCanNext] = useState(true);
   const [activeIdx, setActiveIdx] = useState(0);
+  const [hoveredId, setHoveredId] = useState<number | null>(null);
 
   useEffect(() => {
     getDusun()
@@ -171,30 +172,20 @@ export default function DusunSlider({ onSelect }: { onSelect: (d: Dusun) => void
           setDusunList(res.data);
         }
       })
-      .catch(() => {
-        // Gunakan data fallback
-      });
+      .catch(() => {});
   }, []);
 
   const CARD_W = 252;
-  const STEP = CARD_W * 3;
-  const visibleCards = 5;
-  const TOTAL_SLIDES = Math.max(
-    1,
-    Math.ceil((dusunList.length - visibleCards) / 3) + 1
-  );
+  const GAP = 12;
+  const STEP = (CARD_W + GAP) * 3;
+  const TOTAL_SLIDES = 2;
 
   const updateState = () => {
     const el = trackRef.current;
     if (!el) return;
     setCanPrev(el.scrollLeft > 8);
     setCanNext(el.scrollLeft < el.scrollWidth - el.clientWidth - 8);
-    setActiveIdx(
-      Math.min(
-        Math.round(el.scrollLeft / STEP),
-        TOTAL_SLIDES - 1
-      )
-    );
+    setActiveIdx(Math.min(Math.round(el.scrollLeft / STEP), TOTAL_SLIDES - 1));
   };
 
   const slide = (dir: "prev" | "next") => {
@@ -202,26 +193,11 @@ export default function DusunSlider({ onSelect }: { onSelect: (d: Dusun) => void
   };
 
   const goTo = (idx: number) => {
-    trackRef.current?.scrollTo({
-      left: idx * STEP,
-      behavior: "smooth"
-    });
+    trackRef.current?.scrollTo({ left: idx * STEP, behavior: "smooth" });
   };
 
   return (
     <div id="wisata" className="mt-7">
-      <style>{`
-        .dusun-track::-webkit-scrollbar { display: none; }
-        .dusun-card { transition: transform 0.35s cubic-bezier(.22,1,.36,1), box-shadow 0.35s ease, border-color 0.25s ease; }
-        .dusun-card:hover { transform: translateY(-8px) scale(1.03); }
-        .dusun-card .card-img { transition: height 0.35s cubic-bezier(.22,1,.36,1); }
-        .dusun-card:hover .card-img { height: 11rem; }
-        .dusun-card .reveal { max-height: 0; overflow: hidden; transition: max-height 0.35s cubic-bezier(.22,1,.36,1), opacity 0.3s ease; opacity: 0; }
-        .dusun-card:hover .reveal { max-height: 120px; opacity: 1; }
-        .dusun-card .tag-row { transition: opacity 0.2s ease; opacity: 0; }
-        .dusun-card:hover .tag-row { opacity: 1; }
-      `}</style>
-
       {/* header */}
       <div className="flex items-center justify-between mb-4">
         <div>
@@ -242,77 +218,99 @@ export default function DusunSlider({ onSelect }: { onSelect: (d: Dusun) => void
 
       {/* track */}
       <div ref={trackRef} onScroll={updateState}
-        className="dusun-track flex gap-3 overflow-x-auto pb-4"
-        style={{ scrollSnapType: "x mandatory", scrollbarWidth: "none" }}>
+        className="flex gap-3 overflow-x-auto pb-4"
+        style={{ scrollSnapType: "x mandatory", scrollbarWidth: "none", msOverflowStyle: "none" }}>
 
-        {dusunList.map((d) => (
-          <div key={d.id}
-            className="dusun-card flex-shrink-0 w-60 rounded-2xl overflow-hidden border border-[#c5d0ff] bg-white shadow-md hover:shadow-2xl hover:border-[#182cc1]/50 cursor-pointer"
-            style={{ scrollSnapAlign: "start" }}
-            onClick={() => onSelect(d)}>
+        {dusunList.map((d) => {
+          const isHovered = hoveredId === d.id;
+          return (
+            <div key={d.id}
+              className="flex-shrink-0 w-60 rounded-2xl overflow-hidden bg-white cursor-pointer"
+              style={{
+                scrollSnapAlign: "start",
+                border: `1px solid ${isHovered ? "rgba(24,44,193,0.5)" : "#c5d0ff"}`,
+                boxShadow: isHovered ? "0 20px 40px rgba(24,44,193,0.12)" : "0 1px 8px rgba(0,0,0,0.08)",
+                transform: isHovered ? "translateY(-6px) scale(1.02)" : "translateY(0) scale(1)",
+                transition: "transform 0.3s cubic-bezier(.22,1,.36,1), box-shadow 0.3s ease, border-color 0.25s ease",
+              }}
+              onMouseEnter={() => setHoveredId(d.id)}
+              onMouseLeave={() => setHoveredId(null)}
+              onClick={() => onSelect(d)}>
 
-            {/* image — grows on hover via CSS */}
-            <div className="card-img relative h-32 overflow-hidden bg-[#e8edff]">
-              <img src={d.thumbnail} alt={d.nama}
-                className="w-full h-full object-cover"
-                style={{ transition: "transform 0.5s ease" }}
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-[#091540]/70 via-[#091540]/10 to-transparent" />
+              {/* image */}
+              <div className="relative overflow-hidden bg-[#e8edff]"
+                style={{
+                  height: isHovered ? "11rem" : "8rem",
+                  transition: "height 0.35s cubic-bezier(.22,1,.36,1)",
+                }}>
+                <img src={d.thumbnail} alt={d.nama} className="w-full h-full object-cover" />
+                <div className="absolute inset-0 bg-gradient-to-t from-[#091540]/70 via-[#091540]/10 to-transparent" />
 
-              {/* RW badge */}
-              <div className="absolute top-2.5 left-2.5 px-2 py-0.5 rounded-full bg-white/90 backdrop-blur-sm text-[#182cc1] text-[10px] font-bold shadow">
-                {d.rw}
-              </div>
+                {/* RW badge */}
+                <div className="absolute top-2.5 left-2.5 px-2 py-0.5 rounded-full bg-white/90 backdrop-blur-sm text-[#182cc1] text-[10px] font-bold shadow">
+                  {d.rw}
+                </div>
 
-              {/* "Lihat Detail" pill — appears on hover */}
-              <div className="tag-row absolute top-2.5 right-2.5 px-2 py-0.5 rounded-full bg-[#182cc1] text-white text-[10px] font-bold shadow flex items-center gap-1">
-                <Eye size={9} /> Detail
-              </div>
-
-              {/* name */}
-              <div className="absolute bottom-2.5 left-3 right-3 flex items-end justify-between">
-                <span className="text-white font-black text-lg leading-none drop-shadow" style={{ fontFamily: "Poppins, sans-serif" }}>
-                  {d.nama}
-                </span>
-              </div>
-            </div>
-
-            {/* body */}
-            <div className="p-3.5">
-              {/* always-visible stats row */}
-              <div className="flex items-center gap-3 mb-2">
-                {[
-                  { icon: Users, val: (d.jumlah_penduduk || "400") + " jiwa" },
-                  { icon: Home, val: (d.jumlah_rt || "3") + " RT" },
-                ].map(s => (
-                  <div key={s.val} className="flex items-center gap-1 text-[10px] text-[#3d518c]" style={{ fontFamily: "Inter, sans-serif" }}>
-                    <s.icon size={10} className="text-[#182cc1]" /> {s.val}
+                {/* Detail pill — only on hover */}
+                {isHovered && (
+                  <div className="absolute top-2.5 right-2.5 px-2 py-0.5 rounded-full bg-[#182cc1] text-white text-[10px] font-bold shadow flex items-center gap-1">
+                    <Eye size={9} /> Detail
                   </div>
-                ))}
-                <div className="flex items-center gap-1 text-[10px] text-[#3d518c] ml-auto">
-                  <Leaf size={10} className="text-[#182cc1]" /> {d.luas_wilayah || "1,2 km²"}
+                )}
+
+                {/* name */}
+                <div className="absolute bottom-2.5 left-3 right-3">
+                  <span className="text-white font-black text-lg leading-none drop-shadow" style={{ fontFamily: "Poppins, sans-serif" }}>
+                    {d.nama}
+                  </span>
                 </div>
               </div>
 
-              <p className="text-[#3d518c] text-xs leading-relaxed line-clamp-2 mb-1" style={{ fontFamily: "Inter, sans-serif" }}>{d.deskripsi}</p>
-
-              {/* reveal section — slides in on hover */}
-              <div className="reveal">
-                <div className="pt-2 space-y-1">
-                  {d.keunggulan?.slice(0, 2).map(k => (
-                    <div key={k.keunggulan} className="flex items-center gap-1.5 text-[11px] text-[#1d2e80]" style={{ fontFamily: "Inter, sans-serif" }}>
-                      <CheckCircle size={10} className="text-[#182cc1] flex-shrink-0" /> {k.keunggulan}
+              {/* body */}
+              <div className="p-3.5">
+                {/* stats — selalu tampil */}
+                <div className="flex items-center gap-3 mb-2">
+                  {[
+                    { icon: Users, val: (d.jumlah_penduduk || "400") + " jiwa" },
+                    { icon: Home,  val: (d.jumlah_rt    || "3")   + " RT"   },
+                  ].map(s => (
+                    <div key={s.val} className="flex items-center gap-1 text-[10px] text-[#3d518c]" style={{ fontFamily: "Inter, sans-serif" }}>
+                      <s.icon size={10} className="text-[#182cc1]" /> {s.val}
                     </div>
                   ))}
+                  <div className="flex items-center gap-1 text-[10px] text-[#3d518c] ml-auto">
+                    <Leaf size={10} className="text-[#182cc1]" /> {d.luas_wilayah || "1,2 km²"}
+                  </div>
                 </div>
-                <button className="mt-2.5 w-full py-2 bg-[#182cc1] hover:bg-[#1524a3] text-white text-[11px] font-bold rounded-xl transition flex items-center justify-center gap-1.5"
-                  style={{ fontFamily: "Poppins, sans-serif" }}>
-                  <ArrowRight size={11} /> Lihat Selengkapnya
-                </button>
+
+                {/* deskripsi — selalu tampil */}
+                <p className="text-[#3d518c] text-xs leading-relaxed line-clamp-2 mb-1" style={{ fontFamily: "Inter, sans-serif" }}>
+                  {d.deskripsi}
+                </p>
+
+                {/* keunggulan + tombol — hanya saat hover */}
+                <div style={{
+                  maxHeight: isHovered ? "120px" : "0px",
+                  opacity: isHovered ? 1 : 0,
+                  overflow: "hidden",
+                  transition: "max-height 0.35s cubic-bezier(.22,1,.36,1), opacity 0.3s ease",
+                }}>
+                  <div className="pt-2 space-y-1">
+                    {d.keunggulan?.slice(0, 2).map(k => (
+                      <div key={k.keunggulan} className="flex items-center gap-1.5 text-[11px] text-[#1d2e80]" style={{ fontFamily: "Inter, sans-serif" }}>
+                        <CheckCircle size={10} className="text-[#182cc1] flex-shrink-0" /> {k.keunggulan}
+                      </div>
+                    ))}
+                  </div>
+                  <button className="mt-2.5 w-full py-2 bg-[#182cc1] hover:bg-[#1524a3] text-white text-[11px] font-bold rounded-xl transition flex items-center justify-center gap-1.5"
+                    style={{ fontFamily: "Poppins, sans-serif" }}>
+                    <ArrowRight size={11} /> Lihat Selengkapnya
+                  </button>
+                </div>
               </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       {/* dots */}
