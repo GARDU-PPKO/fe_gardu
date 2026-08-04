@@ -6,8 +6,7 @@ import BookingSummary from '../../components/booking/BookingSummary';
 import { getSettings } from '../../services/village.service';
 import { createBooking } from '../../services/booking.service';
 import type { Setting } from '../../types';
-import { CheckCircle2, Calendar, Users, Sparkles, ShieldCheck } from "lucide-react";
-import { FaWhatsapp } from "react-icons/fa";
+import { CheckCircle, Ticket, Waves, MessageSquare } from "lucide-react";
 
 const BookingPayment: React.FC = () => {
   const navigate = useNavigate();
@@ -19,29 +18,35 @@ const BookingPayment: React.FC = () => {
 
   useEffect(() => {
     getSettings('wa_admin').then(res => {
-      const wa = res.data.find((item: Setting) => item.key === 'wa_admin')?.value;
+      const wa = res.data?.find((item: Setting) => item.key === 'wa_admin')?.value;
       if (wa) setWaAdmin(wa);
-    });
+    }).catch(() => {});
   }, []);
 
-  // Calculate Total
-  const price = bookingData.selectedPackage?.price || 0;
+  const { selectedPackage, date, session, userDetails } = bookingData;
+  const price = selectedPackage?.price || 0;
   const participants = bookingData.participants || 1;
   const totalPrice = price * participants;
+
+  useEffect(() => {
+    if (!selectedPackage && !isSubmitted) {
+      navigate('/booking/package');
+    }
+  }, [selectedPackage, isSubmitted, navigate]);
 
   const handleSubmit = async () => {
     setIsSubmitting(true);
     try {
-      if (bookingData.selectedPackage) {
+      if (selectedPackage) {
         await createBooking({
-          package_id: bookingData.selectedPackage.id,
-          customer_name: bookingData.userDetails.fullName || 'Tamu',
-          phone: bookingData.userDetails.whatsapp || '',
-          email: bookingData.userDetails.email,
-          date: bookingData.date || new Date().toISOString().split('T')[0],
-          session_time: bookingData.session || 'Pagi (07.00 - 09.00)',
+          package_id: selectedPackage.id,
+          customer_name: userDetails.fullName || 'Tamu',
+          phone: userDetails.whatsapp || '',
+          email: userDetails.email,
+          date: date || new Date().toISOString().split('T')[0],
+          session_time: session || 'Pagi (07.00 - 09.00)',
           participants: participants,
-          notes: bookingData.userDetails.notes
+          notes: userDetails.notes
         });
       }
       setIsSubmitted(true);
@@ -54,21 +59,7 @@ const BookingPayment: React.FC = () => {
   };
 
   const handleWhatsAppRedirect = () => {
-    const message = `Halo Admin Wisata Desa Getas,
-Saya telah melakukan pemesanan paket wisata dengan rincian berikut:
-
-📌 *Paket Wisata:* ${bookingData.selectedPackage?.name}
-📅 *Tanggal Kunjungan:* ${bookingData.date}
-⏰ *Sesi:* ${bookingData.session}
-👥 *Jumlah Peserta:* ${participants} orang
-💰 *Total Estimasi Pembayaran:* Rp ${totalPrice.toLocaleString('id-ID')}
-
-👤 *Data Pemesan:*
-- Nama: ${bookingData.userDetails.fullName}
-- WhatsApp: ${bookingData.userDetails.whatsapp}
-${bookingData.userDetails.email ? `- Email: ${bookingData.userDetails.email}\n` : ''}${bookingData.userDetails.notes ? `📝 *Catatan Tambahan:*\n${bookingData.userDetails.notes}\n` : ''}
-
-Mohon konfirmasi ketersediaan dan instruksi selanjutnya. Terima kasih!`;
+    const message = `Halo Admin Wisata Desa Getas,\nSaya telah melakukan pemesanan paket wisata dengan rincian berikut:\n\n📌 *Paket Wisata:* ${selectedPackage?.name}\n📅 *Tanggal Kunjungan:* ${date}\n⏰ *Sesi:* ${session}\n👥 *Jumlah Peserta:* ${participants} orang\n💰 *Total Estimasi Pembayaran:* Rp ${totalPrice.toLocaleString('id-ID')}\n\n👤 *Data Pemesan:*\n- Nama: ${userDetails.fullName}\n- WhatsApp: ${userDetails.whatsapp}\n${userDetails.email ? `- Email: ${userDetails.email}\n` : ''}${userDetails.notes ? `📝 *Catatan Tambahan:*\n${userDetails.notes}\n` : ''}\nMohon konfirmasi ketersediaan dan instruksi selanjutnya. Terima kasih!`;
 
     const cleanWa = waAdmin ? waAdmin.replace(/[^0-9]/g, '') : '6281234567890';
     const finalWa = cleanWa.startsWith('0') ? '62' + cleanWa.slice(1) : cleanWa;
@@ -76,232 +67,192 @@ Mohon konfirmasi ketersediaan dan instruksi selanjutnya. Terima kasih!`;
     window.open(whatsappUrl, '_blank');
   };
 
-  // SUCCESS VIEW
+  const formattedDate = date
+    ? new Date(date).toLocaleDateString("id-ID", { weekday: "long", day: "numeric", month: "long", year: "numeric" })
+    : "—";
+
+  const shortDate = date
+    ? new Date(date).toLocaleDateString("id-ID", { weekday: "short", day: "numeric", month: "short", year: "numeric" })
+    : "—";
+
+  const includes = selectedPackage?.includes && selectedPackage.includes.length > 0
+    ? selectedPackage.includes
+    : ['Safety equipment', 'Multiple guide', 'Makan siang', 'Area gathering'];
+
+  // ══ STEP 4: Sukses ══
   if (isSubmitted) {
     return (
-      <BookingLayout currentStep={3}>
-        <div className="max-w-2xl mx-auto py-8">
-          <div className="bg-white rounded-[2.5rem] border border-blue-100/80 p-8 sm:p-12 text-center shadow-xl relative overflow-hidden">
-            <div className="absolute -top-12 -right-12 w-40 h-40 bg-blue-50 rounded-full opacity-60 pointer-events-none" />
-            <div className="absolute -bottom-12 -left-12 w-40 h-40 bg-blue-50 rounded-full opacity-60 pointer-events-none" />
-
-            <div className="w-20 h-20 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-md shadow-green-500/20 animate-bounce">
-              <CheckCircle2 size={44} strokeWidth={2.5} />
-            </div>
-
-            <span className="text-xs font-extrabold uppercase tracking-widest text-[#182CC1] mb-2 inline-block">
-              RESERVASI DITERIMA
-            </span>
-            <h2 className="text-2xl sm:text-3xl font-black text-[#1E293B] mb-3">
-              Pesanan Berhasil Disubmit!
-            </h2>
-            <p className="text-gray-600 text-xs sm:text-sm max-w-md mx-auto leading-relaxed mb-8 font-medium">
-              Terima kasih <strong className="text-[#1E293B] font-bold">{bookingData.userDetails.fullName}</strong>. Data pesanan Anda telah tersimpan di sistem kami. Langkah terakhir, silakan klik tombol di bawah untuk langsung terhubung dengan Admin via WhatsApp.
-            </p>
-
-            <div className="bg-[#F4F7FF] border border-blue-200/80 rounded-3xl p-6 mb-8 text-left space-y-3 shadow-inner">
-              <div className="flex justify-between items-center pb-3 border-b border-gray-200/60">
-                <span className="text-xs font-bold text-gray-400 uppercase tracking-wide">Nomor Tiket (Resi)</span>
-                <span className="text-sm font-black text-[#182CC1] tracking-wider font-mono">{ticketNumber}</span>
-              </div>
-              <div className="grid grid-cols-2 gap-3 text-xs sm:text-sm font-medium pt-1">
-                <div>
-                  <span className="text-gray-400 text-xs block">Paket Pilihan</span>
-                  <span className="text-[#1E293B] font-bold block mt-0.5">{bookingData.selectedPackage?.name}</span>
-                </div>
-                <div>
-                  <span className="text-gray-400 text-xs block">Jadwal</span>
-                  <span className="text-[#1E293B] font-bold block mt-0.5">{bookingData.date} ({bookingData.session})</span>
-                </div>
-                <div>
-                  <span className="text-gray-400 text-xs block">Peserta</span>
-                  <span className="text-[#1E293B] font-bold block mt-0.5">{participants} Orang</span>
-                </div>
-                <div>
-                  <span className="text-gray-400 text-xs block">Total Bayar (di lokasi)</span>
-                  <span className="text-[#182CC1] font-black text-base block mt-0.5">Rp {totalPrice.toLocaleString('id-ID')}</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="space-y-3 max-w-md mx-auto">
-              <button
-                onClick={handleWhatsAppRedirect}
-                className="w-full py-4 px-6 rounded-2xl font-black text-sm text-white bg-[#16a34a] hover:bg-[#15803d] transition-all duration-300 flex items-center justify-center space-x-2.5 shadow-lg shadow-green-600/30 hover:shadow-xl active:scale-95"
-              >
-                <FaWhatsapp size={20} className="flex-shrink-0" />
-                <span>Hubungi Admin via WhatsApp</span>
-                <span className="text-base">→</span>
-              </button>
-              
-              <button
-                onClick={() => { resetBooking(); navigate('/'); }}
-                className="w-full py-3.5 px-6 rounded-2xl font-bold text-sm text-[#1E293B] bg-white hover:bg-gray-50 border-2 border-gray-200 transition-all duration-300 active:scale-95"
-              >
-                Kembali ke Beranda
-              </button>
-            </div>
+      <BookingLayout currentStep={4}>
+        <div className="max-w-lg mx-auto text-center py-8">
+          <div className="w-24 h-24 rounded-full bg-[#e8edff] border-4 border-[#c5d0ff] flex items-center justify-center mx-auto mb-6 animate-bounce">
+            <CheckCircle size={48} className="text-[#182cc1]" />
           </div>
+          <h3 className="text-2xl font-black text-[#091540] mb-2" style={{ fontFamily: "Poppins, sans-serif" }}>
+            Pesanan Berhasil! 🎉
+          </h3>
+          <p className="text-[#3d518c] text-sm mb-6 leading-relaxed" style={{ fontFamily: "Inter, sans-serif" }}>
+            Terima kasih, <strong className="text-[#091540]">{userDetails.fullName}</strong>! Pesanan Anda telah diterima dan sedang diproses.
+          </p>
+
+          {/* booking card */}
+          <div className="bg-white rounded-2xl border-2 border-[#c5d0ff] p-6 mb-6 text-left shadow-lg">
+            <div className="flex items-center justify-between mb-4 pb-4 border-b border-[#c5d0ff]">
+              <div>
+                <div className="text-xs text-[#3d518c] mb-1">Kode Pemesanan</div>
+                <div className="text-2xl font-black text-[#182cc1] tracking-wider" style={{ fontFamily: "Poppins, sans-serif" }}>{ticketNumber}</div>
+              </div>
+              <div className="w-12 h-12 rounded-full bg-[#182cc1] flex items-center justify-center">
+                <Waves size={22} className="text-white" />
+              </div>
+            </div>
+            {[
+              { label: "Nama Pemesan", value: userDetails.fullName, bold: false },
+              { label: "Paket", value: selectedPackage?.name || '-', bold: false },
+              { label: "Tanggal", value: shortDate, bold: false },
+              { label: "Sesi", value: session || '-', bold: false },
+              { label: "Peserta", value: `${participants} orang`, bold: false },
+              { label: "Total", value: `Rp ${totalPrice.toLocaleString('id-ID')}`, bold: true },
+            ].map(r => (
+              <div key={r.label} className="flex justify-between py-2 text-sm border-b border-[#eef2ff] last:border-0 gap-3">
+                <span className="text-[#3d518c] flex-shrink-0" style={{ fontFamily: "Inter, sans-serif" }}>{r.label}</span>
+                <span className={`${r.bold ? "text-[#182cc1] font-bold" : "text-[#091540] font-medium"} text-right`}
+                  style={{ fontFamily: "Poppins, sans-serif" }}>{r.value}</span>
+              </div>
+            ))}
+          </div>
+
+          <div className="flex flex-col gap-3">
+            <button
+              onClick={handleWhatsAppRedirect}
+              type="button"
+              className="w-full py-4 bg-[#182cc1] hover:bg-[#1524a3] text-white font-bold rounded-2xl transition flex items-center justify-center gap-2 shadow-lg shadow-[#c5d0ff] text-sm"
+              style={{ fontFamily: "Poppins, sans-serif" }}
+            >
+              <MessageSquare size={18} /> Konfirmasi via WhatsApp
+            </button>
+            <button
+              onClick={() => { resetBooking(); navigate('/'); }}
+              type="button"
+              className="w-full py-3 border border-[#c5d0ff] bg-white text-[#3d518c] hover:bg-[#eef2ff] rounded-2xl transition text-sm font-medium"
+              style={{ fontFamily: "Inter, sans-serif" }}
+            >
+              Kembali ke Beranda
+            </button>
+          </div>
+
+          <p className="text-xs text-[#3d518c] mt-4 leading-relaxed" style={{ fontFamily: "Inter, sans-serif" }}>
+            Screenshot kode pemesanan ini dan tunjukkan saat kedatangan.<br />
+            Pembayaran dilakukan di lokasi.
+          </p>
         </div>
       </BookingLayout>
     );
   }
 
-  // REVIEW VIEW (STEP 3 - PERSIS GAMBAR 4)
-  const { selectedPackage, date, session, userDetails } = bookingData;
+  // ══ STEP 3: Konfirmasi ══
+  const detailRows = [
+    { label: "Paket", value: selectedPackage?.name || '-' },
+    { label: "Tanggal", value: formattedDate },
+    { label: "Sesi", value: session || '-' },
+    { label: "Peserta", value: `${participants} orang` },
+    { label: "Nama Pemesan", value: userDetails.fullName || '-' },
+    { label: "No. WhatsApp", value: userDetails.whatsapp || '-' },
+    ...(userDetails.email ? [{ label: "Email", value: userDetails.email }] : []),
+    ...(userDetails.city ? [{ label: "Kota Asal", value: userDetails.city }] : []),
+    ...(userDetails.notes ? [{ label: "Catatan", value: userDetails.notes }] : []),
+  ];
 
   return (
     <BookingLayout currentStep={3}>
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-        
-        {/* Left Column: Details Review */}
-        <div className="lg:col-span-2 space-y-6">
-          <div className="bg-white rounded-3xl border border-blue-100/80 overflow-hidden shadow-xs">
-            
-            {/* Top Royal Blue Gradient Header */}
-            <div className="bg-gradient-to-r from-[#182CC1] to-[#0D1970] text-white p-6 sm:p-8 relative overflow-hidden">
-              <div className="relative z-10 flex items-center justify-between">
+      <div className="grid lg:grid-cols-[1fr_340px] gap-8">
+        <div>
+          <h3 className="text-lg font-bold text-[#091540] mb-6" style={{ fontFamily: "Poppins, sans-serif" }}>
+            Review & Konfirmasi Pesanan
+          </h3>
+
+          {/* Package preview */}
+          <div className="rounded-2xl overflow-hidden border border-[#c5d0ff] mb-5">
+            <div className="relative h-36">
+              {selectedPackage?.image ? (
+                <img src={selectedPackage.image} alt={selectedPackage.name} className="w-full h-full object-cover" />
+              ) : (
+                <div className="w-full h-full bg-gradient-to-tr from-[#182cc1]/30 to-[#eef2ff]" />
+              )}
+              <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-transparent flex items-center px-5">
                 <div>
-                  <span className="text-xs font-bold uppercase tracking-widest text-blue-200 mb-1 block" style={{ fontFamily: "Inter, sans-serif" }}>
-                    LANGKAH TERAKHIR
-                  </span>
-                  <h2 className="text-xl sm:text-2xl font-black text-white" style={{ fontFamily: "Poppins, sans-serif" }}>
-                    Konfirmasi Pesanan Anda
-                  </h2>
-                </div>
-                <div className="w-12 h-12 rounded-2xl bg-white/10 backdrop-blur-md flex items-center justify-center text-white border border-white/20">
-                  <Sparkles size={24} />
+                  <div className="text-white font-black text-xl" style={{ fontFamily: "Poppins, sans-serif" }}>
+                    {selectedPackage?.name || 'Paket Wisata'}
+                  </div>
+                  <div className="text-white/80 text-sm mt-1">Sungai Blukar, Desa Getas</div>
                 </div>
               </div>
-              <div className="absolute -right-10 -bottom-10 w-40 h-40 bg-blue-500/20 rounded-full blur-xl pointer-events-none" />
             </div>
+          </div>
 
-            <div className="p-6 sm:p-8 space-y-8">
-              
-              {/* Package Details */}
-              <div className="space-y-4">
-                <h3 className="text-xs font-extrabold text-gray-400 uppercase tracking-wider" style={{ fontFamily: "Poppins, sans-serif" }}>
-                  DETAIL PAKET WISATA
-                </h3>
-                
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="bg-[#EFF2FC]/60 p-4 rounded-2xl border border-blue-100 flex items-center gap-3.5">
-                    <div className="w-10 h-10 rounded-xl bg-white text-[#182CC1] flex items-center justify-center shadow-xs flex-shrink-0 font-bold">
-                      📦
-                    </div>
-                    <div className="truncate">
-                      <span className="text-[10px] uppercase font-bold text-gray-400 block">Nama Paket</span>
-                      <span className="text-sm font-extrabold text-[#1E293B] block truncate" style={{ fontFamily: "Poppins, sans-serif" }}>{selectedPackage?.name || '-'}</span>
-                    </div>
-                  </div>
-
-                  <div className="bg-[#EFF2FC]/60 p-4 rounded-2xl border border-blue-100 flex items-center gap-3.5">
-                    <div className="w-10 h-10 rounded-xl bg-white text-[#182CC1] flex items-center justify-center shadow-xs flex-shrink-0">
-                      <Calendar size={18} />
-                    </div>
-                    <div>
-                      <span className="text-[10px] uppercase font-bold text-gray-400 block">Jadwal & Sesi</span>
-                      <span className="text-sm font-extrabold text-[#1E293B] block" style={{ fontFamily: "Poppins, sans-serif" }}>{date || '-'} ({session || '-'})</span>
-                    </div>
-                  </div>
-
-                  <div className="bg-[#EFF2FC]/60 p-4 rounded-2xl border border-blue-100 flex items-center gap-3.5">
-                    <div className="w-10 h-10 rounded-xl bg-white text-[#182CC1] flex items-center justify-center shadow-xs flex-shrink-0">
-                      <Users size={18} />
-                    </div>
-                    <div>
-                      <span className="text-[10px] uppercase font-bold text-gray-400 block">Total Peserta</span>
-                      <span className="text-sm font-extrabold text-[#1E293B] block" style={{ fontFamily: "Poppins, sans-serif" }}>{participants} Orang</span>
-                    </div>
-                  </div>
-                </div>
+          {/* Detail rows */}
+          <div className="bg-white rounded-2xl border border-[#c5d0ff] overflow-hidden mb-5">
+            {detailRows.map((r, i) => (
+              <div key={r.label} className={`flex items-start gap-4 px-5 py-3 ${i % 2 === 0 ? "bg-white" : "bg-[#eef2ff]"}`}>
+                <span className="text-[#3d518c] text-sm w-32 flex-shrink-0" style={{ fontFamily: "Inter, sans-serif" }}>
+                  {r.label}
+                </span>
+                <span className="text-[#091540] text-sm font-medium" style={{ fontFamily: "Inter, sans-serif" }}>
+                  {r.value}
+                </span>
               </div>
+            ))}
+          </div>
 
-              {/* Customer Data Review */}
-              <div className="space-y-3.5 border-t border-gray-100 pt-6">
-                <h3 className="text-xs font-extrabold text-gray-400 uppercase tracking-wider" style={{ fontFamily: "Poppins, sans-serif" }}>
-                  IDENTITAS PEMESAN
-                </h3>
-                
-                <div className="bg-[#F8FAFC]/70 p-5 rounded-2xl border border-gray-200/80 space-y-3 text-xs sm:text-sm font-medium" style={{ fontFamily: "Inter, sans-serif" }}>
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-400">Nama Lengkap</span>
-                    <span className="text-[#1E293B] font-extrabold">{userDetails.fullName || '-'}</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-400">WhatsApp</span>
-                    <span className="text-[#182CC1] font-extrabold">{userDetails.whatsapp || '-'}</span>
-                  </div>
-                  {userDetails.email && (
-                    <div className="flex justify-between items-center">
-                      <span className="text-gray-400">Email</span>
-                      <span className="text-[#1E293B] font-bold">{userDetails.email}</span>
-                    </div>
-                  )}
-                  {userDetails.city && (
-                    <div className="flex justify-between items-center">
-                      <span className="text-gray-400">Kota Asal</span>
-                      <span className="text-[#1E293B] font-bold">{userDetails.city}</span>
-                    </div>
-                  )}
-                  {userDetails.notes && (
-                    <div className="pt-2 border-t border-gray-100">
-                      <span className="text-gray-400 block mb-1">Catatan Tambahan:</span>
-                      <span className="text-gray-700 italic bg-white p-3 rounded-xl border border-gray-100 block">{userDetails.notes}</span>
-                    </div>
-                  )}
+          {/* Includes */}
+          <div className="bg-[#e8edff] border border-[#c5d0ff] rounded-2xl p-4 mb-5">
+            <div className="text-xs font-bold uppercase tracking-widest text-[#1d2e80] mb-3">Termasuk dalam Paket</div>
+            <div className="grid grid-cols-2 gap-1.5">
+              {includes.map(inc => (
+                <div key={inc} className="flex items-center gap-2 text-sm text-[#1d2e80]" style={{ fontFamily: "Inter, sans-serif" }}>
+                  <CheckCircle size={13} className="text-[#182cc1] flex-shrink-0" />
+                  {inc}
                 </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Total */}
+          <div className="bg-[#091540] rounded-2xl p-5 flex items-center justify-between">
+            <div>
+              <div className="text-[#abd2fa] text-xs mb-1" style={{ fontFamily: "Inter, sans-serif" }}>Total Pembayaran</div>
+              <div className="text-white font-black text-2xl" style={{ fontFamily: "Poppins, sans-serif" }}>
+                Rp {totalPrice.toLocaleString('id-ID')}
               </div>
-
-              {/* Fasilitas Termasuk (Persis Gambar 4) */}
-              <div className="bg-[#EFF2FC] border border-blue-200/80 p-5 rounded-2xl space-y-3">
-                <div className="flex items-center gap-2">
-                  <ShieldCheck size={18} className="text-[#182CC1]" />
-                  <h4 className="text-xs font-extrabold text-[#182CC1] uppercase tracking-wide" style={{ fontFamily: "Poppins, sans-serif" }}>TERMASUK DALAM PAKET</h4>
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs font-semibold text-[#1E293B]">
-                  {(selectedPackage?.includes || ['Perlengkapan Tubing safety', 'Guide pemandu berpengalaman', 'Welcome drink & snack lokal', 'Asuransi wisata standar']).map((inc, idx) => (
-                    <div key={idx} className="flex items-center gap-2">
-                      <div className="w-4 h-4 rounded-full bg-[#182CC1] text-white flex items-center justify-center text-[10px] font-bold flex-shrink-0">✓</div>
-                      <span>{inc}</span>
-                    </div>
-                  ))}
-                </div>
+              <div className="text-[#abd2fa] text-xs mt-0.5">
+                {selectedPackage?.unit === 'orang' || !selectedPackage?.unit
+                  ? `${participants} orang × Rp ${price.toLocaleString('id-ID')}`
+                  : `Paket grup · ${participants} orang`}
               </div>
-
-              {/* Total Pembayaran Dark Navy Highlight (Persis Gambar 4) */}
-              <div className="bg-[#0B133A] text-white p-6 rounded-3xl flex flex-col sm:flex-row justify-between items-center gap-4 shadow-xl shadow-[#0B133A]/20">
-                <div className="text-center sm:text-left">
-                  <span className="text-xs font-bold text-blue-200 uppercase tracking-widest block" style={{ fontFamily: "Inter, sans-serif" }}>TOTAL PEMBAYARAN</span>
-                  <span className="text-[11px] text-white/70 font-medium" style={{ fontFamily: "Inter, sans-serif" }}>Dibayarkan secara tunai / QRIS di lokasi wisata</span>
-                </div>
-                <div className="bg-[#182CC1] px-6 py-3.5 rounded-2xl border border-blue-400/30 text-right shadow-inner">
-                  <span className="text-white font-black text-2xl block" style={{ fontFamily: "Poppins, sans-serif" }}>
-                    Rp {totalPrice.toLocaleString('id-ID')}
-                  </span>
-                </div>
-              </div>
-
+            </div>
+            <div className="w-12 h-12 rounded-full bg-[#182cc1]/30 flex items-center justify-center">
+              <Ticket size={22} className="text-[#abd2fa]" />
             </div>
           </div>
         </div>
 
-        {/* Right Column: Action Button */}
-        <div className="lg:col-span-1">
-          <div className="sticky top-28">
-            <BookingSummary 
-              buttonText={isSubmitting ? "Memproses..." : "Konfirmasi Pesanan"} 
-              onButtonClick={handleSubmit}
-              buttonDisabled={isSubmitting}
-              showPaymentInfo={true}
-            />
-          </div>
+        {/* Sticky right column */}
+        <div className="lg:sticky lg:top-4 self-start">
+          <BookingSummary
+            buttonText={isSubmitting ? "Memproses..." : "Konfirmasi Pesanan"}
+            onButtonClick={handleSubmit}
+            buttonDisabled={isSubmitting}
+            showPaymentInfo={true}
+            hideSummaryCard={true}
+            onBackClick={() => navigate('/booking/form')}
+            backButtonText="← Ubah Data"
+            buttonIcon={<CheckCircle size={16} />}
+          />
         </div>
-
       </div>
     </BookingLayout>
   );
 };
 
 export default BookingPayment;
+
 

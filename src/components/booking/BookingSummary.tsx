@@ -1,4 +1,5 @@
 import React from 'react';
+import { ArrowRight } from 'lucide-react';
 import { useBooking } from '../../hooks/useBooking';
 
 interface BookingSummaryProps {
@@ -6,6 +7,10 @@ interface BookingSummaryProps {
   onButtonClick: () => void;
   buttonDisabled?: boolean;
   showPaymentInfo?: boolean;
+  hideSummaryCard?: boolean;
+  onBackClick?: () => void;
+  backButtonText?: string;
+  buttonIcon?: React.ReactNode;
 }
 
 const BookingSummary: React.FC<BookingSummaryProps> = ({
@@ -13,109 +18,99 @@ const BookingSummary: React.FC<BookingSummaryProps> = ({
   onButtonClick,
   buttonDisabled = false,
   showPaymentInfo = false,
+  hideSummaryCard = false,
+  onBackClick,
+  backButtonText = "← Kembali",
+  buttonIcon,
 }) => {
   const { bookingData } = useBooking();
-  const { selectedPackage, date, session, participants } = bookingData;
+  const { selectedPackage, date, session, participants, userDetails } = bookingData;
+  const name = userDetails?.fullName;
 
   const total = selectedPackage ? selectedPackage.price * participants : 0;
 
+  const formattedDate = date
+    ? new Date(date).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" })
+    : "—";
+
+  const formattedSession = session ? session.split(" ")[0] : "—";
+
+  const rows = [
+    { label: "Paket", value: selectedPackage ? selectedPackage.name : "-" },
+    ...(name?.trim() ? [{ label: "Nama Pemesan", value: name.trim() }] : []),
+    { label: "Tanggal", value: formattedDate },
+    { label: "Sesi", value: formattedSession },
+    { label: "Peserta", value: `${participants} orang` },
+    ...(selectedPackage ? [{ label: "Durasi", value: selectedPackage.duration || "±2 jam" }] : []),
+  ];
+
   return (
-    <div className="flex flex-col space-y-4">
-      {/* Summary Card */}
-      <div className="bg-white rounded-3xl shadow-sm border border-blue-100/80 overflow-hidden">
-        {/* Cover Image Placeholder */}
-        <div className="h-36 bg-gray-200 relative overflow-hidden">
-          {selectedPackage?.image ? (
-            <img src={selectedPackage.image} alt={selectedPackage.name} className="w-full h-full object-cover" />
-          ) : (
-            <div className="w-full h-full bg-gradient-to-tr from-[#182CC1]/30 to-[#8B5A2B]/20 flex items-center justify-center text-xs text-gray-500 font-medium">Belum Dipilih</div>
-          )}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
-          <div className="absolute bottom-3.5 left-5 right-5 text-white font-black text-lg truncate drop-shadow-md" style={{ fontFamily: "Poppins, sans-serif" }}>
-            {selectedPackage ? selectedPackage.name : 'Pilih Paket'}
-          </div>
-        </div>
-        
-        <div className="p-6 space-y-4">
-          <h3 className="font-extrabold text-[#1E293B] text-xs tracking-wider uppercase" style={{ fontFamily: "Poppins, sans-serif" }}>RINGKASAN PESANAN</h3>
-          
-          <div className="space-y-3 text-xs sm:text-sm font-medium" style={{ fontFamily: "Inter, sans-serif" }}>
-            <div className="flex justify-between items-center">
-              <span className="text-gray-400">Paket</span>
-              <span className="text-[#1E293B] font-bold text-right max-w-[170px] truncate">{selectedPackage ? selectedPackage.name : '-'}</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-gray-400">Tanggal</span>
-              <span className="text-[#1E293B] font-bold text-right">{date || '—'}</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-gray-400">Sesi</span>
-              <span className="text-[#1E293B] font-bold text-right">{session || 'Pagi'}</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-gray-400">Peserta</span>
-              <span className="text-[#1E293B] font-bold text-right">{participants} orang</span>
-            </div>
-            {selectedPackage?.duration && (
-              <div className="flex justify-between items-center">
-                <span className="text-gray-400">Durasi</span>
-                <span className="text-[#1E293B] font-bold text-right">±2 jam</span>
-              </div>
+    <div className="flex flex-col space-y-3">
+      {!hideSummaryCard && (
+        <div className="bg-white rounded-2xl border border-[#c5d0ff] overflow-hidden shadow-sm">
+          <div className="relative h-28">
+            {selectedPackage?.image ? (
+              <img src={selectedPackage.image} alt={selectedPackage.name} className="w-full h-full object-cover" />
+            ) : (
+              <div className="w-full h-full bg-gradient-to-tr from-[#182cc1]/20 to-[#eef2ff]" />
             )}
+            <div className="absolute inset-0 bg-gradient-to-t from-[#091540]/70 via-transparent to-transparent" />
+            <div className="absolute bottom-2 left-3">
+              <div className="text-white font-bold text-sm" style={{ fontFamily: "Poppins, sans-serif" }}>
+                {selectedPackage ? selectedPackage.name : "Pilih Paket"}
+              </div>
+            </div>
           </div>
-          
-          <div className="pt-4 border-t border-gray-100 flex justify-between items-center">
-            <span className="font-black text-[#1E293B] text-base" style={{ fontFamily: "Poppins, sans-serif" }}>Total</span>
-            <span className="font-black text-[#182CC1] text-lg sm:text-xl" style={{ fontFamily: "Poppins, sans-serif" }}>
-              Rp {total.toLocaleString('id-ID')}
-            </span>
+          <div className="p-4 space-y-2.5">
+            <div className="text-xs font-bold uppercase tracking-widest text-[#3d518c] mb-2">Ringkasan Pesanan</div>
+            {rows.map(r => (
+              <div key={r.label} className="flex justify-between text-xs gap-2">
+                <span className="text-[#3d518c] flex-shrink-0" style={{ fontFamily: "Inter, sans-serif" }}>{r.label}</span>
+                <span className="text-[#091540] font-medium text-right" style={{ fontFamily: "Poppins, sans-serif" }}>{r.value}</span>
+              </div>
+            ))}
+            <div className="border-t border-[#c5d0ff] pt-3 flex justify-between items-center">
+              <span className="text-[#091540] font-bold text-sm">Total</span>
+              <span className="text-[#182cc1] font-black text-base" style={{ fontFamily: "Poppins, sans-serif" }}>
+                Rp {total.toLocaleString('id-ID')}
+              </span>
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       {showPaymentInfo && (
-        <div className="bg-[#EFF2FC] p-5 rounded-2xl border border-blue-200/60 shadow-xs space-y-3">
-          <h3 className="font-extrabold text-[#182CC1] text-xs tracking-wide uppercase" style={{ fontFamily: "Poppins, sans-serif" }}>INFORMASI PEMBAYARAN</h3>
-          <ul className="text-xs text-gray-700 space-y-2.5 font-medium" style={{ fontFamily: "Inter, sans-serif" }}>
-            <li className="flex items-start gap-2.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#182CC1] mt-1.5 flex-shrink-0" />
-              <span>Pembayaran dilakukan <strong className="text-[#1E293B]">di lokasi</strong> saat kedatangan.</span>
-            </li>
-            <li className="flex items-start gap-2.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#182CC1] mt-1.5 flex-shrink-0" />
-              <span>Konfirmasi booking via <strong className="text-[#1E293B]">WhatsApp</strong> setelah submit.</span>
-            </li>
-            <li className="flex items-start gap-2.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-red-500 mt-1.5 flex-shrink-0" />
-              <span>Pembatalan gratis <strong className="text-[#1E293B]">H-1</strong> sebelum tanggal kunjungan.</span>
-            </li>
-          </ul>
+        <div className="bg-white rounded-2xl border border-[#c5d0ff] p-4">
+          <div className="text-xs font-bold uppercase tracking-widest text-[#3d518c] mb-3">Informasi Pembayaran</div>
+          <div className="space-y-2 text-sm text-[#3d518c]" style={{ fontFamily: "Inter, sans-serif" }}>
+            <p>💳 Pembayaran dilakukan <strong className="text-[#091540]">di lokasi</strong> saat kedatangan.</p>
+            <p>📲 Konfirmasi booking via <strong className="text-[#091540]">WhatsApp</strong> setelah submit.</p>
+            <p>❌ Pembatalan gratis <strong className="text-[#091540]">H-1</strong> sebelum tanggal kunjungan.</p>
+          </div>
         </div>
       )}
 
       {/* Action Button */}
       <button
+        type="button"
         onClick={onButtonClick}
         disabled={buttonDisabled}
-        className={`w-full py-4 rounded-2xl font-bold text-sm text-white transition-all duration-300 flex items-center justify-center space-x-2.5 active:scale-95 ${
-          buttonDisabled
-            ? 'bg-[#94A3B8]/70 text-white cursor-not-allowed shadow-none font-semibold'
-            : 'bg-[#182CC1] hover:bg-[#122190] shadow-lg shadow-[#182CC1]/30 hover:shadow-xl'
-        }`}
+        className="w-full py-3.5 bg-[#182cc1] hover:bg-[#1524a3] disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold rounded-2xl transition flex items-center justify-center gap-2 shadow-lg shadow-[#c5d0ff]"
         style={{ fontFamily: "Poppins, sans-serif" }}
       >
+        {buttonIcon || null}
         <span>{buttonText}</span>
-        {!showPaymentInfo && <span className="text-base leading-none">→</span>}
+        {!buttonIcon && !showPaymentInfo && <ArrowRight size={16} />}
       </button>
 
-      {/* Back to Home Button placeholder for layout matching */}
-      {showPaymentInfo && (
+      {onBackClick && (
         <button
-          className="w-full py-3.5 rounded-2xl font-bold text-sm text-[#182CC1] border-2 border-blue-200 bg-white hover:bg-blue-50/80 transition-all duration-300 shadow-xs active:scale-95"
-          onClick={() => window.history.back()}
-          style={{ fontFamily: "Poppins, sans-serif" }}
+          type="button"
+          className="w-full py-3 border border-[#c5d0ff] bg-white text-[#3d518c] hover:bg-[#eef2ff] rounded-2xl transition text-sm font-medium"
+          onClick={onBackClick}
+          style={{ fontFamily: "Inter, sans-serif" }}
         >
-          ← Ubah Data
+          {backButtonText}
         </button>
       )}
     </div>
@@ -123,4 +118,7 @@ const BookingSummary: React.FC<BookingSummaryProps> = ({
 };
 
 export default BookingSummary;
+
+
+
 
