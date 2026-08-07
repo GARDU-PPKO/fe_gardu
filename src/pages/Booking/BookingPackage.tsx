@@ -127,28 +127,32 @@ const BookingPackage: React.FC = () => {
               <label className="block text-sm font-semibold text-[#091540] mb-2" style={{ fontFamily: "Inter, sans-serif" }}>
                 Jumlah Peserta <span className="text-[#3d518c] font-normal">(min. {minParticipants}, maks. {maxParticipants})</span>
               </label>
-              <div className="flex items-center gap-3">
+              <div className="flex items-center justify-between bg-[#f8faff] border border-[#c5d0ff] rounded-2xl p-2 shadow-inner">
                 <button
                   type="button"
                   onClick={() => setLocalParticipants(Math.max(minParticipants, localParticipants - 1))}
                   disabled={localParticipants <= minParticipants}
-                  className="w-11 h-11 rounded-xl border-2 border-[#c5d0ff] bg-white text-[#091540] flex items-center justify-center text-xl font-bold hover:border-[#182cc1] hover:bg-[#eef2ff] transition disabled:opacity-40 disabled:cursor-not-allowed"
+                  className="w-12 h-12 rounded-xl bg-white border border-[#c5d0ff] text-[#182cc1] flex items-center justify-center hover:border-[#182cc1] hover:bg-[#eef2ff] hover:shadow-md transition-all disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:shadow-none"
                 >
-                  −
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line></svg>
                 </button>
-                <div className="flex-1 text-center">
-                  <span className="text-3xl font-black text-[#091540]" style={{ fontFamily: "Poppins, sans-serif" }}>
+                
+                <div className="flex flex-col items-center justify-center px-6">
+                  <span className="text-4xl font-black text-[#091540] tracking-tight leading-none" style={{ fontFamily: "Poppins, sans-serif" }}>
                     {localParticipants}
                   </span>
-                  <span className="text-sm text-[#3d518c] ml-2">orang</span>
+                  <span className="text-[10px] uppercase font-bold text-[#182cc1] tracking-widest mt-1">
+                    Orang
+                  </span>
                 </div>
+
                 <button
                   type="button"
                   onClick={() => setLocalParticipants(Math.min(maxParticipants, localParticipants + 1))}
                   disabled={localParticipants >= maxParticipants}
-                  className="w-11 h-11 rounded-xl border-2 border-[#c5d0ff] bg-white text-[#091540] flex items-center justify-center text-xl font-bold hover:border-[#182cc1] hover:bg-[#eef2ff] transition disabled:opacity-40 disabled:cursor-not-allowed"
+                  className="w-12 h-12 rounded-xl bg-[#182cc1] text-white flex items-center justify-center hover:bg-[#1524a3] hover:shadow-md hover:-translate-y-0.5 transition-all disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:shadow-none disabled:hover:translate-y-0 shadow-sm shadow-[#c5d0ff]"
                 >
-                  +
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
                 </button>
               </div>
             </div>

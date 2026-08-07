@@ -73,6 +73,20 @@ export default function Hero({ onSelectDusun }: { onSelectDusun: (d: Dusun) => v
         {/* Big title like WANDER */}
         <div className="absolute inset-0 flex flex-col justify-end pb-16 sm:pb-24 px-4 sm:px-8">
           <div className="max-w-7xl mx-auto w-full relative">
+            {/* Inline Badges */}
+            <div className="flex flex-wrap items-center gap-3 mb-4">
+              <span className="px-3.5 py-1.5 rounded-full bg-white/10 text-white text-xs font-semibold backdrop-blur-md border border-white/20 flex items-center gap-2">
+                <TreePine size={14} className="text-[#a5f3fc]" /> Desa Wisata Alam
+              </span>
+              <span className="px-3.5 py-1.5 rounded-full bg-white/10 text-white text-xs font-semibold backdrop-blur-md border border-white/20 flex items-center gap-2">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                </span>
+                Online
+              </span>
+            </div>
+
             <p className="text-white/80 text-sm font-medium mb-2 tracking-widest uppercase" style={{ fontFamily: "Inter, sans-serif" }}>
               Kecamatan Singorojo · Kabupaten Kendal
             </p>
@@ -99,36 +113,28 @@ export default function Hero({ onSelectDusun }: { onSelectDusun: (d: Dusun) => v
                 Layanan Online
               </button>
             </div>
-
-            {/* badge top-right */}
-            <div className="absolute -top-32 right-0 hidden md:flex gap-2">
-              <span className="px-3 py-1.5 rounded-full bg-[#8b5a2b]/90 text-white text-xs font-bold backdrop-blur-md border border-white/10 flex items-center gap-1.5 shadow-lg">
-                <TreePine size={12} /> Desa Wisata Alam
-              </span>
-              <span className="px-3 py-1.5 rounded-full bg-white/10 text-white text-xs font-semibold backdrop-blur-md border border-white/10 flex items-center gap-1.5 shadow-lg">
-                <div className="w-1.5 h-1.5 rounded-full bg-[#7692ff] animate-pulse" /> Online
-              </span>
-            </div>
           </div>
         </div>
       </section>
 
       {/* Content below hero */}
-      <div className="bg-white px-4 sm:px-8 pb-8 pt-4">
+      <div className="bg-[#f8faff] px-4 sm:px-8 pb-8 pt-4">
         <div className="max-w-7xl mx-auto">
-          {/* ── Stats 6 kartu (overlapping slightly) ── */}
-          <div className="-mt-12 relative z-10 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-            {statItems.map(s => (
-              <div key={s.label} className="bg-white/95 backdrop-blur-xl border border-[#c5d0ff] rounded-2xl p-4 flex items-center gap-3 shadow-lg hover:shadow-xl hover:-translate-y-1 hover:border-[#182cc1]/30 transition-all duration-300">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#e8edff] to-white border border-[#c5d0ff]/50 flex items-center justify-center flex-shrink-0">
-                  <s.icon size={18} className="text-[#182cc1]" />
+          {/* ── Unified Stats Container ── */}
+          <div className="-mt-16 relative z-10">
+            <div className="bg-white/95 backdrop-blur-xl border border-[#c5d0ff] rounded-[2rem] p-6 shadow-xl shadow-[#091540]/5 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6 divide-y md:divide-y-0 lg:divide-x divide-[#e8edff]">
+              {statItems.map((s, idx) => (
+                <div key={s.label} className={`flex flex-col sm:flex-row items-start sm:items-center gap-4 ${idx !== 0 && idx % 3 !== 0 ? 'lg:pl-6' : ''} ${idx !== 0 && idx % 2 !== 0 ? 'md:pl-6' : ''} pt-4 md:pt-0 first:pt-0`}>
+                  <div className="w-12 h-12 rounded-2xl bg-[#e8edff] text-[#182cc1] flex items-center justify-center flex-shrink-0">
+                    <s.icon size={22} />
+                  </div>
+                  <div>
+                    <div className="font-black text-[#091540] text-lg leading-tight mb-0.5" style={{ fontFamily: "Poppins, sans-serif" }}>{s.value}</div>
+                    <div className="text-[#3d518c] text-xs font-medium" style={{ fontFamily: "Inter, sans-serif" }}>{s.label}</div>
+                  </div>
                 </div>
-                <div>
-                  <div className="font-bold text-[#091540] text-sm leading-tight" style={{ fontFamily: "Poppins, sans-serif" }}>{s.value}</div>
-                  <div className="text-[#3d518c] text-xs" style={{ fontFamily: "Inter, sans-serif" }}>{s.label}</div>
-                </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
 
           {/* ── Dusun slider ── */}
