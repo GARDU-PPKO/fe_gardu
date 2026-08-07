@@ -2,6 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Waves, X } from 'lucide-react';
 import BookingStepper from '../booking/BookingStepper';
+import Footer from './Footer';
 
 interface BookingLayoutProps {
   children: React.ReactNode;
@@ -38,10 +39,11 @@ const BookingLayout: React.FC<BookingLayoutProps> = ({ children, currentStep }) 
       {currentStep > 0 && currentStep < 4 && <BookingStepper currentStep={currentStep} />}
 
       {/* ── Body ── */}
-      <div className="flex-1 overflow-y-auto">
-        <div className="max-w-5xl mx-auto px-4 sm:px-8 py-8">
+      <div className="flex-1 overflow-y-auto flex flex-col">
+        <div className="max-w-5xl mx-auto px-4 sm:px-8 py-8 w-full flex-1">
           {children}
         </div>
+        <Footer />
       </div>
     </div>
   );

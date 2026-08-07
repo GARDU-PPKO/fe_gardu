@@ -1,4 +1,5 @@
 import { ExternalLink, Zap } from "lucide-react";
+import { useLocation, useNavigate } from "react-router-dom";
 import LogoGardu from "../../assets/Logo_Gardu_V2.png";
 
 const NAV = [
@@ -10,8 +11,15 @@ const NAV = [
 ];
 
 export default function Footer() {
+  const location = useLocation();
+  const navigate = useNavigate();
+
   const scrollTo = (href: string) => {
-    document.querySelector(href)?.scrollIntoView({ behavior: "smooth" });
+    if (location.pathname === "/") {
+      document.querySelector(href)?.scrollIntoView({ behavior: "smooth" });
+    } else {
+      navigate("/" + href);
+    }
   };
 
   return (

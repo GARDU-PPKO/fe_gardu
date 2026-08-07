@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowRight, ArrowLeft } from "lucide-react";
-import Footer from "../../components/layout/Footer";
+import { ArrowRight, ArrowLeft, CheckCircle2, Clock, Users, Leaf } from "lucide-react";
 import { getTourPackages } from "../../services/tour-package.service";
 import { useBooking } from "../../hooks/useBooking";
+import Footer from "../../components/layout/Footer";
 import type { TourPackage } from "../../types";
 
 const FALLBACK_PACKAGES: TourPackage[] = [
@@ -13,10 +13,10 @@ const FALLBACK_PACKAGES: TourPackage[] = [
     durasi: "±2 jam",
     harga: 75000,
     satuan: "orang",
-    tag: "Terpopuler",
+    tag: "Adventure",
     min_participants: 1,
     max_participants: 10,
-    gambar: "https://images.unsplash.com/photo-1546058914-5000137323f0?w=500&h=320&fit=crop&auto=format",
+    gambar: "https://images.unsplash.com/photo-1546058914-5000137323f0?w=500&h=300&fit=crop&auto=format",
     deskripsi: "Menyusuri Sungai Blukar sepanjang 1,5 km dengan arus alami.",
     is_active: true,
     created_by: 1,
@@ -25,15 +25,15 @@ const FALLBACK_PACKAGES: TourPackage[] = [
   },
   {
     id: 2,
-    nama: "River Exploration",
+    nama: "Agro Education",
     durasi: "±3 jam",
     harga: 95000,
     satuan: "orang",
-    tag: null,
+    tag: "Education",
     min_participants: 1,
     max_participants: 8,
-    gambar: "https://images.unsplash.com/photo-1561774711-b0fa364863b7?w=500&h=320&fit=crop&auto=format",
-    deskripsi: "Eksplorasi sungai bersama guide berpengalaman dan safety equipment lengkap.",
+    gambar: "https://images.unsplash.com/photo-1561774711-b0fa364863b7?w=500&h=300&fit=crop&auto=format",
+    deskripsi: "Edukasi pertanian organik dan pengenalan flora lokal bersama guide.",
     is_active: true,
     created_by: 1,
     created_at: "",
@@ -45,10 +45,10 @@ const FALLBACK_PACKAGES: TourPackage[] = [
     durasi: "½ hari",
     harga: 250000,
     satuan: "grup",
-    tag: "Promo",
+    tag: "Family",
     min_participants: 2,
     max_participants: 6,
-    gambar: "https://images.unsplash.com/photo-1520329612326-d6038d1395a1?w=500&h=320&fit=crop&auto=format",
+    gambar: "https://images.unsplash.com/photo-1520329612326-d6038d1395a1?w=500&h=300&fit=crop&auto=format",
     deskripsi: "Paket keluarga lengkap — tubing, makan siang, foto dokumentasi.",
     is_active: true,
     created_by: 1,
@@ -57,20 +57,21 @@ const FALLBACK_PACKAGES: TourPackage[] = [
   },
   {
     id: 4,
-    nama: "Group Package",
+    nama: "Group Adventure",
     durasi: "½ hari",
     harga: 65000,
     satuan: "orang",
-    tag: null,
+    tag: "Adventure",
     min_participants: 20,
     max_participants: 100,
-    gambar: "https://images.unsplash.com/photo-1643215721864-cd4c354ac298?w=500&h=320&fit=crop&auto=format",
-    deskripsi: "Paket rombongan minimal 20 orang dengan guide dan makan siang.",
+    gambar: "https://images.unsplash.com/photo-1643215721864-cd4c354ac298?w=500&h=300&fit=crop&auto=format",
+    deskripsi: "Paket rombongan (min 20) dengan guide dan makan siang.",
     is_active: true,
     created_by: 1,
     created_at: "",
     updated_at: ""
-  }
+  },
+  // Add some dummy data to show scroll behavior if needed, but 4 is enough if it wraps on small screens
 ];
 
 export default function PackagesPage() {
@@ -78,12 +79,10 @@ export default function PackagesPage() {
   const { updatePackage } = useBooking();
   const [packages, setPackages] = useState<TourPackage[]>(FALLBACK_PACKAGES);
   const [filter, setFilter] = useState("Semua");
-  const categories = ["Semua", "Terpopuler", "Promo", "Grup"];
+  const categories = ["Semua", "Adventure", "Education", "Family"];
 
   useEffect(() => {
-    // Scroll to top on mount
     window.scrollTo(0, 0);
-    
     getTourPackages()
       .then(res => {
         if (res?.data && res.data.length > 0) {
@@ -95,9 +94,9 @@ export default function PackagesPage() {
 
   const filteredPackages = packages.filter(p => {
     if (filter === "Semua") return true;
-    if (filter === "Terpopuler") return p.tag?.toLowerCase() === "terpopuler";
-    if (filter === "Promo") return p.tag?.toLowerCase() === "promo";
-    if (filter === "Grup") return p.satuan === "grup" || (p.min_participants ?? 0) >= 10;
+    if (p.tag) {
+       return p.tag.toLowerCase() === filter.toLowerCase();
+    }
     return true;
   });
 
@@ -119,103 +118,133 @@ export default function PackagesPage() {
   };
 
   return (
-    <div className="min-h-screen bg-white text-[#091540] font-sans selection:bg-[#e8edff] selection:text-[#182cc1] flex flex-col">
-      <div className="relative h-[40vh] min-h-[300px] flex items-center justify-center overflow-hidden">
-        <img src="https://images.unsplash.com/photo-1546058914-5000137323f0?w=1200&h=600&fit=crop&auto=format" alt="Packages Header" className="absolute inset-0 w-full h-full object-cover" />
-        <div className="absolute inset-0 bg-[#091540]/60" />
-        <button onClick={() => navigate('/')} className="absolute top-6 left-4 sm:left-8 flex items-center gap-2 text-white/90 hover:text-white transition-colors bg-black/20 hover:bg-black/40 px-4 py-2 rounded-full backdrop-blur-sm text-sm font-semibold shadow-sm" style={{ fontFamily: "Inter, sans-serif" }}>
-          <ArrowLeft size={16} /> Kembali ke Beranda
-        </button>
-        <div className="relative z-10 text-center px-4">
-          <span className="text-xs font-bold uppercase tracking-widest text-[#7692ff] mb-2 block" style={{ fontFamily: "Inter, sans-serif" }}>Daftar Paket</span>
-          <h1 className="text-3xl sm:text-5xl font-black text-white leading-tight mb-4 drop-shadow-md" style={{ fontFamily: "Poppins, sans-serif" }}>
-            Eksplorasi Paket Wisata Kami
-          </h1>
-          <p className="text-white/80 text-sm max-w-xl mx-auto drop-shadow" style={{ fontFamily: "Inter, sans-serif" }}>
-            Pilih paket yang paling cocok untuk petualangan Anda. Dari solo tubing hingga rombongan besar, kami punya semuanya.
-          </p>
+    <div className="min-h-screen w-full bg-[#f8faff] text-[#091540] font-sans flex flex-col relative">
+      {/* Background ambient light */}
+      <div className="absolute top-0 left-0 w-[50%] h-[50%] bg-[#182cc1]/5 rounded-full blur-[120px] pointer-events-none" />
+      <div className="absolute bottom-0 right-0 w-[40%] h-[50%] bg-[#7692ff]/10 rounded-full blur-[100px] pointer-events-none" />
+
+      <div className="flex-1 flex flex-col z-10">
+        {/* Sleek Top Header */}
+        <header className="flex-shrink-0 flex items-center justify-between px-6 sm:px-10 py-6">
+          <button onClick={() => navigate('/')} 
+            className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-white hover:bg-[#e8edff] shadow-md hover:shadow-lg border border-[#e8edff] transition-all text-sm font-semibold text-[#3d518c]">
+            <ArrowLeft size={16} /> Kembali ke Beranda
+          </button>
+          <div className="hidden sm:flex bg-white shadow-md border border-[#e8edff] rounded-full p-1.5">
+            {categories.map(cat => (
+              <button
+                key={cat}
+                onClick={() => setFilter(cat)}
+                className={`px-6 py-2 rounded-full text-xs font-bold transition-all ${
+                  filter === cat 
+                    ? "bg-[#182cc1] text-white shadow-md transform scale-105" 
+                    : "text-[#3d518c] hover:text-[#091540] hover:bg-[#f8faff]"
+                }`}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
+        </header>
+
+        {/* Mobile Filters */}
+        <div className="sm:hidden px-6 overflow-x-auto pb-2 flex gap-2">
+          {categories.map(cat => (
+            <button
+              key={cat}
+              onClick={() => setFilter(cat)}
+              className={`px-5 py-2 rounded-full text-xs font-bold whitespace-nowrap transition-all shadow-sm ${
+                filter === cat 
+                  ? "bg-[#182cc1] text-white" 
+                  : "bg-white text-[#3d518c] border border-[#e8edff]"
+              }`}
+            >
+              {cat}
+            </button>
+          ))}
         </div>
-      </div>
 
-      <main className="flex-1 py-12 px-4 sm:px-8 bg-white -mt-6 rounded-t-[2.5rem] relative z-20 shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.1)]">
-        <div className="max-w-6xl mx-auto">
-
-          {/* Filters */}
-          <div className="flex justify-center mb-10">
-            <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-hide">
-              {categories.map(cat => (
-                <button
-                  key={cat}
-                  onClick={() => setFilter(cat)}
-                  className={`px-5 py-2 rounded-full text-sm font-semibold whitespace-nowrap transition-all ${
-                    filter === cat 
-                      ? "bg-[#091540] text-white shadow-md" 
-                      : "bg-[#e8edff] text-[#3d518c] hover:bg-[#c5d0ff] hover:text-[#1d2e80]"
-                  }`}
-                  style={{ fontFamily: "Inter, sans-serif" }}
-                >
-                  {cat}
-                </button>
-              ))}
-            </div>
+        {/* Main Content */}
+        <main className="flex-1 flex flex-col px-6 sm:px-10 pb-20 pt-4">
+          <div className="mb-10 max-w-2xl">
+            <span className="text-[#182cc1] text-sm font-bold tracking-widest uppercase mb-2 block flex items-center gap-2">
+              <span className="w-8 h-0.5 bg-[#182cc1] rounded-full"></span>
+              Daftar Paket Getas
+            </span>
+            <h1 className="text-4xl sm:text-5xl font-black text-[#091540] leading-tight drop-shadow-sm" style={{ fontFamily: "Poppins, sans-serif" }}>
+              Eksplorasi Petualangan
+            </h1>
+            <p className="text-[#3d518c] mt-4 text-sm sm:text-base leading-relaxed max-w-xl">
+              Temukan paket wisata alam eksklusif, edukasi, hingga rekreasi keluarga yang telah kami susun khusus untuk pengalaman tak terlupakan di Desa Getas.
+            </p>
           </div>
 
-          {/* Grid */}
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {/* Grid Layout - Flows naturally, handles unlimited data */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 sm:gap-8">
             {filteredPackages.map(p => (
               <div 
                 key={p.id} 
                 onClick={() => handleSelectPackage(p)}
-                className="bg-white rounded-3xl overflow-hidden shadow-sm border border-[#c5d0ff] group hover:shadow-xl hover:border-[#182cc1] transition-all cursor-pointer flex flex-col h-full relative transform hover:-translate-y-1"
+                className="bg-white rounded-[2rem] overflow-hidden group hover:-translate-y-2 hover:shadow-[0_20px_40px_-15px_rgba(24,44,193,0.15)] shadow-md border border-[#e8edff] transition-all duration-300 cursor-pointer flex flex-col h-full relative"
               >
-                <div className="relative h-48 bg-[#c5d0ff] overflow-hidden flex-shrink-0">
-                  <img src={p.gambar} alt={p.nama} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#091540]/80 via-transparent to-transparent" />
-                  
-                  {p.tag && p.tag.toLowerCase() !== "promo" && (
-                    <span className="absolute top-4 left-4 text-xs font-bold px-3 py-1 rounded-full bg-[#182cc1] text-white shadow">
-                      {p.tag}
-                    </span>
-                  )}
-                  {p.tag && p.tag.toLowerCase() === "promo" && (
-                    <span className="absolute top-4 left-4 text-xs font-bold px-3 py-1 rounded-full bg-amber-500 text-white shadow">
-                      {p.tag}
-                    </span>
-                  )}
-                  
-                  <div className="absolute bottom-4 left-4 right-4">
-                    <h3 className="text-white font-black text-xl drop-shadow-md leading-tight" style={{ fontFamily: "Poppins, sans-serif" }}>
-                      {p.nama}
-                    </h3>
+                {/* Image Section */}
+                <div className="relative h-48 sm:h-56 overflow-hidden flex-shrink-0 p-2">
+                  <div className="w-full h-full rounded-[1.5rem] overflow-hidden relative shadow-inner">
+                    <img src={p.gambar} alt={p.nama} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#091540]/60 via-transparent to-transparent opacity-90" />
+                    
+                    {p.tag && (
+                      <div className={`absolute top-4 left-4 flex items-center gap-1.5 px-3 py-1.5 rounded-full backdrop-blur-md shadow-lg ${p.tag.toLowerCase() === 'education' ? 'bg-emerald-500/95' : p.tag.toLowerCase() === 'family' ? 'bg-amber-500/95' : 'bg-[#182cc1]/95'}`}>
+                        {p.tag.toLowerCase() === 'education' ? <Leaf size={12} className="text-white" /> : p.tag.toLowerCase() === 'family' ? <Users size={12} className="text-white" /> : <CheckCircle2 size={12} className="text-white" />}
+                        <span className="text-[10px] font-bold text-white uppercase tracking-wider">{p.tag}</span>
+                      </div>
+                    )}
                   </div>
                 </div>
 
-                <div className="p-5 flex flex-col flex-1 justify-between bg-white relative overflow-hidden">
-                  <div>
-                    <p className="text-[#3d518c] text-sm mb-4 leading-relaxed line-clamp-3" style={{ fontFamily: "Inter, sans-serif" }}>{p.deskripsi}</p>
+                {/* Content Body */}
+                <div className="p-6 flex flex-col flex-1">
+                  <h3 className="text-[#091540] font-black text-xl mb-2 leading-tight group-hover:text-[#182cc1] transition-colors" style={{ fontFamily: "Poppins, sans-serif" }}>
+                    {p.nama}
+                  </h3>
+                  <p className="text-[#3d518c] text-sm mb-6 line-clamp-2 leading-relaxed" style={{ fontFamily: "Inter, sans-serif" }}>
+                    {p.deskripsi}
+                  </p>
+                  
+                  <div className="flex gap-3 mb-auto">
+                    <div className="flex items-center gap-2 bg-[#f8faff] rounded-xl px-3 py-2 border border-[#e8edff] shadow-sm">
+                      <Clock size={14} className="text-[#182cc1]" />
+                      <span className="text-xs font-bold text-[#3d518c]">{p.durasi}</span>
+                    </div>
+                    <div className="flex items-center gap-2 bg-[#f8faff] rounded-xl px-3 py-2 border border-[#e8edff] shadow-sm">
+                      <Users size={14} className="text-[#182cc1]" />
+                      <span className="text-xs font-bold text-[#3d518c]">Min {p.min_participants}</span>
+                    </div>
                   </div>
                   
-                  <div className="flex items-end justify-between mt-auto">
+                  {/* Footer */}
+                  <div className="flex items-end justify-between pt-5 mt-4 border-t border-dashed border-[#c5d0ff]">
                     <div>
-                      <div className="text-[#182cc1] font-black text-xl" style={{ fontFamily: "Poppins, sans-serif" }}>
-                        {`Rp ${Number(p.harga).toLocaleString('id-ID')}`}
+                      <div className="text-[10px] text-[#3d518c] uppercase tracking-widest mb-1 font-bold flex items-center gap-1">
+                        Harga Tiket
                       </div>
-                      <div className="text-[#3d518c] text-xs mt-1" style={{ fontFamily: "Inter, sans-serif" }}>
-                        {p.satuan === 'orang' ? "/orang" : "/grup"} · {p.durasi}
+                      <div className="text-[#091540] font-black text-2xl leading-none" style={{ fontFamily: "Poppins, sans-serif" }}>
+                        Rp {Number(p.harga).toLocaleString('id-ID')}
+                        <span className="text-[11px] text-[#3d518c] font-semibold ml-1">/{p.satuan}</span>
                       </div>
                     </div>
-                    <div className="w-10 h-10 rounded-full bg-[#e8edff] flex items-center justify-center text-[#182cc1] group-hover:bg-[#182cc1] group-hover:text-white transition-colors shadow-sm">
+                    <button className="w-10 h-10 rounded-full bg-[#182cc1] text-white flex items-center justify-center group-hover:scale-110 group-hover:shadow-[0_0_20px_rgba(24,44,193,0.4)] transition-all shadow-md">
                       <ArrowRight size={18} className="group-hover:translate-x-0.5 transition-transform" />
-                    </div>
+                    </button>
                   </div>
                 </div>
               </div>
             ))}
           </div>
-
-        </div>
-      </main>
-
+        </main>
+      </div>
+      
+      {/* Footer */}
       <Footer />
     </div>
   );

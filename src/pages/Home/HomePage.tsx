@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { MessageSquare } from "lucide-react";
 import Navbar from "../../components/layout/Navbar";
 import Footer from "../../components/layout/Footer";
@@ -15,7 +15,20 @@ import type { Dusun, Setting } from "../../types";
 
 export default function HomePage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [selectedDusun, setSelectedDusun] = useState<Dusun | null>(null);
+
+  useEffect(() => {
+    if (location.hash) {
+      setTimeout(() => {
+        const id = location.hash.replace('#', '');
+        const element = document.getElementById(id);
+        if (element) {
+          element.scrollIntoView({ behavior: "smooth" });
+        }
+      }, 200); // Small delay to ensure DOM is ready
+    }
+  }, [location.hash]);
   const [waAdmin, setWaAdmin] = useState("6281234567890");
 
   useEffect(() => {
