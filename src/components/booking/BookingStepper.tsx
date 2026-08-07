@@ -11,9 +11,9 @@ const BookingStepper: React.FC<StepperProps> = ({ currentStep }) => {
       <div className="max-w-3xl mx-auto">
         <div className="flex items-center gap-2 mb-2">
           {[
-            { n: 1, label: "Pilih Paket & Jadwal" },
+            { n: 1, label: "Jadwal Kunjungan" },
             { n: 2, label: "Data Pemesan" },
-            { n: 3, label: "Konfirmasi" },
+            { n: 3, label: "Selesai" },
           ].map((s, i) => (
             <div key={s.n} className="flex items-center gap-2 flex-1">
               <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 transition-all ${

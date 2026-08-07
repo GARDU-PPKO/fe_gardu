@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { ArrowRight, Users, Home, ChevronLeft, ChevronRight, CheckCircle, Leaf, Eye } from "lucide-react";
+import { Users, Home, ChevronLeft, ChevronRight, Leaf, Eye } from "lucide-react";
 import { getDusun } from "../../services/dusun.service";
 import type { Dusun } from "../../types";
 
@@ -163,7 +163,6 @@ export default function DusunSlider({ onSelect }: { onSelect: (d: Dusun) => void
   const [canPrev, setCanPrev] = useState(false);
   const [canNext, setCanNext] = useState(true);
   const [activeIdx, setActiveIdx] = useState(0);
-  const [hoveredId, setHoveredId] = useState<number | null>(null);
 
   useEffect(() => {
     getDusun()
@@ -221,96 +220,55 @@ export default function DusunSlider({ onSelect }: { onSelect: (d: Dusun) => void
         className="flex gap-3 overflow-x-auto pb-4"
         style={{ scrollSnapType: "x mandatory", scrollbarWidth: "none", msOverflowStyle: "none" }}>
 
-        {dusunList.map((d) => {
-          const isHovered = hoveredId === d.id;
-          return (
+        {dusunList.map((d) => (
             <div key={d.id}
-              className="flex-shrink-0 w-60 rounded-2xl overflow-hidden bg-white cursor-pointer"
-              style={{
-                scrollSnapAlign: "start",
-                border: `1px solid ${isHovered ? "rgba(24,44,193,0.5)" : "#c5d0ff"}`,
-                boxShadow: isHovered ? "0 20px 40px rgba(24,44,193,0.12)" : "0 1px 8px rgba(0,0,0,0.08)",
-                transform: isHovered ? "translateY(-6px) scale(1.02)" : "translateY(0) scale(1)",
-                transition: "transform 0.3s cubic-bezier(.22,1,.36,1), box-shadow 0.3s ease, border-color 0.25s ease",
-              }}
-              onMouseEnter={() => setHoveredId(d.id)}
-              onMouseLeave={() => setHoveredId(null)}
+              className="flex-shrink-0 w-[260px] h-[340px] rounded-3xl overflow-hidden bg-[#091540] cursor-pointer relative group"
+              style={{ scrollSnapAlign: "start" }}
               onClick={() => onSelect(d)}>
 
-              {/* image */}
-              <div className="relative overflow-hidden bg-[#e8edff]"
-                style={{
-                  height: isHovered ? "11rem" : "8rem",
-                  transition: "height 0.35s cubic-bezier(.22,1,.36,1)",
-                }}>
-                <img src={d.thumbnail} alt={d.nama} className="w-full h-full object-cover" />
-                <div className="absolute inset-0 bg-gradient-to-t from-[#091540]/70 via-[#091540]/10 to-transparent" />
+              <img src={d.thumbnail} alt={d.nama} className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+              
+              {/* Gradient overlay */}
+              <div className="absolute inset-0 bg-gradient-to-t from-[#091540] via-[#091540]/50 to-transparent opacity-90 transition-opacity duration-500 group-hover:opacity-95" />
 
-                {/* RW badge */}
-                <div className="absolute top-2.5 left-2.5 px-2 py-0.5 rounded-full bg-white/90 backdrop-blur-sm text-[#182cc1] text-[10px] font-bold shadow">
-                  {d.rw}
-                </div>
-
-                {/* Detail pill — only on hover */}
-                {isHovered && (
-                  <div className="absolute top-2.5 right-2.5 px-2 py-0.5 rounded-full bg-[#182cc1] text-white text-[10px] font-bold shadow flex items-center gap-1">
-                    <Eye size={9} /> Detail
-                  </div>
-                )}
-
-                {/* name */}
-                <div className="absolute bottom-2.5 left-3 right-3">
-                  <span className="text-white font-black text-lg leading-none drop-shadow" style={{ fontFamily: "Poppins, sans-serif" }}>
-                    {d.nama}
-                  </span>
-                </div>
+              {/* RW badge */}
+              <div className="absolute top-3 left-3 px-2.5 py-1 rounded-full bg-white/20 backdrop-blur-md text-white text-[10px] font-bold border border-white/30">
+                {d.rw}
               </div>
 
-              {/* body */}
-              <div className="p-3.5">
-                {/* stats — selalu tampil */}
-                <div className="flex items-center gap-3 mb-2">
-                  {[
-                    { icon: Users, val: (d.jumlah_penduduk || "400") + " jiwa" },
-                    { icon: Home,  val: (d.jumlah_rt    || "3")   + " RT"   },
-                  ].map(s => (
-                    <div key={s.val} className="flex items-center gap-1 text-[10px] text-[#3d518c]" style={{ fontFamily: "Inter, sans-serif" }}>
-                      <s.icon size={10} className="text-[#182cc1]" /> {s.val}
-                    </div>
-                  ))}
-                  <div className="flex items-center gap-1 text-[10px] text-[#3d518c] ml-auto">
-                    <Leaf size={10} className="text-[#182cc1]" /> {d.luas_wilayah || "1,2 km²"}
+              {/* Content that slides up */}
+              <div className="absolute bottom-0 left-0 right-0 p-4 flex flex-col justify-end transition-transform duration-500 ease-out translate-y-[84px] group-hover:translate-y-0">
+                <span className="text-white font-black text-2xl leading-none drop-shadow-md mb-2" style={{ fontFamily: "Poppins, sans-serif" }}>
+                  {d.nama}
+                </span>
+
+                {/* stats */}
+                <div className="flex items-center gap-3 mb-2 text-white/90">
+                  <div className="flex items-center gap-1.5 text-[11px]" style={{ fontFamily: "Inter, sans-serif" }}>
+                    <Users size={12} className="text-[#a5b4fc]" /> {d.jumlah_penduduk || "400"}
+                  </div>
+                  <div className="flex items-center gap-1.5 text-[11px]" style={{ fontFamily: "Inter, sans-serif" }}>
+                    <Home size={12} className="text-[#a5b4fc]" /> {d.jumlah_rt || "3"} RT
+                  </div>
+                  <div className="flex items-center gap-1.5 text-[11px] ml-auto">
+                    <Leaf size={12} className="text-[#a5b4fc]" /> {d.luas_wilayah || "1,2 km²"}
                   </div>
                 </div>
 
-                {/* deskripsi — selalu tampil */}
-                <p className="text-[#3d518c] text-xs leading-relaxed line-clamp-2 mb-1" style={{ fontFamily: "Inter, sans-serif" }}>
-                  {d.deskripsi}
-                </p>
-
-                {/* keunggulan + tombol — hanya saat hover */}
-                <div style={{
-                  maxHeight: isHovered ? "120px" : "0px",
-                  opacity: isHovered ? 1 : 0,
-                  overflow: "hidden",
-                  transition: "max-height 0.35s cubic-bezier(.22,1,.36,1), opacity 0.3s ease",
-                }}>
-                  <div className="pt-2 space-y-1">
-                    {d.keunggulan?.slice(0, 2).map(k => (
-                      <div key={k.keunggulan} className="flex items-center gap-1.5 text-[11px] text-[#1d2e80]" style={{ fontFamily: "Inter, sans-serif" }}>
-                        <CheckCircle size={10} className="text-[#182cc1] flex-shrink-0" /> {k.keunggulan}
-                      </div>
-                    ))}
-                  </div>
-                  <button className="mt-2.5 w-full py-2 bg-[#182cc1] hover:bg-[#1524a3] text-white text-[11px] font-bold rounded-xl transition flex items-center justify-center gap-1.5"
-                    style={{ fontFamily: "Poppins, sans-serif" }}>
-                    <ArrowRight size={11} /> Lihat Selengkapnya
-                  </button>
+                {/* deskripsi (hidden until hover) */}
+                <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-500 delay-100 h-[64px]">
+                  <p className="text-white/80 text-xs leading-relaxed line-clamp-2 mb-3" style={{ fontFamily: "Inter, sans-serif" }}>
+                    {d.deskripsi}
+                  </p>
                 </div>
+
+                <button className="w-full py-2.5 bg-white/20 hover:bg-white/30 backdrop-blur-md border border-white/40 text-white text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-1.5"
+                  style={{ fontFamily: "Poppins, sans-serif" }}>
+                  <Eye size={14} /> Lihat Detail Dusun
+                </button>
               </div>
             </div>
-          );
-        })}
+          ))}
       </div>
 
       {/* dots */}

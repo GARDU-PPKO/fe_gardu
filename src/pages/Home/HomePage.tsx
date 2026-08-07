@@ -33,7 +33,7 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-white text-[#091540] font-sans selection:bg-[#e8edff] selection:text-[#182cc1]">
-      <Navbar onOpenBooking={() => navigate('/booking/package')} />
+      <Navbar onOpenBooking={() => navigate('/packages')} />
       
       {selectedDusun && (
         <DusunPage dusun={selectedDusun} onClose={() => setSelectedDusun(null)} />

@@ -1,114 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import BookingLayout from '../../components/layout/BookingLayout';
-import PackageCard from '../../components/booking/PackageCard';
 import BookingSummary from '../../components/booking/BookingSummary';
 import { useBooking } from '../../hooks/useBooking';
 import { getBookingSessions } from '../../services/booking.service';
-import { getTourPackages } from '../../services/tour-package.service';
-import type { Package } from '../../types/booking';
-import type { BookingSession, TourPackage } from '../../types';
-
-const FALLBACK_PACKAGES: Package[] = [
-  {
-    id: "1",
-    name: "Tubing Adventure",
-    duration: "±2 jam",
-    price: 75000,
-    unit: "orang",
-    tag: "Terpopuler",
-    minParticipants: 1,
-    maxParticipants: 10,
-    image: "https://images.unsplash.com/photo-1546058914-5000137323f0?w=500&h=320&fit=crop&auto=format",
-    description: "Menyusuri Sungai Blukar sepanjang 1,5 km dengan arus alami.",
-    includes: ["Pelampung & helm", "Pemandu lokal", "Air minum"],
-  },
-  {
-    id: "2",
-    name: "River Exploration",
-    duration: "±3 jam",
-    price: 95000,
-    unit: "orang",
-    minParticipants: 1,
-    maxParticipants: 8,
-    image: "https://images.unsplash.com/photo-1561774711-b0fa364863b7?w=500&h=320&fit=crop&auto=format",
-    description: "Eksplorasi sungai bersama guide berpengalaman dan safety equipment lengkap.",
-    includes: ["Full safety gear", "Pemandu senior", "Foto dokumentasi", "Air minum"],
-  },
-  {
-    id: "3",
-    name: "Family Package",
-    duration: "½ hari",
-    price: 250000,
-    unit: "grup",
-    tag: "Promo",
-    minParticipants: 2,
-    maxParticipants: 6,
-    image: "https://images.unsplash.com/photo-1520329612326-d6038d1395a1?w=500&h=320&fit=crop&auto=format",
-    description: "Paket keluarga lengkap — tubing, makan siang, foto dokumentasi.",
-    includes: ["Full safety gear", "Pemandu keluarga", "Makan siang", "Foto & video", "Suvenir"],
-  },
-  {
-    id: "4",
-    name: "Group Package",
-    duration: "½ hari",
-    price: 65000,
-    unit: "orang",
-    minParticipants: 20,
-    maxParticipants: 100,
-    image: "https://images.unsplash.com/photo-1643215721864-cd4c354ac298?w=500&h=320&fit=crop&auto=format",
-    description: "Paket rombongan minimal 20 orang dengan guide dan makan siang.",
-    includes: ["Safety equipment", "Multiple guide", "Makan siang", "Area gathering"],
-  },
-];
+import type { BookingSession } from '../../types';
 
 const BookingPackage: React.FC = () => {
   const navigate = useNavigate();
-  const { bookingData, updatePackage, updateSchedule } = useBooking();
-  const [packages, setPackages] = useState<Package[]>(FALLBACK_PACKAGES);
+  const { bookingData, updateSchedule } = useBooking();
   const [sessions, setSessions] = useState<BookingSession[]>([]);
 
   useEffect(() => {
-    if (!bookingData.selectedPackage && FALLBACK_PACKAGES.length > 0) {
-      updatePackage(FALLBACK_PACKAGES[0]);
+    if (!bookingData.selectedPackage) {
+      navigate('/packages', { replace: true });
     }
+  }, [bookingData.selectedPackage, navigate]);
 
-    getTourPackages()
-      .then(res => {
-        if (res?.data && res.data.length > 0) {
-          const mapped: Package[] = res.data.map((p: TourPackage) => ({
-            id: String(p.id),
-            name: p.nama,
-            description: p.deskripsi,
-            price: Number(p.harga),
-            unit: p.satuan === 'orang' ? 'orang' : 'grup',
-            tag: p.tag ?? undefined,
-            minParticipants: p.min_participants ?? undefined,
-            maxParticipants: p.max_participants ?? undefined,
-            image: p.gambar,
-            duration: p.durasi,
-            includes: p.includes?.map(item => item.item) ?? [],
-          }));
-
-          // Set default tags if missing in DB to match reference design
-          const fixedPackages = mapped.map(p => {
-            if (p.name === 'Tubing Adventure' && !p.tag) return { ...p, tag: 'Terpopuler' };
-            if (p.name === 'Family Package' && !p.tag) return { ...p, tag: 'Promo' };
-            return p;
-          });
-
-          setPackages(fixedPackages);
-
-          if (!bookingData.selectedPackage && fixedPackages.length > 0) {
-            updatePackage(fixedPackages[0]);
-          }
-        }
-      })
-      .catch(() => {
-        // Retain fallback packages if API fails or is unreachable
-      });
-  }, []);
-  
   const [localDate, setLocalDate] = useState(bookingData.date);
   const [localSession, setLocalSession] = useState(bookingData.session || 'Pagi (07.00 - 09.00)');
   const [localParticipants, setLocalParticipants] = useState(bookingData.participants || 1);
@@ -128,13 +36,8 @@ const BookingPackage: React.FC = () => {
     });
   }, [currentPackage, localDate]);
 
-  const handleSelectPackage = (pkg: Package) => {
-    updatePackage(pkg);
-    setLocalSession('Pagi (07.00 - 09.00)');
-    const min = pkg.minParticipants || 1;
-    const max = pkg.maxParticipants || 10;
-    if (localParticipants < min) setLocalParticipants(min);
-    if (localParticipants > max) setLocalParticipants(max);
+  const handleSelectPackageAgain = () => {
+    navigate('/packages');
   };
 
   useEffect(() => {
@@ -147,22 +50,32 @@ const BookingPackage: React.FC = () => {
 
   const isFormValid = bookingData.selectedPackage !== null && localDate !== '' && localSession !== '';
 
+  if (!currentPackage) return null;
+
   return (
     <BookingLayout currentStep={1}>
       <div className="grid lg:grid-cols-[1fr_340px] gap-8">
         <div>
-          <h3 className="text-lg font-bold text-[#091540] mb-5" style={{ fontFamily: "Poppins, sans-serif" }}>
-            Pilih Paket
-          </h3>
-          <div className="grid sm:grid-cols-2 gap-3 mb-8">
-            {packages.map((pkg) => (
-              <PackageCard
-                key={pkg.id}
-                pkg={pkg}
-                isSelected={bookingData.selectedPackage?.id === pkg.id}
-                onSelect={handleSelectPackage}
-              />
-            ))}
+          <div className="flex items-center justify-between mb-5">
+            <h3 className="text-lg font-bold text-[#091540]" style={{ fontFamily: "Poppins, sans-serif" }}>
+              Paket Terpilih
+            </h3>
+            <button onClick={handleSelectPackageAgain} className="text-sm font-semibold text-[#182cc1] hover:underline">
+              Ganti Paket
+            </button>
+          </div>
+          
+          <div className="bg-white rounded-2xl p-4 border border-[#c5d0ff] flex gap-4 items-center mb-8 shadow-sm">
+            <div className="w-24 h-24 rounded-xl overflow-hidden flex-shrink-0 bg-[#e8edff]">
+              <img src={currentPackage.image} alt={currentPackage.name} className="w-full h-full object-cover" />
+            </div>
+            <div>
+              <h4 className="font-bold text-[#091540] text-lg mb-1" style={{ fontFamily: "Poppins, sans-serif" }}>{currentPackage.name}</h4>
+              <p className="text-[#3d518c] text-sm mb-2" style={{ fontFamily: "Inter, sans-serif" }}>{currentPackage.duration} · {currentPackage.unit === 'orang' ? 'Per Orang' : 'Per Grup'}</p>
+              <div className="text-[#182cc1] font-bold">
+                {`Rp ${Number(currentPackage.price).toLocaleString('id-ID')}`}
+              </div>
+            </div>
           </div>
 
           <h3 className="text-lg font-bold text-[#091540] mb-5" style={{ fontFamily: "Poppins, sans-serif" }}>
@@ -261,5 +174,3 @@ const BookingPackage: React.FC = () => {
 };
 
 export default BookingPackage;
-
-

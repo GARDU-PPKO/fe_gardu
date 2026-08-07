@@ -53,23 +53,33 @@ export default function UMKMSection() {
 
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
           {filtered.map(p => (
-            <div key={p.id} className="bg-white rounded-2xl overflow-hidden border border-[#c5d0ff] shadow-sm hover:shadow-md transition-all group cursor-pointer">
-              <div className="h-44 overflow-hidden bg-[#c5d0ff]">
+            <a 
+              key={p.id} 
+              href={`https://wa.me/${p.no_wa_penjual}?text=Halo, saya tertarik dengan produk ${encodeURIComponent(p.nama)}`}
+              target="_blank" rel="noopener noreferrer"
+              className="bg-white rounded-2xl overflow-hidden border border-[#c5d0ff] shadow-sm hover:shadow-lg hover:border-[#25D366] transition-all group cursor-pointer flex flex-col relative"
+            >
+              <div className="h-44 overflow-hidden bg-[#c5d0ff] relative">
                 <img src={p.gambar} alt={p.nama} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
               </div>
-              <div className="p-4">
-                <div className="inline-block text-[10px] font-bold uppercase px-2 py-0.5 rounded-full mb-2 bg-[#fef3e7] text-[#8b5a2b]">
-                  {p.kategori}
+              <div className="p-4 flex flex-col flex-1">
+                <div>
+                  <div className="inline-block text-[10px] font-bold uppercase px-2 py-0.5 rounded-full mb-2 bg-[#fef3e7] text-[#8b5a2b]">
+                    {p.kategori}
+                  </div>
+                  <h4 className="font-bold text-[#091540] text-sm mb-1 line-clamp-1" style={{ fontFamily: "Poppins, sans-serif" }}>{p.nama}</h4>
+                  <p className="text-[#3d518c] text-xs mb-3 line-clamp-2" style={{ fontFamily: "Inter, sans-serif" }}>{p.deskripsi}</p>
                 </div>
-                <h4 className="font-bold text-[#091540] text-sm mb-1" style={{ fontFamily: "Poppins, sans-serif" }}>{p.nama}</h4>
-                <div className="text-[#182cc1] font-bold text-sm mb-3">{`Rp ${Number(p.harga).toLocaleString('id-ID')}`}</div>
-                <a href={`https://wa.me/${p.no_wa_penjual}?text=Halo, saya tertarik dengan produk ${encodeURIComponent(p.nama)}`}
-                  target="_blank" rel="noopener noreferrer"
-                  className="w-full py-2 bg-[#182cc1] hover:bg-[#1524a3] text-white text-xs font-semibold rounded-lg transition flex items-center justify-center gap-1.5">
-                  <MessageSquare size={12} /> Hubungi WhatsApp
-                </a>
+                
+                <div className="flex items-end justify-between mt-auto pt-2">
+                  <div className="text-[#182cc1] font-black text-sm">{`Rp ${Number(p.harga).toLocaleString('id-ID')}`}</div>
+                  <div className="w-8 h-8 rounded-full bg-[#e8edff] flex items-center justify-center text-[#182cc1] group-hover:bg-[#25D366] group-hover:text-white transition-colors shadow-sm">
+                    <MessageSquare size={14} className="group-hover:scale-110 transition-transform" />
+                  </div>
+                </div>
               </div>
-            </div>
+            </a>
           ))}
         </div>
       </div>
