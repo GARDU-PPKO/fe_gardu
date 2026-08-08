@@ -28,7 +28,12 @@ export default function Hero({ onSelectDusun }: { onSelectDusun: (d: Dusun) => v
   const [stats, setStats] = useState<VillageStat[]>([]);
   const [heroImage, setHeroImage] = useState("");
 
+  const [showStats, setShowStats] = useState(false);
+
   useEffect(() => {
+    const handleScroll = () => setShowStats(window.scrollY > 150);
+    window.addEventListener("scroll", handleScroll);
+    
     getSettings('nama_desa').then(res => {
       setSettings(Object.fromEntries(res.data.map((item: Setting) => [item.key, item.value])));
     });
@@ -43,6 +48,8 @@ export default function Hero({ onSelectDusun }: { onSelectDusun: (d: Dusun) => v
       const firstDusun = res.data.find((item: Dusun) => item.hero_img || item.thumbnail);
       setHeroImage(firstDusun?.hero_img ?? firstDusun?.thumbnail ?? defaultHeroImg);
     });
+
+    return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
   const villageName = settings.nama_desa ?? "DESA WISATA GETAS";
@@ -61,7 +68,7 @@ export default function Hero({ onSelectDusun }: { onSelectDusun: (d: Dusun) => v
 
   return (
     <>
-      <section id="hero" className="relative w-full h-[85vh] bg-[#091540]">
+      <section id="hero" className="relative w-full min-h-screen bg-[#091540]">
         <img
           src={heroImage || defaultHeroImg}
           alt="Tubing Sungai Desa Getas"
@@ -121,7 +128,7 @@ export default function Hero({ onSelectDusun }: { onSelectDusun: (d: Dusun) => v
       <div className="bg-[#f8faff] px-4 sm:px-8 pb-8 pt-4">
         <div className="max-w-7xl mx-auto">
           {/* ── Unified Stats Container ── */}
-          <div className="-mt-16 relative z-10">
+          <div className={`-mt-16 relative z-10 transition-all duration-1000 ease-out transform ${showStats ? 'translate-y-0 opacity-100' : 'translate-y-24 opacity-0'}`}>
             <div className="bg-white/95 backdrop-blur-xl border border-[#c5d0ff] rounded-[2rem] p-6 shadow-xl shadow-[#091540]/5 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6 divide-y md:divide-y-0 lg:divide-x divide-[#e8edff]">
               {statItems.map((s, idx) => (
                 <div key={s.label} className={`flex flex-col sm:flex-row items-start sm:items-center gap-4 ${idx !== 0 && idx % 3 !== 0 ? 'lg:pl-6' : ''} ${idx !== 0 && idx % 2 !== 0 ? 'md:pl-6' : ''} pt-4 md:pt-0 first:pt-0`}>

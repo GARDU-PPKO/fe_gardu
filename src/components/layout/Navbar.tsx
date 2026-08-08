@@ -25,7 +25,7 @@ export default function Navbar({ onOpenBooking }: { onOpenBooking: () => void })
 
   return (
     <div className="fixed top-4 left-0 right-0 z-50 flex justify-center px-4 pointer-events-none">
-      <nav className={`pointer-events-auto transition-all duration-300 rounded-full w-full max-w-5xl ${scrolled ? "bg-white/95 backdrop-blur-md shadow-lg border border-[#c5d0ff]" : "bg-white/80 backdrop-blur-md border border-white/40"}`}>
+      <nav className={`pointer-events-auto transition-all duration-300 rounded-full w-full max-w-7xl ${scrolled ? "bg-white/95 backdrop-blur-md shadow-lg border border-[#c5d0ff]" : "bg-white/80 backdrop-blur-md border border-white/40"}`}>
         <div className="px-5 sm:px-8 h-16 flex items-center justify-between gap-3">
 
         {/* ── Left: Logo + AR Explore ── */}
