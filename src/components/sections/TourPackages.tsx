@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { CheckCircle, Ticket } from "lucide-react";
+import { CheckCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { getTourPackages } from "../../services/tour-package.service";
 import type { TourPackage } from "../../types";
@@ -74,26 +74,34 @@ const FALLBACK_PACKAGES: TourPackage[] = [
 export default function TourPackages() {
   const navigate = useNavigate();
   const [packages, setPackages] = useState<TourPackage[]>(FALLBACK_PACKAGES);
+  const [filter, setFilter] = useState("Semua");
+  const categories = ["Semua", "Terpopuler", "Promo", "Grup"];
 
   useEffect(() => {
     getTourPackages()
       .then(res => {
         if (res?.data && res.data.length > 0) {
-          // Batasi maksimal 4 paket agar grid kanan-kiri (2x2) tetap sempurna dan tidak memanjang
-          setPackages(res.data.slice(0, 4));
+          setPackages(res.data);
         }
       })
       .catch(() => {
-        // Biarkan menggunakan data fallback jika API gagal / tidak aktif
       });
   }, []);
+
+  const filteredPackages = packages.filter(p => {
+    if (filter === "Semua") return true;
+    if (filter === "Terpopuler") return p.tag?.toLowerCase() === "terpopuler";
+    if (filter === "Promo") return p.tag?.toLowerCase() === "promo";
+    if (filter === "Grup") return p.satuan === "grup" || (p.min_participants ?? 0) >= 10;
+    return true;
+  }).slice(0, 4);
 
   return (
     <section id="paket" className="py-16 px-4 sm:px-8 bg-white">
       <div className="max-w-7xl mx-auto">
-        <div className="grid lg:grid-cols-[380px_1fr] gap-14 items-center">
+        <div className="grid lg:grid-cols-[380px_1fr] gap-14 items-start">
           {/* Left text */}
-          <div>
+          <div className="sticky top-24">
             <span className="text-xs font-bold uppercase tracking-widest text-[#182cc1]" style={{ fontFamily: "Inter, sans-serif" }}>Paket Wisata</span>
             <h2 className="text-2xl sm:text-3xl font-bold text-[#091540] mt-2 mb-4 leading-tight" style={{ fontFamily: "Poppins, sans-serif" }}>
               Paket Tubing Seru<br />untuk Semua
@@ -109,57 +117,74 @@ export default function TourPackages() {
                 </div>
               ))}
             </div>
-            <button onClick={() => navigate('/booking/package')}
-              className="flex items-center gap-2.5 px-6 py-3 bg-[#182cc1] hover:bg-[#1524a3] text-white font-semibold rounded-full transition shadow-md shadow-[#c5d0ff]"
+            <button onClick={() => navigate('/packages')}
+              className="flex items-center gap-2.5 px-6 py-3 bg-[#182cc1] hover:bg-[#1524a3] text-white font-semibold rounded-full transition shadow-md shadow-[#c5d0ff] w-fit"
               style={{ fontFamily: "Poppins, sans-serif" }}>
-              <Ticket size={16} /> Pesan Sekarang
+              Lihat Paket Lainnya <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
             </button>
           </div>
 
-          {/* Right cards - 2x2 grid */}
-          <div className="grid sm:grid-cols-2 gap-4">
-            {packages.map(p => (
-              <div key={p.id} className="bg-white rounded-2xl overflow-hidden shadow-sm border border-[#c5d0ff] group hover:shadow-lg hover:border-[#abd2fa] transition-all cursor-pointer flex flex-col h-full"
-                onClick={() => navigate('/booking/package')}>
-                <div className="relative h-40 bg-[#c5d0ff] overflow-hidden flex-shrink-0">
-                  <img src={p.gambar} alt={p.nama} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
-                  {p.tag && p.tag.toLowerCase() !== "promo" && (
-                    <span className="absolute top-2 left-2 text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#182cc1] text-white shadow">
-                      {p.tag}
-                    </span>
-                  )}
-                  {p.tag && p.tag.toLowerCase() === "promo" && (
-                    <span className="absolute top-2 left-2 text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500 text-white shadow">
-                      {p.tag}
-                    </span>
-                  )}
-                  <div className="absolute bottom-2 left-3">
-                    <span className="text-white font-bold text-sm drop-shadow" style={{ fontFamily: "Poppins, sans-serif" }}>{p.nama}</span>
-                  </div>
-                </div>
-                <div className="p-4 flex flex-col flex-1 justify-between">
-                  <div>
-                    <p className="text-[#3d518c] text-xs mb-3 leading-relaxed" style={{ fontFamily: "Inter, sans-serif" }}>{p.deskripsi}</p>
-                  </div>
-                  <div>
-                    <div className="flex items-center justify-between mb-3 pt-2">
-                      <div>
-                        <span className="text-[#182cc1] font-bold text-sm">{`Rp ${Number(p.harga).toLocaleString('id-ID')}`}</span>
-                        <span className="text-[#3d518c] text-[10px] ml-1">{p.satuan === 'orang' ? "/orang" : "/grup"} · {p.durasi}</span>
-                      </div>
-                      <span className="text-[10px] text-[#3d518c] bg-[#eef2ff] border border-[#c5d0ff] px-2 py-0.5 rounded-full">
-                        {p.min_participants === p.max_participants ? `Min. ${p.min_participants}` : `${p.min_participants}–${p.max_participants} org`}
+          {/* Right cards with filter */}
+          <div className="flex flex-col gap-5">
+            {/* Filter Pills */}
+            <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-hide">
+              {categories.map(cat => (
+                <button
+                  key={cat}
+                  onClick={() => setFilter(cat)}
+                  className={`px-4 py-1.5 rounded-full text-sm font-semibold whitespace-nowrap transition-all ${
+                    filter === cat 
+                      ? "bg-[#091540] text-white shadow-md" 
+                      : "bg-[#e8edff] text-[#3d518c] hover:bg-[#c5d0ff] hover:text-[#1d2e80]"
+                  }`}
+                  style={{ fontFamily: "Inter, sans-serif" }}
+                >
+                  {cat}
+                </button>
+              ))}
+            </div>
+
+            {/* 2x2 grid */}
+            <div className="grid sm:grid-cols-2 gap-4">
+              {filteredPackages.map(p => (
+                <div key={p.id} className="bg-white rounded-2xl overflow-hidden shadow-sm border border-[#c5d0ff] group hover:shadow-lg hover:border-[#182cc1] transition-all cursor-pointer flex flex-col h-full relative"
+                  onClick={() => navigate('/packages')}>
+                  <div className="relative h-40 bg-[#c5d0ff] overflow-hidden flex-shrink-0">
+                    <img src={p.gambar} alt={p.nama} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
+                    {p.tag && p.tag.toLowerCase() !== "promo" && (
+                      <span className="absolute top-2 left-2 text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#182cc1] text-white shadow">
+                        {p.tag}
                       </span>
+                    )}
+                    {p.tag && p.tag.toLowerCase() === "promo" && (
+                      <span className="absolute top-2 left-2 text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500 text-white shadow">
+                        {p.tag}
+                      </span>
+                    )}
+                    <div className="absolute bottom-2 left-3">
+                      <span className="text-white font-bold text-sm drop-shadow" style={{ fontFamily: "Poppins, sans-serif" }}>{p.nama}</span>
                     </div>
-                    <button className="w-full py-2.5 bg-[#182cc1] hover:bg-[#1524a3] text-white text-xs font-bold rounded-full transition flex items-center justify-center gap-1.5 shadow-xs"
-                      style={{ fontFamily: "Poppins, sans-serif" }}>
-                      <Ticket size={12} /> Pesan Paket Ini
-                    </button>
+                  </div>
+                  <div className="p-4 flex flex-col flex-1 justify-between">
+                    <div>
+                      <p className="text-[#3d518c] text-xs mb-3 leading-relaxed line-clamp-2" style={{ fontFamily: "Inter, sans-serif" }}>{p.deskripsi}</p>
+                    </div>
+                    <div className="flex items-end justify-between mt-auto">
+                      <div>
+                        <div className="text-[#182cc1] font-bold text-sm">{`Rp ${Number(p.harga).toLocaleString('id-ID')}`}</div>
+                        <div className="text-[#3d518c] text-[10px] mt-0.5" style={{ fontFamily: "Inter, sans-serif" }}>
+                          {p.satuan === 'orang' ? "/orang" : "/grup"} · {p.durasi}
+                        </div>
+                      </div>
+                      <div className="w-8 h-8 rounded-full bg-[#e8edff] flex items-center justify-center text-[#182cc1] group-hover:bg-[#182cc1] group-hover:text-white transition-colors">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="group-hover:translate-x-0.5 transition-transform"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+                      </div>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         </div>
       </div>

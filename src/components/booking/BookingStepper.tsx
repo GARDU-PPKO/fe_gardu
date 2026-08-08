@@ -1,54 +1,40 @@
 import React from 'react';
+import { CheckCircle } from 'lucide-react';
 
 interface StepperProps {
   currentStep: number;
 }
 
-const steps = [
-  { id: 1, label: 'Pilih Paket & Jadwal' },
-  { id: 2, label: 'Data Pemesan' },
-  { id: 3, label: 'Konfirmasi' },
-];
-
 const BookingStepper: React.FC<StepperProps> = ({ currentStep }) => {
   return (
-    <div className="flex items-center justify-center w-full py-4 bg-white border-b border-blue-100/80 shadow-2xs">
-      <div className="flex items-center space-x-2 sm:space-x-4 px-4 overflow-x-auto scrollbar-hide">
-        {steps.map((step, index) => (
-          <React.Fragment key={step.id}>
-            <div className="flex items-center space-x-2.5 flex-shrink-0">
-              <div
-                className={`w-7 h-7 flex items-center justify-center rounded-full text-xs font-bold transition-all duration-300 shadow-sm ${
-                  currentStep >= step.id
-                    ? 'bg-[#182CC1] text-white shadow-md shadow-[#182CC1]/30 ring-4 ring-blue-50'
-                    : 'bg-[#EFF2FC] text-[#182CC1] border border-blue-200/80 font-semibold'
-                }`}
-                style={{ fontFamily: "Poppins, sans-serif" }}
-              >
-                {currentStep > step.id ? '✓' : step.id}
+    <div className="flex-shrink-0 px-4 sm:px-8 pt-4 pb-2 bg-white border-b border-[#c5d0ff]">
+      <div className="max-w-3xl mx-auto">
+        <div className="flex items-center gap-2 mb-2">
+          {[
+            { n: 1, label: "Jadwal" },
+            { n: 2, label: "Data Pemesan" },
+            { n: 3, label: "Pembayaran" },
+          ].map((s, i) => (
+            <div key={s.n} className="flex items-center gap-2 flex-1">
+              <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 transition-all ${
+                currentStep > s.n ? "bg-[#182cc1] text-white" :
+                currentStep === s.n ? "bg-[#091540] text-white" :
+                "bg-[#e8edff] text-[#3d518c]"
+              }`} style={{ fontFamily: "Poppins, sans-serif" }}>
+                {currentStep > s.n ? <CheckCircle size={14} /> : s.n}
               </div>
-              <span
-                className={`text-xs sm:text-sm tracking-wide ${
-                  currentStep >= step.id ? 'text-[#1E293B] font-extrabold' : 'text-gray-400 font-semibold'
-                }`}
-                style={{ fontFamily: "Inter, sans-serif" }}
-              >
-                {step.label}
-              </span>
+              <span className={`text-xs font-medium hidden sm:block ${currentStep >= s.n ? "text-[#091540]" : "text-[#3d518c]"}`}
+                style={{ fontFamily: "Inter, sans-serif" }}>{s.label}</span>
+              {i < 2 && <div className={`flex-1 h-0.5 rounded-full mx-1 ${currentStep > s.n ? "bg-[#182cc1]" : "bg-[#c5d0ff]"}`} />}
             </div>
-            {index < steps.length - 1 && (
-              <div
-                className={`w-8 sm:w-16 h-0.5 rounded-full transition-colors ${
-                  currentStep > step.id ? 'bg-[#182CC1]' : 'bg-blue-100'
-                }`}
-              />
-            )}
-          </React.Fragment>
-        ))}
+          ))}
+        </div>
       </div>
     </div>
   );
 };
 
 export default BookingStepper;
+
+
 
