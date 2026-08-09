@@ -2,8 +2,9 @@ export interface AddOnItem {
   id: string;
   name: string;
   price: number;
-  description: string;
+  description?: string;
   isFree?: boolean;
+  quantity?: number;
 }
 
 export interface Package {
