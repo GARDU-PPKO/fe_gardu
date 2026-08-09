@@ -18,3 +18,6 @@ export const getBookingSessions = (params?: { package_id?: number; tanggal?: str
 
 export const createBooking = (data: CreateBookingPayload) =>
   api.post('/bookings', data);
+
+export const checkBooking = (params: { kode?: string; phone?: string }) =>
+  api.get('/bookings/check', { params });

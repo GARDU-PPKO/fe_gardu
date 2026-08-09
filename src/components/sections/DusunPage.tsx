@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Star, ChevronLeft, ChevronRight } from "lucide-react";
+import { Star, ChevronLeft, ChevronRight, MapPin, Navigation, X, CheckCircle2 } from "lucide-react";
 import { getDusunDetail } from "../../services/dusun.service";
 import type { Dusun } from "../../types";
 
@@ -25,124 +25,137 @@ export default function DusunPage({ dusun, onClose }: { dusun: Dusun; onClose: (
     return () => { document.body.style.overflow = ""; };
   }, []);
 
-  const keunggulanList = detail.keunggulan ? detail.keunggulan.map(k => k.keunggulan) : ["Suami tani organik dan asri", "Pemandangan alam pegunungan sejuk", "Komunitas warga yang ramah dan aktif"];
+  const keunggulanList = detail.keunggulan ? detail.keunggulan.map(k => k.keunggulan) : ["Suasana tani organik dan asri", "Pemandangan pegunungan", "Warga yang ramah"];
 
   return (
-    <div className="fixed inset-0 z-[70] bg-white overflow-y-auto">
-      <div className="max-w-6xl mx-auto px-4 sm:px-8 py-8">
-
-        {/* Back button */}
+    <div 
+      className="fixed inset-0 z-[70] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 sm:p-8 animate-fadeIn"
+      onClick={onClose}
+    >
+      <div 
+        className="bg-white w-full max-w-6xl h-full max-h-[100dvh] sm:max-h-[85vh] rounded-3xl overflow-hidden flex flex-col lg:flex-row shadow-2xl relative"
+        onClick={(e) => e.stopPropagation()}
+      >
+        
+        {/* Close Button Mobile/Desktop */}
         <button onClick={onClose}
-          className="flex items-center gap-2 text-[#3d518c] text-sm font-semibold hover:text-[#182cc1] transition mb-5">
-          <ChevronLeft size={18} /> Kembali ke Beranda
+          className="absolute top-4 right-4 z-50 w-10 h-10 rounded-full bg-black/20 hover:bg-black/40 backdrop-blur-md text-white flex items-center justify-center transition-all lg:bg-[#e8edff] lg:hover:bg-[#c5d0ff] lg:text-[#091540]">
+          <X size={20} />
         </button>
 
-        {/* ── Big centered dusun name ── */}
-        <h1
-          className="font-black text-[#091540] text-center mb-6 leading-none"
-          style={{ fontFamily: "Poppins, sans-serif", fontSize: "clamp(2.8rem, 8vw, 5.5rem)", letterSpacing: "-0.02em" }}>
-          {detail.nama}
-        </h1>
+        {/* ── Left Side: Gallery (Compact) ── */}
+        <div className="relative w-full lg:w-[45%] h-[40%] lg:h-full bg-[#091540] group flex-shrink-0">
+          <img
+            src={allImages[activeImg] || detail.thumbnail}
+            alt={detail.nama}
+            key={activeImg}
+            className="w-full h-full object-cover transition-transform duration-700 hover:scale-105"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#091540] via-transparent to-transparent opacity-80" />
+          
+          {/* Gallery Controls */}
+          {allImages.length > 1 && (
+            <>
+              <button
+                onClick={() => setActiveImg(i => (i - 1 + allImages.length) % allImages.length)}
+                className="absolute left-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white/20 hover:bg-white/40 backdrop-blur-md flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-all">
+                <ChevronLeft size={18} />
+              </button>
+              <button
+                onClick={() => setActiveImg(i => (i + 1) % allImages.length)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white/20 hover:bg-white/40 backdrop-blur-md flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-all">
+                <ChevronRight size={18} />
+              </button>
+              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-1.5">
+                {allImages.map((_, i) => (
+                  <button key={i} onClick={() => setActiveImg(i)}
+                    className={`rounded-full transition-all ${activeImg === i ? "w-6 h-1.5 bg-white" : "w-1.5 h-1.5 bg-white/50"}`} />
+                ))}
+              </div>
+            </>
+          )}
 
-        {/* ── Main 2-column: large image LEFT + info RIGHT ── */}
-        <div className="grid lg:grid-cols-[1fr_320px] gap-5 mb-10">
-
-          {/* Main image with swipe arrows */}
-          <div className="relative rounded-3xl overflow-hidden bg-[#e8edff] group" style={{ minHeight: "360px" }}>
-            <img
-              src={allImages[activeImg] || detail.thumbnail}
-              alt={detail.nama}
-              key={activeImg}
-              className="w-full h-full object-cover"
-              style={{ minHeight: "360px" }}
-            />
-            {allImages.length > 1 && (
-              <>
-                <button
-                  onClick={() => setActiveImg(i => (i - 1 + allImages.length) % allImages.length)}
-                  className="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/80 backdrop-blur-sm flex items-center justify-center shadow-md opacity-0 group-hover:opacity-100 transition hover:bg-white">
-                  <ChevronLeft size={18} className="text-[#091540]" />
-                </button>
-                <button
-                  onClick={() => setActiveImg(i => (i + 1) % allImages.length)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/80 backdrop-blur-sm flex items-center justify-center shadow-md opacity-0 group-hover:opacity-100 transition hover:bg-white">
-                  <ChevronRight size={18} className="text-[#091540]" />
-                </button>
-                <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
-                  {allImages.map((_, i) => (
-                    <button key={i} onClick={() => setActiveImg(i)}
-                      className={`rounded-full transition-all ${activeImg === i ? "w-5 h-2 bg-white" : "w-2 h-2 bg-white/50"}`} />
-                  ))}
-                </div>
-              </>
-            )}
-          </div>
-
-          {/* Right: info sidebar */}
-          <div className="flex flex-col gap-4">
-            <div className="bg-white rounded-2xl border border-[#c5d0ff] p-5 shadow-sm flex-1">
-              <div className="text-xs font-bold uppercase tracking-widest text-[#3d518c] mb-4" style={{ fontFamily: "Inter, sans-serif" }}>Info Dusun</div>
-              {[
-                { label: "Nama Dusun",  val: detail.nama },
-                { label: "Wilayah RW",  val: detail.rw },
-                { label: "Jumlah RT",   val: detail.jumlah_rt + " RT" },
-                { label: "Penduduk",    val: (detail.jumlah_penduduk ? detail.jumlah_penduduk.toLocaleString("id-ID") : "400") + " jiwa" },
-                { label: "Luas",        val: detail.luas_wilayah || "1,2 km²" },
-                { label: "Desa",        val: "Getas, Singorojo" },
-                { label: "Kabupaten",   val: "Kendal, Jawa Tengah" },
-              ].map(r => (
-                <div key={r.label} className="flex justify-between py-2 border-b border-[#eef2ff] last:border-0 text-sm gap-3">
-                  <span className="text-[#3d518c]" style={{ fontFamily: "Inter, sans-serif" }}>{r.label}</span>
-                  <span className="text-[#091540] font-medium text-right" style={{ fontFamily: "Poppins, sans-serif" }}>{r.val}</span>
-                </div>
-              ))}
+          {/* Title on Image */}
+          <div className="absolute bottom-6 left-6 right-6">
+            <div className="text-white/80 text-[10px] font-bold tracking-widest uppercase mb-1 flex items-center gap-1.5" style={{ fontFamily: "Inter, sans-serif" }}>
+              <Navigation size={12} className="text-[#7692ff]" /> Dusun Getas
             </div>
-            <button onClick={onClose}
-              className="w-full py-3 bg-[#182cc1] hover:bg-[#1524a3] text-white font-bold rounded-2xl transition flex items-center justify-center gap-2 shadow-lg shadow-[#c5d0ff]"
-              style={{ fontFamily: "Poppins, sans-serif" }}>
-              <ChevronLeft size={16} /> Kembali
-            </button>
+            <h1 className="font-black text-white text-4xl lg:text-5xl leading-none drop-shadow-md" style={{ fontFamily: "Poppins, sans-serif" }}>
+              {detail.nama}
+            </h1>
           </div>
         </div>
 
-        {/* ── Description + Keunggulan + Map ── */}
-        <div className="grid lg:grid-cols-2 gap-10 pb-10 items-stretch">
-          <div>
-            <h2 className="text-xl font-bold text-[#091540] mb-3" style={{ fontFamily: "Poppins, sans-serif" }}>
-              Tentang Dusun {detail.nama}
+        {/* ── Right Side: Content (Compact & Scrollable if needed) ── */}
+        <div className="flex-1 bg-[#f8faff] p-6 lg:p-8 overflow-y-auto custom-scrollbar flex flex-col h-full">
+          
+          <div className="mb-6">
+            <h2 className="text-xl font-bold text-[#091540] mb-2" style={{ fontFamily: "Poppins, sans-serif" }}>
+              Tentang Dusun
             </h2>
-            <p className="text-[#3d518c] leading-relaxed mb-6" style={{ fontFamily: "Inter, sans-serif" }}>
+            <p className="text-[#3d518c] text-sm leading-relaxed" style={{ fontFamily: "Inter, sans-serif" }}>
               {detail.deskripsi || "Dusun yang asri dengan pemandangan alam indah dan keramahan warga desa yang berlandaskan kearifan lokal."}
             </p>
+          </div>
 
-            <h3 className="text-base font-bold text-[#091540] mb-4" style={{ fontFamily: "Poppins, sans-serif" }}>
-              Keunggulan & Daya Tarik
-            </h3>
-            <div className="space-y-2">
-              {keunggulanList.map((k, idx) => (
-                <div key={idx} className="flex items-center gap-3 bg-[#eef2ff] border border-[#c5d0ff] rounded-xl p-3">
-                  <div className="w-7 h-7 rounded-lg bg-[#e8edff] flex items-center justify-center flex-shrink-0">
-                    <Star size={13} className="text-[#182cc1]" />
-                  </div>
-                  <p className="text-[#091540] text-sm font-medium" style={{ fontFamily: "Inter, sans-serif" }}>{k}</p>
+          <div className="grid grid-cols-2 gap-4 mb-6">
+            {/* Info Box */}
+            <div className="col-span-2 sm:col-span-1 bg-white p-4 rounded-2xl border border-[#e8edff] shadow-sm">
+              <h3 className="text-xs font-bold text-[#182cc1] uppercase tracking-widest mb-3 flex items-center gap-1.5">
+                <MapPin size={14} /> Demografi
+              </h3>
+              <div className="grid grid-cols-2 gap-2 text-sm">
+                <div>
+                  <div className="text-[10px] text-[#3d518c]">Jumlah RT</div>
+                  <div className="font-bold text-[#091540]">{detail.jumlah_rt} RT</div>
                 </div>
-              ))}
+                <div>
+                  <div className="text-[10px] text-[#3d518c]">Penduduk</div>
+                  <div className="font-bold text-[#091540]">{(detail.jumlah_penduduk ? detail.jumlah_penduduk.toLocaleString("id-ID") : "400")}</div>
+                </div>
+                <div>
+                  <div className="text-[10px] text-[#3d518c]">Wilayah RW</div>
+                  <div className="font-bold text-[#091540]">{detail.rw}</div>
+                </div>
+                <div>
+                  <div className="text-[10px] text-[#3d518c]">Luas</div>
+                  <div className="font-bold text-[#091540]">{detail.luas_wilayah || "1,2 km²"}</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Keunggulan */}
+            <div className="col-span-2 sm:col-span-1 bg-white p-4 rounded-2xl border border-[#e8edff] shadow-sm">
+              <h3 className="text-xs font-bold text-[#182cc1] uppercase tracking-widest mb-3 flex items-center gap-1.5">
+                <Star size={14} /> Daya Tarik
+              </h3>
+              <div className="space-y-2">
+                {keunggulanList.slice(0,3).map((k, idx) => (
+                  <div key={idx} className="flex items-start gap-2">
+                    <div className="w-4 h-4 mt-0.5 rounded-full bg-[#e8edff] flex items-center justify-center flex-shrink-0 text-[#182cc1]">
+                      <CheckCircle2 size={10} />
+                    </div>
+                    <p className="text-[#091540] text-xs font-medium leading-tight">{k}</p>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
 
-          <div className="flex flex-col">
-            <h3 className="text-base font-bold text-[#091540] mb-3" style={{ fontFamily: "Poppins, sans-serif" }}>Lokasi</h3>
-            <div className="flex-1 rounded-2xl overflow-hidden border border-[#c5d0ff] shadow-sm" style={{ minHeight: "200px" }}>
-              <iframe
-                title={`Peta Dusun ${detail.nama}`}
-                src={`https://maps.google.com/maps?q=Dusun+${detail.nama},+Desa+Getas,+Singorojo,+Kendal&output=embed&z=14`}
-                className="w-full h-full border-0"
-                allowFullScreen loading="lazy"
-              />
-            </div>
+          {/* Map (Compact) */}
+          <div className="flex-1 bg-white rounded-2xl border border-[#e8edff] shadow-sm overflow-hidden min-h-[150px] relative">
+            <h3 className="absolute top-3 left-3 bg-white/90 backdrop-blur-md px-3 py-1 rounded-lg text-xs font-bold text-[#182cc1] z-10 uppercase tracking-widest shadow-sm">
+              Lokasi Peta
+            </h3>
+            <iframe
+              title={`Peta Dusun ${detail.nama}`}
+              src={`https://maps.google.com/maps?q=Dusun+${detail.nama},+Desa+Getas,+Singorojo,+Kendal&output=embed&z=14`}
+              className="w-full h-full border-0 absolute inset-0"
+              allowFullScreen loading="lazy"
+            />
           </div>
+
         </div>
-
       </div>
     </div>
   );
