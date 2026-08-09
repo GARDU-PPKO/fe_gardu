@@ -1,15 +1,25 @@
 import React from 'react';
-import { CheckCircle } from 'lucide-react';
+import { CheckCircle, ArrowLeft } from 'lucide-react';
 
 interface StepperProps {
   currentStep: number;
+  onBackClick?: () => void;
 }
 
-const BookingStepper: React.FC<StepperProps> = ({ currentStep }) => {
+const BookingStepper: React.FC<StepperProps> = ({ currentStep, onBackClick }) => {
   return (
     <div className="flex-shrink-0 px-4 sm:px-8 pt-4 pb-2 bg-white border-b border-[#c5d0ff]">
-      <div className="max-w-3xl mx-auto">
-        <div className="flex items-center gap-2 mb-2">
+      <div className="max-w-4xl mx-auto flex items-center gap-3">
+        {onBackClick && (
+          <button 
+            onClick={onBackClick}
+            className="flex-shrink-0 p-2 mb-2 text-[#3d518c] hover:bg-[#eef2ff] rounded-lg transition-colors border border-transparent hover:border-[#c5d0ff] bg-white flex items-center justify-center shadow-sm"
+            title="Kembali"
+          >
+            <ArrowLeft size={18} />
+          </button>
+        )}
+        <div className="flex-1 flex items-center gap-2 mb-2">
           {[
             { n: 1, label: "Jadwal" },
             { n: 2, label: "Data Pemesan" },

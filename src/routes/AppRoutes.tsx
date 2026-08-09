@@ -6,6 +6,7 @@ import PackagesPage from '../pages/Packages/PackagesPage';
 import BookingPackage from '../pages/Booking/BookingPackage';
 import BookingFormPage from '../pages/Booking/BookingForm';
 import BookingPayment from '../pages/Booking/BookingPayment';
+import CheckBooking from '../pages/Booking/CheckBooking';
 import { BookingProvider } from '../hooks/useBooking';
 
 const PageWrapper = ({ children }: { children: React.ReactNode }) => (
@@ -27,6 +28,8 @@ const AnimatedRoutes: React.FC = () => {
         <Route path="/" element={<PageWrapper><HomePage /></PageWrapper>} />
         
         <Route path="/packages" element={<PageWrapper><PackagesPage /></PageWrapper>} />
+        
+        <Route path="/cek-pesanan" element={<PageWrapper><CheckBooking /></PageWrapper>} />
 
         <Route path="/booking/*" element={
           <PageWrapper>

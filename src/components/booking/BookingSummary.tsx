@@ -8,8 +8,6 @@ interface BookingSummaryProps {
   buttonDisabled?: boolean;
   showPaymentInfo?: boolean;
   hideSummaryCard?: boolean;
-  onBackClick?: () => void;
-  backButtonText?: string;
   buttonIcon?: React.ReactNode;
 }
 
@@ -19,8 +17,6 @@ const BookingSummary: React.FC<BookingSummaryProps> = ({
   buttonDisabled = false,
   showPaymentInfo = false,
   hideSummaryCard = false,
-  onBackClick,
-  backButtonText = "← Kembali",
   buttonIcon,
 }) => {
   const { bookingData } = useBooking();
@@ -110,17 +106,6 @@ const BookingSummary: React.FC<BookingSummaryProps> = ({
         <span>{buttonText}</span>
         {!buttonIcon && !showPaymentInfo && <ArrowRight size={16} />}
       </button>
-
-      {onBackClick && (
-        <button
-          type="button"
-          className="w-full py-3 border border-[#c5d0ff] bg-white text-[#3d518c] hover:bg-[#eef2ff] rounded-2xl transition text-sm font-medium"
-          onClick={onBackClick}
-          style={{ fontFamily: "Inter, sans-serif" }}
-        >
-          {backButtonText}
-        </button>
-      )}
     </div>
   );
 };

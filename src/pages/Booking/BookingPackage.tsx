@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Flame, Coffee, Bike, Target } from 'lucide-react';
+
 import BookingLayout from '../../components/layout/BookingLayout';
 import BookingSummary from '../../components/booking/BookingSummary';
 import { useBooking } from '../../hooks/useBooking';
@@ -27,6 +27,7 @@ const BookingPackage: React.FC = () => {
   const [localSession, setLocalSession] = useState(bookingData.session || 'Pagi (07.00 - 09.00)');
   const [localParticipants, setLocalParticipants] = useState(bookingData.participants || 1);
   const [localAddOns, setLocalAddOns] = useState(bookingData.selectedAddOns || []);
+  const [isAddonModalOpen, setIsAddonModalOpen] = useState(false);
 
   const currentPackage = bookingData.selectedPackage;
   const minParticipants = currentPackage?.minParticipants || 1;
@@ -64,7 +65,7 @@ const BookingPackage: React.FC = () => {
   if (!currentPackage) return null;
 
   return (
-    <BookingLayout currentStep={1}>
+    <BookingLayout currentStep={1} onBackClick={() => navigate('/packages')}>
       <div className="grid lg:grid-cols-[1fr_340px] gap-8">
         <div>
           <div className="flex items-center justify-between mb-5">
@@ -170,96 +171,141 @@ const BookingPackage: React.FC = () => {
           </div>
 
           {/* Add-Ons Section */}
-          <h3 className="text-lg font-bold text-[#091540] mt-8 mb-5" style={{ fontFamily: "Poppins, sans-serif" }}>
-            Fasilitas Tambahan (Opsional)
+          <h3 className="text-lg font-bold text-[#091540] mt-8 mb-4" style={{ fontFamily: "Poppins, sans-serif" }}>
+            Adds On (Opsional)
           </h3>
-          <div className="grid gap-4">
-            {[
-              { 
-                id: '1', 
-                name: 'Alat Bakaran', 
-                price: 35000, 
-                desc: 'Lengkap dengan arang, capitan, kipas, dan panggangan. Cocok untuk BBQ malam.',
-                image: imgBbq
-              },
-              { 
-                id: '2', 
-                name: 'Paket Snack Lokal', 
-                price: 15000, 
-                desc: 'Kopi/teh hangat, ubi rebus, kacang rebus, dan jajanan tradisional khas Getas.',
-                image: imgSnack
-              },
-              { 
-                id: '3', 
-                name: 'ATV Ride Adventure', 
-                price: 50000, 
-                desc: 'Sewa ATV 30 menit di sirkuit mini off-road kami. Sudah termasuk helm.',
-                image: imgAtv
-              },
-              { 
-                id: '4', 
-                name: 'Area Panahan (Archery)', 
-                price: 0, 
-                desc: 'Gratis! Coba 3 anak panah dengan target sasaran di area khusus.',
-                image: imgArchery
-              }
-            ].map(addon => {
-              const isSelected = localAddOns.some(a => a.id === addon.id);
-              return (
-                <label key={addon.id} className={`flex flex-col sm:flex-row items-start sm:items-center justify-between p-3 rounded-2xl border cursor-pointer transition-all ${isSelected ? 'border-[#182cc1] bg-[#f8faff] shadow-md shadow-[#182cc1]/10' : 'border-[#c5d0ff] bg-white hover:border-[#182cc1] hover:shadow-sm'}`}>
-                  <div className="flex items-center gap-4 w-full">
-                    {/* Add-on Image */}
-                    <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl overflow-hidden flex-shrink-0 bg-[#e8edff]">
-                      <img src={addon.image} alt={addon.name} className="w-full h-full object-cover" />
-                    </div>
-                    
-                    {/* Text Details */}
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="font-bold text-[#091540] text-sm sm:text-base">{addon.name}</span>
-                        {addon.price === 0 && (
-                          <span className="bg-green-100 text-green-700 text-[10px] font-bold px-2 py-0.5 rounded-full">FREE</span>
-                        )}
-                      </div>
-                      <p className="text-xs sm:text-sm text-[#3d518c] leading-snug line-clamp-2 pr-2" style={{ fontFamily: "Inter, sans-serif" }}>
-                        {addon.desc}
-                      </p>
-                      
-                      {/* Mobile Layout Price (shows up on small screens instead of far right) */}
-                      <div className="sm:hidden mt-2 font-bold text-[#182cc1] text-sm">
-                        {addon.price === 0 ? 'Gratis' : `+ Rp ${addon.price.toLocaleString('id-ID')}`}
-                      </div>
-                    </div>
-                  </div>
-                  
-                  {/* Desktop Right Side: Price & Checkbox */}
-                  <div className="hidden sm:flex items-center gap-4 flex-shrink-0 pl-4 border-l border-transparent">
-                    <span className="text-[#182cc1] font-bold whitespace-nowrap">
-                      {addon.price === 0 ? 'Gratis' : `+ Rp ${addon.price.toLocaleString('id-ID')}`}
-                    </span>
-                    <div className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-colors ${isSelected ? 'bg-[#182cc1] border-[#182cc1]' : 'border-[#c5d0ff] bg-white'}`}>
-                      {isSelected && <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"></path></svg>}
-                    </div>
-                  </div>
+          <button
+            type="button"
+            onClick={() => setIsAddonModalOpen(true)}
+            className="w-full sm:w-auto px-6 py-3 bg-white border-2 border-[#182cc1] text-[#182cc1] font-bold rounded-xl flex items-center justify-center gap-2 hover:bg-[#f8faff] hover:shadow-md transition-all active:scale-[0.98]"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg>
+            Pilih Adds On
+            {localAddOns.length > 0 && (
+              <span className="ml-2 bg-[#182cc1] text-white text-xs px-2 py-0.5 rounded-full">
+                {localAddOns.length} Terpilih
+              </span>
+            )}
+          </button>
 
-                  {/* Mobile Layout Checkbox (absolute top right for mobile) */}
-                  <div className="sm:hidden absolute right-4 top-4">
-                    <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${isSelected ? 'bg-[#182cc1] border-[#182cc1]' : 'border-[#c5d0ff] bg-white'}`}>
-                      {isSelected && <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"></path></svg>}
-                    </div>
-                  </div>
-
-                  <input type="checkbox" className="hidden" checked={isSelected} onChange={(e) => {
-                    if (e.target.checked) {
-                      setLocalAddOns([...localAddOns, { id: addon.id, name: addon.name, price: addon.price, quantity: 1 }]);
-                    } else {
-                      setLocalAddOns(localAddOns.filter(a => a.id !== addon.id));
+          {/* Add-on Modal Overlay */}
+          {isAddonModalOpen && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#091540]/60 backdrop-blur-sm">
+              <div className="bg-white w-full max-w-2xl rounded-2xl shadow-2xl flex flex-col max-h-[90vh] overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+                {/* Modal Header */}
+                <div className="px-6 py-4 border-b flex items-center justify-between bg-gray-50">
+                  <h3 className="text-lg font-bold text-[#091540]" style={{ fontFamily: "Poppins, sans-serif" }}>
+                    Adds On
+                  </h3>
+                  <button 
+                    onClick={() => setIsAddonModalOpen(false)}
+                    className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                  </button>
+                </div>
+                
+                {/* Modal Body */}
+                <div className="p-4 sm:p-6 overflow-y-auto space-y-4 bg-gray-50/50">
+                  {[
+                    { 
+                      id: '1', 
+                      name: 'Alat Bakaran', 
+                      price: 35000, 
+                      desc: 'Lengkap dengan arang, capitan, kipas, dan panggangan. Cocok untuk BBQ malam.',
+                      image: imgBbq
+                    },
+                    { 
+                      id: '2', 
+                      name: 'Paket Snack Lokal', 
+                      price: 15000, 
+                      desc: 'Kopi/teh hangat, ubi rebus, kacang rebus, dan jajanan tradisional khas Getas.',
+                      image: imgSnack
+                    },
+                    { 
+                      id: '3', 
+                      name: 'ATV Ride Adventure', 
+                      price: 50000, 
+                      desc: 'Sewa ATV 30 menit di sirkuit mini off-road kami. Sudah termasuk helm.',
+                      image: imgAtv
+                    },
+                    { 
+                      id: '4', 
+                      name: 'Area Panahan (Archery)', 
+                      price: 0, 
+                      desc: 'Gratis! Coba 3 anak panah dengan target sasaran di area khusus.',
+                      image: imgArchery
                     }
-                  }} />
-                </label>
-              );
-            })}
-          </div>
+                  ].map(addon => {
+                    const isSelected = localAddOns.some(a => a.id === addon.id);
+                    return (
+                      <label key={addon.id} className={`flex flex-col sm:flex-row items-start sm:items-center justify-between p-3 rounded-2xl border cursor-pointer transition-all ${isSelected ? 'border-[#182cc1] bg-[#f8faff] shadow-md shadow-[#182cc1]/10' : 'border-[#c5d0ff] bg-white hover:border-[#182cc1] hover:shadow-sm'}`}>
+                        <div className="flex items-center gap-4 w-full">
+                          {/* Add-on Image */}
+                          <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl overflow-hidden flex-shrink-0 bg-[#e8edff]">
+                            <img src={addon.image} alt={addon.name} className="w-full h-full object-cover" />
+                          </div>
+                          
+                          {/* Text Details */}
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-1">
+                              <span className="font-bold text-[#091540] text-sm sm:text-base">{addon.name}</span>
+                              {addon.price === 0 && (
+                                <span className="bg-green-100 text-green-700 text-[10px] font-bold px-2 py-0.5 rounded-full">FREE</span>
+                              )}
+                            </div>
+                            <p className="text-xs sm:text-sm text-[#3d518c] leading-snug line-clamp-2 pr-2" style={{ fontFamily: "Inter, sans-serif" }}>
+                              {addon.desc}
+                            </p>
+                            
+                            {/* Mobile Layout Price */}
+                            <div className="sm:hidden mt-2 font-bold text-[#182cc1] text-sm">
+                              {addon.price === 0 ? 'Gratis' : `+ Rp ${addon.price.toLocaleString('id-ID')}`}
+                            </div>
+                          </div>
+                        </div>
+                        
+                        {/* Desktop Right Side: Price & Checkbox */}
+                        <div className="hidden sm:flex items-center gap-4 flex-shrink-0 pl-4 border-l border-transparent">
+                          <span className="text-[#182cc1] font-bold whitespace-nowrap">
+                            {addon.price === 0 ? 'Gratis' : `+ Rp ${addon.price.toLocaleString('id-ID')}`}
+                          </span>
+                          <div className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-colors ${isSelected ? 'bg-[#182cc1] border-[#182cc1]' : 'border-[#c5d0ff] bg-white'}`}>
+                            {isSelected && <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"></path></svg>}
+                          </div>
+                        </div>
+
+                        {/* Mobile Layout Checkbox */}
+                        <div className="sm:hidden absolute right-4 top-4">
+                          <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${isSelected ? 'bg-[#182cc1] border-[#182cc1]' : 'border-[#c5d0ff] bg-white'}`}>
+                            {isSelected && <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"></path></svg>}
+                          </div>
+                        </div>
+
+                        <input type="checkbox" className="hidden" checked={isSelected} onChange={(e) => {
+                          if (e.target.checked) {
+                            setLocalAddOns([...localAddOns, { id: addon.id, name: addon.name, price: addon.price, quantity: 1 }]);
+                          } else {
+                            setLocalAddOns(localAddOns.filter(a => a.id !== addon.id));
+                          }
+                        }} />
+                      </label>
+                    );
+                  })}
+                </div>
+                
+                {/* Modal Footer */}
+                <div className="px-6 py-4 border-t bg-white flex justify-end">
+                  <button 
+                    onClick={() => setIsAddonModalOpen(false)}
+                    className="px-6 py-2.5 bg-[#182cc1] text-white font-bold rounded-xl hover:bg-[#1524a3] transition-colors shadow-md shadow-[#c5d0ff]"
+                  >
+                    Simpan Pilihan
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Rules Section */}
           <h3 className="text-lg font-bold text-[#091540] mt-8 mb-4" style={{ fontFamily: "Poppins, sans-serif" }}>

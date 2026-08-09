@@ -8,9 +8,10 @@ import LogoGardu from '../../assets/Logo_Gardu_V2.png';
 interface BookingLayoutProps {
   children: React.ReactNode;
   currentStep: number;
+  onBackClick?: () => void;
 }
 
-const BookingLayout: React.FC<BookingLayoutProps> = ({ children, currentStep }) => {
+const BookingLayout: React.FC<BookingLayoutProps> = ({ children, currentStep, onBackClick }) => {
   const navigate = useNavigate();
 
   return (
@@ -40,7 +41,7 @@ const BookingLayout: React.FC<BookingLayoutProps> = ({ children, currentStep }) 
       </div>
 
       {/* ── Progress bar ── */}
-      {currentStep > 0 && currentStep < 4 && <BookingStepper currentStep={currentStep} />}
+      {currentStep > 0 && currentStep < 4 && <BookingStepper currentStep={currentStep} onBackClick={onBackClick} />}
 
       {/* ── Body ── */}
       <div className="flex-1 overflow-y-auto flex flex-col">

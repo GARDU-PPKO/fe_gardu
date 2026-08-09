@@ -32,7 +32,7 @@ const BookingFormPage: React.FC = () => {
     updateUserDetails(newFormData);
   };
 
-  const isFormValid = formData.fullName.trim() !== '' && formData.whatsapp.trim() !== '';
+  const isFormValid = formData.fullName.trim() !== '' && formData.whatsapp.trim() !== '' && formData.email.trim() !== '';
 
   const handleSubmit = () => {
     if (!isFormValid) return;
@@ -42,12 +42,12 @@ const BookingFormPage: React.FC = () => {
   const fields = [
     { key: "fullName", label: "Nama Lengkap", placeholder: "Sesuai identitas", type: "text", val: formData.fullName, req: true, span: true },
     { key: "whatsapp", label: "No. WhatsApp", placeholder: "Contoh: 0812xxxx", type: "tel", val: formData.whatsapp, req: true, span: false },
-    { key: "email", label: "Email (opsional)", placeholder: "email@contoh.com", type: "email", val: formData.email, req: false, span: false },
+    { key: "email", label: "Kontak Darurat", placeholder: "No WA / Nama Keluarga", type: "text", val: formData.email, req: true, span: false },
     { key: "city", label: "Kota Asal", placeholder: "Semarang, Kendal, dll.", type: "text", val: formData.city, req: false, span: false },
   ];
 
   return (
-    <BookingLayout currentStep={2}>
+    <BookingLayout currentStep={2} onBackClick={() => navigate('/booking/package')}>
       <div className="grid lg:grid-cols-[1fr_340px] gap-8">
         <div>
           <h3 className="text-lg font-bold text-[#091540] mb-6" style={{ fontFamily: "Poppins, sans-serif" }}>
@@ -99,8 +99,6 @@ const BookingFormPage: React.FC = () => {
             buttonText="Lanjut ke Pembayaran"
             onButtonClick={handleSubmit}
             buttonDisabled={!isFormValid}
-            onBackClick={() => navigate('/booking/package')}
-            backButtonText="← Kembali"
             showPaymentInfo={false}
           />
         </div>

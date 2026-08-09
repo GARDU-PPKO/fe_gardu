@@ -1,19 +1,15 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useBooking } from '../../hooks/useBooking';
 import BookingLayout from '../../components/layout/BookingLayout';
-import BookingSummary from '../../components/booking/BookingSummary';
 import { createBooking } from '../../services/booking.service';
-import { CheckCircle, UploadCloud, Ticket, FileImage, Trash2, Download } from "lucide-react";
-import LogoGardu from '../../assets/Logo_Gardu_V2.png';
-import { downloadReceipt } from '../../utils/generateReceipt';
+import { UploadCloud, Ticket, FileImage, Trash2 } from "lucide-react";
+
 
 const BookingPayment: React.FC = () => {
   const navigate = useNavigate();
-  const { bookingData, resetBooking } = useBooking();
-  const [isSubmitted, setIsSubmitted] = useState(false);
+  const { bookingData } = useBooking();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [ticketNumber] = useState(() => `GTS-${Math.floor(100000 + Math.random() * 900000)}`);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -25,37 +21,13 @@ const BookingPayment: React.FC = () => {
   const addOnsTotal = addOnsList.reduce((acc, curr) => acc + (curr.price * curr.quantity), 0);
   const totalPrice = packageTotal + addOnsTotal;
 
-  const shortDate = date
-    ? new Date(date).toLocaleDateString("id-ID", { weekday: "short", day: "numeric", month: "short", year: "numeric" })
-    : "—";
 
-  const triggerDownload = useCallback(() => {
-    downloadReceipt({
-      ticketNumber,
-      customerName: userDetails.fullName || 'Tamu',
-      whatsapp: userDetails.whatsapp || '—',
-      packageName: selectedPackage?.name || 'Paket Wisata',
-      date: shortDate,
-      session: session || 'Pagi (07.00 - 09.00)',
-      participants: participants,
-      totalPrice: totalPrice,
-      logoSrc: LogoGardu,
-      addOns: addOnsList,
-    });
-  }, [ticketNumber, userDetails.fullName, userDetails.whatsapp, selectedPackage?.name, shortDate, session, participants, totalPrice, addOnsList]);
 
   useEffect(() => {
-    if (!selectedPackage && !isSubmitted) {
+    if (!selectedPackage) {
       navigate('/booking/package');
     }
-  }, [selectedPackage, isSubmitted, navigate]);
-
-  useEffect(() => {
-    if (isSubmitted) {
-      // Otomatis download bukti pemesanan saat payment selesai
-      triggerDownload();
-    }
-  }, [isSubmitted, triggerDownload]);
+  }, [selectedPackage, navigate]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
@@ -76,7 +48,7 @@ const BookingPayment: React.FC = () => {
           ? `${userDetails.notes}${addOnsText}\n\n[Bukti pembayaran telah diunggah: ${selectedFile.name}]`
           : `${addOnsText}\n\n[Bukti pembayaran telah diunggah: ${selectedFile.name}]`.trim();
 
-        await createBooking({
+        const response = await createBooking({
           package_id: selectedPackage.id,
           customer_name: userDetails.fullName || 'Tamu',
           phone: userDetails.whatsapp || '',
@@ -84,104 +56,60 @@ const BookingPayment: React.FC = () => {
           date: date || new Date().toISOString().split('T')[0],
           session_time: session || 'Pagi (07.00 - 09.00)',
           participants: participants,
+          total_harga: totalPrice,
           notes: notesWithPayment
         });
+        
+        if (response.data && response.data.data && response.data.data.kode_booking) {
+          const kode = response.data.data.kode_booking;
+          saveDummyToLocal(kode);
+          navigate(`/cek-pesanan?kode=${kode}`);
+        } else {
+          // eslint-disable-next-line react-hooks/purity
+          const fallbackKode = `GTS-${Math.floor(100000 + Math.random() * 900000)}`;
+          saveDummyToLocal(fallbackKode);
+          navigate(`/cek-pesanan?kode=${fallbackKode}`);
+        }
       }
-      setIsSubmitted(true);
     } catch (e) {
       console.error('Failed to submit booking to backend:', e);
-      setIsSubmitted(true);
+      // Fallback ticket number if API fails
+      // eslint-disable-next-line react-hooks/purity
+      const fallbackKode = `GTS-${Math.floor(100000 + Math.random() * 900000)}`;
+      saveDummyToLocal(fallbackKode);
+      navigate(`/cek-pesanan?kode=${fallbackKode}`);
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  if (isSubmitted) {
-    return (
-      <BookingLayout currentStep={3}>
-        <div className="max-w-xl mx-auto py-8 px-4">
-          
-          <div className="bg-gradient-to-br from-[#182cc1] to-[#091540] rounded-3xl p-8 sm:p-10 text-center shadow-xl shadow-[#182cc1]/20 relative overflow-hidden mb-8">
-            <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full blur-3xl -mr-20 -mt-20"></div>
-            <div className="absolute bottom-0 left-0 w-40 h-40 bg-white/5 rounded-full blur-3xl -ml-10 -mb-10"></div>
-            
-            <div className="relative z-10">
-              <div className="w-24 h-24 rounded-full bg-white/10 backdrop-blur-md border-4 border-white/20 flex items-center justify-center mx-auto mb-6">
-                <CheckCircle size={52} className="text-[#a5f3fc]" />
-              </div>
-              <h3 className="text-3xl sm:text-4xl font-black text-white mb-3 tracking-tight" style={{ fontFamily: "Poppins, sans-serif" }}>
-                Bukti Diterima! 🎉
-              </h3>
-              <p className="text-white/80 text-sm sm:text-base mb-8 max-w-sm mx-auto leading-relaxed" style={{ fontFamily: "Inter, sans-serif" }}>
-                Terima kasih <strong>{userDetails.fullName}</strong>. Bukti pembayaran Anda telah berhasil diunggah dan bukti pemesanan otomatis diunduh.
-              </p>
+  const saveDummyToLocal = (kode: string) => {
+    if (selectedPackage) {
+      const dummyBooking = {
+        id: 999,
+        kode_booking: kode,
+        nama_pemesan: userDetails.fullName || 'Tamu',
+        no_wa_pemesan: userDetails.whatsapp || '',
+        kontak_darurat: userDetails.email || '', // mapping email field which is now kontak darurat
+        tanggal: date || new Date().toISOString().split('T')[0],
+        sesi: session || 'Pagi (07.00 - 09.00)',
+        jumlah_peserta: participants,
+        total_harga: totalPrice,
+        status: 'pending',
+        package: {
+          id: selectedPackage.id,
+          nama: selectedPackage.name,
+          durasi: selectedPackage.duration || '±2 jam'
+        },
+        addons: addOnsList.map(a => ({ nama: a.name, harga: a.price }))
+      };
+      localStorage.setItem('dummy_booking', JSON.stringify(dummyBooking));
+    }
+  };
 
-              <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-5 text-left flex items-start gap-4">
-                <div className="w-12 h-12 rounded-full bg-amber-400/20 text-amber-300 flex items-center justify-center flex-shrink-0 mt-0.5 border border-amber-400/30">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-                </div>
-                <div>
-                  <h4 className="font-bold text-lg text-white mb-1 tracking-wide" style={{ fontFamily: "Poppins, sans-serif" }}>Menunggu Konfirmasi</h4>
-                  <p className="text-white/70 text-xs sm:text-sm leading-relaxed" style={{ fontFamily: "Inter, sans-serif" }}>
-                    Admin kami sedang melakukan verifikasi. <strong>Mohon tunggu pesan WhatsApp</strong> yang berisi informasi lanjutan & e-tiket Anda.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-2xl border-2 border-[#c5d0ff] p-6 mb-6 text-left shadow-lg">
-            <div className="flex items-center justify-between mb-4 pb-4 border-b border-[#c5d0ff]">
-              <div>
-                <div className="text-xs text-[#3d518c] mb-1">Kode Referensi</div>
-                <div className="text-2xl font-black text-[#182cc1] tracking-wider" style={{ fontFamily: "Poppins, sans-serif" }}>{ticketNumber}</div>
-              </div>
-              <img src={LogoGardu} alt="Logo Desa Getas" className="h-10 sm:h-12 w-auto object-contain" />
-            </div>
-            {[
-              { label: "Nama Pemesan", value: userDetails.fullName, bold: false },
-              { label: "Paket", value: selectedPackage?.name || '-', bold: false },
-              { label: "Tanggal", value: shortDate, bold: false },
-              { label: "Sesi Waktu", value: session || 'Pagi (07.00 - 09.00)', bold: false },
-              { label: "Jumlah Peserta", value: `${participants} Orang`, bold: false },
-              ...addOnsList.map(a => ({ label: `+ Add-On: ${a.name}`, value: a.price === 0 ? "Gratis" : `Rp ${a.price.toLocaleString('id-ID')}`, bold: false })),
-              { label: "Total Dibayar", value: `Rp ${totalPrice.toLocaleString('id-ID')}`, bold: true },
-            ].map(r => (
-              <div key={r.label} className="flex justify-between py-2 text-sm border-b border-[#eef2ff] last:border-0 gap-3">
-                <span className="text-[#3d518c] flex-shrink-0" style={{ fontFamily: "Inter, sans-serif" }}>{r.label}</span>
-                <span className={`${r.bold ? "text-[#182cc1] font-bold" : "text-[#091540] font-medium"} text-right`}
-                  style={{ fontFamily: "Poppins, sans-serif" }}>{r.value}</span>
-              </div>
-            ))}
-          </div>
-
-          <div className="flex flex-col sm:flex-row gap-3">
-            <button
-              onClick={triggerDownload}
-              type="button"
-              className="flex-1 py-3 px-4 bg-[#182cc1] hover:bg-[#1524a3] text-white rounded-2xl transition text-sm font-bold flex items-center justify-center gap-2 shadow-md shadow-[#c5d0ff]"
-              style={{ fontFamily: "Poppins, sans-serif" }}
-            >
-              <Download size={16} />
-              Download Bukti Pemesanan
-            </button>
-
-            <button
-              onClick={() => { resetBooking(); navigate('/'); }}
-              type="button"
-              className="flex-1 py-3 px-4 border border-[#c5d0ff] bg-white text-[#3d518c] hover:bg-[#eef2ff] rounded-2xl transition text-sm font-medium"
-              style={{ fontFamily: "Inter, sans-serif" }}
-            >
-              Selesai & Beranda
-            </button>
-          </div>
-        </div>
-      </BookingLayout>
-    );
-  }
 
   return (
-    <BookingLayout currentStep={3}>
+    <BookingLayout currentStep={3} onBackClick={() => navigate('/booking/form')}>
       <div className="grid lg:grid-cols-[1fr_340px] gap-8">
         <div className="grid md:grid-cols-2 gap-6 items-stretch mb-6">
           <div className="flex flex-col">
@@ -272,8 +200,6 @@ const BookingPayment: React.FC = () => {
             buttonDisabled={isSubmitting || !selectedFile}
             showPaymentInfo={false}
             hideSummaryCard={true}
-            onBackClick={() => navigate('/booking/form')}
-            backButtonText="← Ubah Data Pemesan"
             buttonIcon={isSubmitting ? undefined : <CheckCircle size={16} />}
           />
           {!selectedFile && (
