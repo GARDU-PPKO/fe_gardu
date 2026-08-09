@@ -71,7 +71,22 @@ const FALLBACK_PACKAGES: TourPackage[] = [
     created_at: "",
     updated_at: ""
   },
-  // Add some dummy data to show scroll behavior if needed, but 4 is enough if it wraps on small screens
+  {
+    id: 5,
+    nama: "Paket Camping (Sewa Tenda)",
+    durasi: "1 hari 1 malam",
+    harga: 50000,
+    satuan: "tenda",
+    tag: "Camping",
+    min_participants: 1,
+    max_participants: 4,
+    gambar: "https://images.unsplash.com/photo-1478131143081-80f7f84ca84d?w=500&h=300&fit=crop&auto=format",
+    deskripsi: "Sewa tenda muat 4 orang. Termasuk area camping. Checkout 11:00, Checkin 13:00.",
+    is_active: true,
+    created_by: 1,
+    created_at: "",
+    updated_at: ""
+  },
 ];
 
 export default function PackagesPage() {
@@ -79,7 +94,7 @@ export default function PackagesPage() {
   const { updatePackage } = useBooking();
   const [packages, setPackages] = useState<TourPackage[]>(FALLBACK_PACKAGES);
   const [filter, setFilter] = useState("Semua");
-  const categories = ["Semua", "Adventure", "Education", "Family"];
+  const categories = ["Semua", "Adventure", "Education", "Family", "Camping"];
 
   useEffect(() => {
     window.scrollTo(0, 0);

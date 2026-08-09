@@ -36,7 +36,7 @@ export interface TourPackage {
   nama: string;
   deskripsi: string;
   harga: number;
-  satuan: 'orang' | 'grup';
+  satuan: 'orang' | 'grup' | 'tenda';
   tag: string | null;
   durasi: string;
   min_participants: number | null;

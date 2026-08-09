@@ -24,16 +24,23 @@ const BookingSummary: React.FC<BookingSummaryProps> = ({
   buttonIcon,
 }) => {
   const { bookingData } = useBooking();
-  const { selectedPackage, date, session, participants, userDetails } = bookingData;
+  const { selectedPackage, date, session, participants, userDetails, selectedAddOns } = bookingData;
   const name = userDetails?.fullName;
 
-  const total = selectedPackage ? selectedPackage.price * participants : 0;
+  const packageTotal = selectedPackage ? selectedPackage.price * participants : 0;
+  const addOnsTotal = (selectedAddOns || []).reduce((acc, curr) => acc + (curr.price * curr.quantity), 0);
+  const total = packageTotal + addOnsTotal;
 
   const formattedDate = date
     ? new Date(date).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" })
     : "—";
 
   const formattedSession = session ? session.split(" ")[0] : "—";
+
+  const addOnsRows = (selectedAddOns || []).map(addon => ({
+    label: `+ ${addon.name}`,
+    value: addon.price === 0 ? "Gratis" : `Rp ${addon.price.toLocaleString('id-ID')}`
+  }));
 
   const rows = [
     { label: "Paket", value: selectedPackage ? selectedPackage.name : "-" },
@@ -42,6 +49,7 @@ const BookingSummary: React.FC<BookingSummaryProps> = ({
     { label: "Sesi", value: formattedSession },
     { label: "Peserta", value: `${participants} orang` },
     ...(selectedPackage ? [{ label: "Durasi", value: selectedPackage.duration || "±2 jam" }] : []),
+    ...addOnsRows,
   ];
 
   return (

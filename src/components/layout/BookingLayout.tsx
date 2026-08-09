@@ -1,8 +1,9 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Waves, X } from 'lucide-react';
+import { X } from 'lucide-react';
 import BookingStepper from '../booking/BookingStepper';
 import Footer from './Footer';
+import LogoGardu from '../../assets/Logo_Gardu_V2.png';
 
 interface BookingLayoutProps {
   children: React.ReactNode;
@@ -17,9 +18,12 @@ const BookingLayout: React.FC<BookingLayoutProps> = ({ children, currentStep }) 
       {/* ── Header ── */}
       <div className="flex items-center justify-between px-4 sm:px-8 py-4 bg-white border-b border-[#c5d0ff] shadow-sm flex-shrink-0">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-full bg-[#182cc1] flex items-center justify-center">
-            <Waves size={16} className="text-white" />
-          </div>
+          <img
+            src={LogoGardu}
+            alt="Logo Desa Getas"
+            className="h-9 w-auto object-contain cursor-pointer"
+            onClick={() => navigate('/')}
+          />
           <div>
             <div className="font-bold text-[#091540] text-sm" style={{ fontFamily: "Poppins, sans-serif" }}>
               Pesan Paket Wisata Tubing

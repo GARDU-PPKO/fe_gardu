@@ -1,26 +1,14 @@
 /* eslint-disable react-refresh/only-export-components */
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import type { ReactNode } from 'react';
-import type { BookingState, Package, UserDetails } from '../types/booking';
-
-const INITIAL_BOOKING_STATE: BookingState = {
-  selectedPackage: null,
-  date: '',
-  session: '',
-  participants: 1,
-  userDetails: {
-    fullName: '',
-    whatsapp: '',
-    email: '',
-    city: '',
-    notes: '',
-  }
-};
+import type { BookingState, Package, UserDetails, AddOnItem } from '../types/booking';
+import { INITIAL_BOOKING_STATE } from '../types/booking';
 
 interface BookingContextType {
   bookingData: BookingState;
   updatePackage: (pkg: Package) => void;
   updateSchedule: (date: string, session: string, participants: number) => void;
+  updateAddOns: (addOns: AddOnItem[]) => void;
   updateUserDetails: (details: Partial<UserDetails>) => void;
   resetBooking: () => void;
 }
@@ -54,6 +42,10 @@ export const BookingProvider: React.FC<{ children: ReactNode }> = ({ children })
     setBookingData((prev) => ({ ...prev, date, session, participants }));
   }, []);
 
+  const updateAddOns = useCallback((addOns: AddOnItem[]) => {
+    setBookingData((prev) => ({ ...prev, selectedAddOns: addOns }));
+  }, []);
+
   const updateUserDetails = useCallback((details: Partial<UserDetails>) => {
     setBookingData((prev) => ({
       ...prev,
@@ -72,6 +64,7 @@ export const BookingProvider: React.FC<{ children: ReactNode }> = ({ children })
         bookingData,
         updatePackage,
         updateSchedule,
+        updateAddOns,
         updateUserDetails,
         resetBooking,
       }}

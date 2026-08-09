@@ -1,10 +1,12 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useBooking } from '../../hooks/useBooking';
 import BookingLayout from '../../components/layout/BookingLayout';
 import BookingSummary from '../../components/booking/BookingSummary';
 import { createBooking } from '../../services/booking.service';
-import { CheckCircle, UploadCloud, Ticket, Waves, FileImage, Trash2 } from "lucide-react";
+import { CheckCircle, UploadCloud, Ticket, FileImage, Trash2, Download } from "lucide-react";
+import LogoGardu from '../../assets/Logo_Gardu_V2.png';
+import { downloadReceipt } from '../../utils/generateReceipt';
 
 const BookingPayment: React.FC = () => {
   const navigate = useNavigate();
@@ -15,16 +17,45 @@ const BookingPayment: React.FC = () => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const { selectedPackage, date, session, userDetails } = bookingData;
+  const { selectedPackage, date, session, userDetails, selectedAddOns } = bookingData;
   const price = selectedPackage?.price || 0;
   const participants = bookingData.participants || 1;
-  const totalPrice = price * participants;
+  const packageTotal = price * participants;
+  const addOnsList = selectedAddOns || [];
+  const addOnsTotal = addOnsList.reduce((acc, curr) => acc + (curr.price * curr.quantity), 0);
+  const totalPrice = packageTotal + addOnsTotal;
+
+  const shortDate = date
+    ? new Date(date).toLocaleDateString("id-ID", { weekday: "short", day: "numeric", month: "short", year: "numeric" })
+    : "—";
+
+  const triggerDownload = useCallback(() => {
+    downloadReceipt({
+      ticketNumber,
+      customerName: userDetails.fullName || 'Tamu',
+      whatsapp: userDetails.whatsapp || '—',
+      packageName: selectedPackage?.name || 'Paket Wisata',
+      date: shortDate,
+      session: session || 'Pagi (07.00 - 09.00)',
+      participants: participants,
+      totalPrice: totalPrice,
+      logoSrc: LogoGardu,
+      addOns: addOnsList,
+    });
+  }, [ticketNumber, userDetails.fullName, userDetails.whatsapp, selectedPackage?.name, shortDate, session, participants, totalPrice, addOnsList]);
 
   useEffect(() => {
     if (!selectedPackage && !isSubmitted) {
       navigate('/booking/package');
     }
   }, [selectedPackage, isSubmitted, navigate]);
+
+  useEffect(() => {
+    if (isSubmitted) {
+      // Otomatis download bukti pemesanan saat payment selesai
+      triggerDownload();
+    }
+  }, [isSubmitted, triggerDownload]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
@@ -37,10 +68,13 @@ const BookingPayment: React.FC = () => {
     setIsSubmitting(true);
     try {
       if (selectedPackage) {
-        // Asumsi API bisa menerima JSON, kita tambahkan note bahwa bukti sudah diupload
+        const addOnsText = addOnsList.length > 0 
+          ? `\n\nAdd-Ons Tambahan:\n${addOnsList.map(a => `- ${a.name}`).join('\n')}`
+          : '';
+
         const notesWithPayment = userDetails.notes 
-          ? `${userDetails.notes}\n\n[Bukti pembayaran telah diunggah: ${selectedFile.name}]`
-          : `[Bukti pembayaran telah diunggah: ${selectedFile.name}]`;
+          ? `${userDetails.notes}${addOnsText}\n\n[Bukti pembayaran telah diunggah: ${selectedFile.name}]`
+          : `${addOnsText}\n\n[Bukti pembayaran telah diunggah: ${selectedFile.name}]`.trim();
 
         await createBooking({
           package_id: selectedPackage.id,
@@ -62,10 +96,6 @@ const BookingPayment: React.FC = () => {
     }
   };
 
-  const shortDate = date
-    ? new Date(date).toLocaleDateString("id-ID", { weekday: "short", day: "numeric", month: "short", year: "numeric" })
-    : "—";
-
   if (isSubmitted) {
     return (
       <BookingLayout currentStep={3}>
@@ -83,7 +113,7 @@ const BookingPayment: React.FC = () => {
                 Bukti Diterima! 🎉
               </h3>
               <p className="text-white/80 text-sm sm:text-base mb-8 max-w-sm mx-auto leading-relaxed" style={{ fontFamily: "Inter, sans-serif" }}>
-                Terima kasih <strong>{userDetails.fullName}</strong>. Bukti pembayaran Anda telah berhasil diunggah.
+                Terima kasih <strong>{userDetails.fullName}</strong>. Bukti pembayaran Anda telah berhasil diunggah dan bukti pemesanan otomatis diunduh.
               </p>
 
               <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-5 text-left flex items-start gap-4">
@@ -106,14 +136,15 @@ const BookingPayment: React.FC = () => {
                 <div className="text-xs text-[#3d518c] mb-1">Kode Referensi</div>
                 <div className="text-2xl font-black text-[#182cc1] tracking-wider" style={{ fontFamily: "Poppins, sans-serif" }}>{ticketNumber}</div>
               </div>
-              <div className="w-12 h-12 rounded-full bg-[#182cc1] flex items-center justify-center">
-                <Waves size={22} className="text-white" />
-              </div>
+              <img src={LogoGardu} alt="Logo Desa Getas" className="h-10 sm:h-12 w-auto object-contain" />
             </div>
             {[
               { label: "Nama Pemesan", value: userDetails.fullName, bold: false },
               { label: "Paket", value: selectedPackage?.name || '-', bold: false },
               { label: "Tanggal", value: shortDate, bold: false },
+              { label: "Sesi Waktu", value: session || 'Pagi (07.00 - 09.00)', bold: false },
+              { label: "Jumlah Peserta", value: `${participants} Orang`, bold: false },
+              ...addOnsList.map(a => ({ label: `+ Add-On: ${a.name}`, value: a.price === 0 ? "Gratis" : `Rp ${a.price.toLocaleString('id-ID')}`, bold: false })),
               { label: "Total Dibayar", value: `Rp ${totalPrice.toLocaleString('id-ID')}`, bold: true },
             ].map(r => (
               <div key={r.label} className="flex justify-between py-2 text-sm border-b border-[#eef2ff] last:border-0 gap-3">
@@ -124,14 +155,26 @@ const BookingPayment: React.FC = () => {
             ))}
           </div>
 
-          <button
-            onClick={() => { resetBooking(); navigate('/'); }}
-            type="button"
-            className="w-full py-3 border border-[#c5d0ff] bg-white text-[#3d518c] hover:bg-[#eef2ff] rounded-2xl transition text-sm font-medium"
-            style={{ fontFamily: "Inter, sans-serif" }}
-          >
-            Selesai & Kembali ke Beranda
-          </button>
+          <div className="flex flex-col sm:flex-row gap-3">
+            <button
+              onClick={triggerDownload}
+              type="button"
+              className="flex-1 py-3 px-4 bg-[#182cc1] hover:bg-[#1524a3] text-white rounded-2xl transition text-sm font-bold flex items-center justify-center gap-2 shadow-md shadow-[#c5d0ff]"
+              style={{ fontFamily: "Poppins, sans-serif" }}
+            >
+              <Download size={16} />
+              Download Bukti Pemesanan
+            </button>
+
+            <button
+              onClick={() => { resetBooking(); navigate('/'); }}
+              type="button"
+              className="flex-1 py-3 px-4 border border-[#c5d0ff] bg-white text-[#3d518c] hover:bg-[#eef2ff] rounded-2xl transition text-sm font-medium"
+              style={{ fontFamily: "Inter, sans-serif" }}
+            >
+              Selesai & Beranda
+            </button>
+          </div>
         </div>
       </BookingLayout>
     );
