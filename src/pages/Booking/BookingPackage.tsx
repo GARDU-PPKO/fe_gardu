@@ -7,11 +7,6 @@ import { useBooking } from '../../hooks/useBooking';
 import { getBookingSessions } from '../../services/booking.service';
 import type { BookingSession } from '../../types';
 
-import imgBbq from '../../assets/addons/addon_bbq_1786241504347.png';
-import imgSnack from '../../assets/addons/addon_snack_1786241515770.png';
-import imgAtv from '../../assets/addons/addon_atv_1786241528213.png';
-import imgArchery from '../../assets/addons/addon_archery_1786241541072.png';
-
 const BookingPackage: React.FC = () => {
   const navigate = useNavigate();
   const { bookingData, updateSchedule, updateAddOns } = useBooking();
@@ -28,6 +23,17 @@ const BookingPackage: React.FC = () => {
   const [localParticipants, setLocalParticipants] = useState(bookingData.participants || 1);
   const [localAddOns, setLocalAddOns] = useState(bookingData.selectedAddOns || []);
   const [isAddonModalOpen, setIsAddonModalOpen] = useState(false);
+
+  useEffect(() => {
+    if (isAddonModalOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [isAddonModalOpen]);
 
   const currentPackage = bookingData.selectedPackage;
   const minParticipants = currentPackage?.minParticipants || 1;
@@ -191,9 +197,9 @@ const BookingPackage: React.FC = () => {
           {/* Add-on Modal Overlay */}
           {isAddonModalOpen && (
             <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#091540]/60 backdrop-blur-sm">
-              <div className="bg-white w-full max-w-2xl rounded-2xl shadow-2xl flex flex-col max-h-[90vh] overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+              <div className="bg-white w-full max-w-2xl rounded-2xl shadow-2xl flex flex-col max-h-[80vh] overflow-hidden animate-in fade-in zoom-in-95 duration-200">
                 {/* Modal Header */}
-                <div className="px-6 py-4 border-b flex items-center justify-between bg-gray-50">
+                <div className="px-6 py-4 border-b flex items-center justify-between bg-gray-50 flex-shrink-0">
                   <h3 className="text-lg font-bold text-[#091540]" style={{ fontFamily: "Poppins, sans-serif" }}>
                     Adds On
                   </h3>
@@ -205,97 +211,82 @@ const BookingPackage: React.FC = () => {
                   </button>
                 </div>
                 
-                {/* Modal Body */}
-                <div className="p-4 sm:p-6 overflow-y-auto space-y-4 bg-gray-50/50">
+                {/* Modal Body (Scrollable Container) */}
+                <div className="p-4 sm:p-6 overflow-y-auto space-y-3 bg-gray-50/50 flex-1 min-h-0">
                   {[
                     { 
                       id: '1', 
                       name: 'Alat Bakaran', 
                       price: 35000, 
-                      desc: 'Lengkap dengan arang, capitan, kipas, dan panggangan. Cocok untuk BBQ malam.',
-                      image: imgBbq
+                      desc: 'Lengkap dengan arang, capitan, kipas, dan panggangan. Cocok untuk BBQ malam.'
                     },
                     { 
                       id: '2', 
                       name: 'Paket Snack Lokal', 
                       price: 15000, 
-                      desc: 'Kopi/teh hangat, ubi rebus, kacang rebus, dan jajanan tradisional khas Getas.',
-                      image: imgSnack
+                      desc: 'Kopi/teh hangat, ubi rebus, kacang rebus, dan jajanan tradisional khas Getas.'
                     },
                     { 
                       id: '3', 
                       name: 'ATV Ride Adventure', 
                       price: 50000, 
-                      desc: 'Sewa ATV 30 menit di sirkuit mini off-road kami. Sudah termasuk helm.',
-                      image: imgAtv
+                      desc: 'Sewa ATV 30 menit di sirkuit mini off-road kami. Sudah termasuk helm.'
                     },
                     { 
                       id: '4', 
                       name: 'Area Panahan (Archery)', 
                       price: 0, 
-                      desc: 'Gratis! Coba 3 anak panah dengan target sasaran di area khusus.',
-                      image: imgArchery
+                      desc: 'Gratis! Coba 3 anak panah dengan target sasaran di area khusus.'
                     }
                   ].map(addon => {
                     const isSelected = localAddOns.some(a => a.id === addon.id);
                     return (
-                      <label key={addon.id} className={`flex flex-col sm:flex-row items-start sm:items-center justify-between p-3 rounded-2xl border cursor-pointer transition-all ${isSelected ? 'border-[#182cc1] bg-[#f8faff] shadow-md shadow-[#182cc1]/10' : 'border-[#c5d0ff] bg-white hover:border-[#182cc1] hover:shadow-sm'}`}>
-                        <div className="flex items-center gap-4 w-full">
-                          {/* Add-on Image */}
-                          <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl overflow-hidden flex-shrink-0 bg-[#e8edff]">
-                            <img src={addon.image} alt={addon.name} className="w-full h-full object-cover" />
+                      <label key={addon.id} className={`flex items-center justify-between p-4 rounded-2xl border cursor-pointer transition-all ${isSelected ? 'border-[#182cc1] bg-[#f8faff] shadow-md shadow-[#182cc1]/10' : 'border-[#c5d0ff] bg-white hover:border-[#182cc1] hover:shadow-sm'}`}>
+                        <input 
+                          type="checkbox" 
+                          className="hidden" 
+                          checked={isSelected} 
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setLocalAddOns([...localAddOns, { id: addon.id, name: addon.name, price: addon.price, quantity: 1 }]);
+                            } else {
+                              setLocalAddOns(localAddOns.filter(a => a.id !== addon.id));
+                            }
+                          }} 
+                        />
+                        <div className="flex-1 pr-4">
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="font-bold text-[#091540] text-sm sm:text-base">{addon.name}</span>
+                            {addon.price === 0 && (
+                              <span className="bg-green-100 text-green-700 text-[10px] font-bold px-2 py-0.5 rounded-full">FREE</span>
+                            )}
                           </div>
+                          <p className="text-xs sm:text-sm text-[#3d518c] leading-snug" style={{ fontFamily: "Inter, sans-serif" }}>
+                            {addon.desc}
+                          </p>
                           
-                          {/* Text Details */}
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2 mb-1">
-                              <span className="font-bold text-[#091540] text-sm sm:text-base">{addon.name}</span>
-                              {addon.price === 0 && (
-                                <span className="bg-green-100 text-green-700 text-[10px] font-bold px-2 py-0.5 rounded-full">FREE</span>
-                              )}
-                            </div>
-                            <p className="text-xs sm:text-sm text-[#3d518c] leading-snug line-clamp-2 pr-2" style={{ fontFamily: "Inter, sans-serif" }}>
-                              {addon.desc}
-                            </p>
-                            
-                            {/* Mobile Layout Price */}
-                            <div className="sm:hidden mt-2 font-bold text-[#182cc1] text-sm">
-                              {addon.price === 0 ? 'Gratis' : `+ Rp ${addon.price.toLocaleString('id-ID')}`}
-                            </div>
+                          {/* Mobile Layout Price */}
+                          <div className="sm:hidden mt-2 font-bold text-[#182cc1] text-sm">
+                            {addon.price === 0 ? 'Gratis' : `+ Rp ${addon.price.toLocaleString('id-ID')}`}
                           </div>
                         </div>
                         
-                        {/* Desktop Right Side: Price & Checkbox */}
-                        <div className="hidden sm:flex items-center gap-4 flex-shrink-0 pl-4 border-l border-transparent">
-                          <span className="text-[#182cc1] font-bold whitespace-nowrap">
+                        {/* Right Side: Price & Checkbox Indicator */}
+                        <div className="flex items-center gap-4 flex-shrink-0">
+                          <span className="hidden sm:inline-block text-[#182cc1] font-bold whitespace-nowrap">
                             {addon.price === 0 ? 'Gratis' : `+ Rp ${addon.price.toLocaleString('id-ID')}`}
                           </span>
                           <div className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-colors ${isSelected ? 'bg-[#182cc1] border-[#182cc1]' : 'border-[#c5d0ff] bg-white'}`}>
                             {isSelected && <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"></path></svg>}
                           </div>
                         </div>
-
-                        {/* Mobile Layout Checkbox */}
-                        <div className="sm:hidden absolute right-4 top-4">
-                          <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${isSelected ? 'bg-[#182cc1] border-[#182cc1]' : 'border-[#c5d0ff] bg-white'}`}>
-                            {isSelected && <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"></path></svg>}
-                          </div>
-                        </div>
-
-                        <input type="checkbox" className="hidden" checked={isSelected} onChange={(e) => {
-                          if (e.target.checked) {
-                            setLocalAddOns([...localAddOns, { id: addon.id, name: addon.name, price: addon.price, quantity: 1 }]);
-                          } else {
-                            setLocalAddOns(localAddOns.filter(a => a.id !== addon.id));
-                          }
-                        }} />
                       </label>
                     );
                   })}
                 </div>
                 
                 {/* Modal Footer */}
-                <div className="px-6 py-4 border-t bg-white flex justify-end">
+                <div className="px-6 py-4 border-t bg-white flex justify-end flex-shrink-0">
                   <button 
                     onClick={() => setIsAddonModalOpen(false)}
                     className="px-6 py-2.5 bg-[#182cc1] text-white font-bold rounded-xl hover:bg-[#1524a3] transition-colors shadow-md shadow-[#c5d0ff]"
