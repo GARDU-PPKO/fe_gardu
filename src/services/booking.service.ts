@@ -1,23 +1,92 @@
 import api from './api';
-import type { BookingSession } from '../types';
+import type { BookingSession, BookingDetail } from '../types';
 
-export interface CreateBookingPayload {
-  package_id?: number | string;
-  customer_name?: string;
-  phone?: string;
-  email?: string;
-  date?: string;
-  session_time?: string;
-  participants?: number;
-  notes?: string;
-  [key: string]: unknown;
+// ── Payloads ──
+
+export interface AddOnOption {
+  id: number;
+  nama: string;
+  harga: number;
+  satuan: string;
+  deskripsi: string;
+  gambar: string;
+  is_free: boolean;
+  is_active: boolean;
+  urutan: number | null;
 }
 
-export const getBookingSessions = (params?: { package_id?: number; tanggal?: string }) =>
+export interface CreateBookingPayload {
+  package_id: number | string;
+  customer_name: string;
+  phone: string;
+  email?: string;
+  kontak_darurat?: string;
+  kota_asal?: string;
+  date: string;
+  session_time: string;
+  participants: number;
+  notes?: string;
+  addons?: { id: string | number; quantity?: number }[];
+}
+
+export interface CreateBookingResponse {
+  id: number;
+  kode_booking: string;
+  total_harga: number;
+  status: string;
+  expired_at: string;
+  payment_url: string;
+}
+
+export interface UploadBuktiResponse {
+  id: number;
+  kode_booking: string;
+  status: string;
+  bukti_bayar: string;
+}
+
+// ── Endpoints ──
+
+/** Cek kuota sesi pada tanggal & paket tertentu */
+export const getBookingSessions = (params: { package_id: number; tanggal: string }) =>
   api.get<BookingSession[]>('/booking-sessions', { params });
 
-export const createBooking = (data: CreateBookingPayload) =>
-  api.post('/bookings', data);
+/** Ambil daftar add-on yang tersedia */
+export const getAddOns = () => api.get<AddOnOption[]>('/addons');
 
+/** Create booking draft → PENDING_PAYMENT */
+export const createBooking = (data: CreateBookingPayload) =>
+  api.post<CreateBookingResponse>('/bookings', data);
+
+/** Ambil detail booking by kode (publik, untuk payment page & cek pesanan) */
+export const getBookingByKode = (kode: string) =>
+  api.get<BookingDetail>(`/bookings/${kode}`);
+
+/** Cek booking by kode atau phone */
 export const checkBooking = (params: { kode?: string; phone?: string }) =>
-  api.get('/bookings/check', { params });
+  api.get<BookingDetail>('/bookings/check', { params });
+
+/** Upload bukti bayar (multipart) → PENDING_VERIFY */
+export const uploadBuktiBayar = (kode: string, file: File) => {
+  const formData = new FormData();
+  formData.append('bukti_bayar', file);
+  return api.post<UploadBuktiResponse>(`/bookings/${kode}/bukti`, formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  });
+};
+
+/** Batalkan booking */
+export const cancelBooking = (kode: string) =>
+  api.patch<{ kode_booking: string; status: string }>(`/bookings/${kode}/cancel`);
+
+/** Kirim ulang notifikasi/WA link pembayaran */
+export const resendPaymentLink = (kode: string) =>
+  api.post<{ kode_booking: string }>(`/bookings/${kode}/resend-wa`);
+
+/** Edit data diri booking (opsional) */
+export const updateBooking = (kode: string, data: Partial<{
+  customer_name: string;
+  phone: string;
+  kontak_darurat: string;
+}>) =>
+  api.patch<BookingDetail>(`/bookings/${kode}`, data);

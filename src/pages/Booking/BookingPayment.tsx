@@ -16,9 +16,10 @@ const BookingPayment: React.FC = () => {
   const { selectedPackage, date, session, userDetails, selectedAddOns } = bookingData;
   const price = selectedPackage?.price || 0;
   const participants = bookingData.participants || 1;
-  const packageTotal = price * participants;
+  const isPerPerson = !selectedPackage?.unit || selectedPackage.unit === 'orang';
+  const packageTotal = isPerPerson ? price * participants : price;
   const addOnsList = selectedAddOns || [];
-  const addOnsTotal = addOnsList.reduce((acc, curr) => acc + (curr.price * curr.quantity), 0);
+  const addOnsTotal = addOnsList.reduce((acc, curr) => acc + (curr.price * (curr.quantity || 1)), 0);
   const totalPrice = packageTotal + addOnsTotal;
 
 

@@ -1,3 +1,5 @@
+// ── Dusun ──
+
 export interface Dusun {
   id: number;
   nama: string;
@@ -10,9 +12,9 @@ export interface Dusun {
   hero_img: string;
   thumbnail: string;
   is_active: boolean;
-  created_by: number;
-  created_at: string;
-  updated_at: string;
+  created_by?: number;
+  created_at?: string;
+  updated_at?: string;
   galleries?: DusunGallery[];
   keunggulan?: DusunKeunggulan[];
 }
@@ -31,21 +33,23 @@ export interface DusunKeunggulan {
   urutan: number;
 }
 
+// ── Tour Packages ──
+
 export interface TourPackage {
   id: number;
   nama: string;
   deskripsi: string;
   harga: number;
-  satuan: 'orang' | 'grup' | 'tenda';
+  satuan: 'orang' | 'grup' | 'tenda' | 'paket';
   tag: string | null;
   durasi: string;
   min_participants: number | null;
   max_participants: number | null;
   gambar: string;
   is_active: boolean;
-  created_by: number;
-  created_at: string;
-  updated_at: string;
+  created_by?: number;
+  created_at?: string;
+  updated_at?: string;
   includes?: TourPackageInclude[];
 }
 
@@ -56,16 +60,74 @@ export interface TourPackageInclude {
   urutan: number;
 }
 
+// ── Booking Sessions ──
+
 export interface BookingSession {
   id: number;
   package_id: number;
   tanggal: string;
-  sesi: 'Pagi' | 'Siang' | 'Sore';
+  sesi: string; // full string: "Pagi (07.00 - 09.00)"
   kuota: number;
   terisi: number;
   is_active: boolean;
   package?: { id: number; nama: string };
 }
+
+// ── Booking Status ──
+
+export type BookingStatus =
+  | 'pending_payment'
+  | 'pending_verify'
+  | 'confirmed'
+  | 'cancelled'
+  | 'expired'
+  | 'rejected';
+
+// ── Booking Detail (response from API) ──
+
+export interface BookingAddon {
+  id: string;
+  nama: string;
+  harga: number;
+  quantity: number;
+}
+
+export interface BookingPaymentInfo {
+  bank: string;
+  nomor_rekening: string;
+  atas_nama: string;
+  qris_image?: string;
+  batas_waktu_jam?: number;
+}
+
+export interface BookingDetail {
+  id: number;
+  kode_booking: string;
+  nama_pemesan: string;
+  no_wa_pemesan: string;
+  kontak_darurat?: string;
+  kota_asal?: string;
+  catatan?: string;
+  tanggal: string;
+  sesi: string;
+  jumlah_peserta: number;
+  total_harga: number;
+  status: BookingStatus;
+  expired_at?: string;
+  rejected_reason?: string;
+  bukti_bayar?: string;
+  payment_info?: BookingPaymentInfo;
+  package?: {
+    id: number;
+    nama: string;
+    durasi?: string;
+    gambar?: string;
+    satuan?: string;
+  };
+  addons?: BookingAddon[];
+}
+
+// ── UMKM ──
 
 export interface UmkmProduct {
   id: number;
@@ -78,6 +140,8 @@ export interface UmkmProduct {
   is_active: boolean;
 }
 
+// ── Budaya ──
+
 export interface Budaya {
   id: number;
   judul: string;
@@ -86,7 +150,7 @@ export interface Budaya {
   gambar: string;
   span_grid: number;
   is_active: boolean;
-  created_by: number;
+  created_by?: number;
   schedules?: BudayaSchedule[];
 }
 
@@ -100,6 +164,8 @@ export interface BudayaSchedule {
   is_active: boolean;
 }
 
+// ── Village Profile ──
+
 export interface VillageProfile {
   id: number;
   tipe: 'sejarah' | 'visi' | 'misi' | 'pemerintahan';
@@ -108,6 +174,8 @@ export interface VillageProfile {
   urutan: number;
   is_active: boolean;
 }
+
+// ── Village Stats ──
 
 export interface VillageStat {
   id: number;
@@ -118,6 +186,8 @@ export interface VillageStat {
   urutan: number;
   is_active: boolean;
 }
+
+// ── Settings ──
 
 export interface Setting {
   id: number;

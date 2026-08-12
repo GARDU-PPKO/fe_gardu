@@ -1,6 +1,7 @@
 import React from 'react';
 import { ArrowRight } from 'lucide-react';
 import { useBooking } from '../../hooks/useBooking';
+import type { AddOnItem } from '../../types/booking';
 
 interface BookingSummaryProps {
   buttonText: string;
@@ -24,26 +25,43 @@ const BookingSummary: React.FC<BookingSummaryProps> = ({
   const name = userDetails?.fullName;
 
   const packageTotal = selectedPackage ? selectedPackage.price * participants : 0;
-  const addOnsTotal = (selectedAddOns || []).reduce((acc, curr) => acc + (curr.price * curr.quantity), 0);
+  const isPerOrang = (addon: AddOnItem) => addon.satuan === 'per orang';
+  const addOnsTotal = (selectedAddOns || []).reduce((acc, curr) => {
+    const qty = isPerOrang(curr) ? participants : (curr.quantity || 1);
+    return acc + (curr.price * qty);
+  }, 0);
   const total = packageTotal + addOnsTotal;
 
   const formattedDate = date
-    ? new Date(date).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" })
+    ? (() => {
+        try {
+          const parts = date.split('-');
+          if (parts.length === 3) {
+            const d = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
+            return d.toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" });
+          }
+          return new Date(date).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" });
+        } catch {
+          return date;
+        }
+      })()
     : "—";
 
   const formattedSession = session ? session.split(" ")[0] : "—";
 
-  const addOnsRows = (selectedAddOns || []).map(addon => ({
-    label: `+ ${addon.name}`,
-    value: addon.price === 0 ? "Gratis" : `Rp ${addon.price.toLocaleString('id-ID')}`
-  }));
+  const addOnsRows = (selectedAddOns || []).map(addon => {
+    const qty = isPerOrang(addon) ? participants : (addon.quantity || 1);
+    const label = isPerOrang(addon) ? `+ ${addon.name} × ${participants} orang` : `+ ${addon.name}`;
+    const value = addon.price === 0 ? "Gratis" : `Rp ${(addon.price * qty).toLocaleString('id-ID')}`;
+    return { label, value };
+  });
 
   const rows = [
     { label: "Paket", value: selectedPackage ? selectedPackage.name : "-" },
     ...(name?.trim() ? [{ label: "Nama Pemesan", value: name.trim() }] : []),
     { label: "Tanggal", value: formattedDate },
     { label: "Sesi", value: formattedSession },
-    { label: "Peserta", value: `${participants} orang` },
+    { label: "Peserta", value: `${numParticipants} orang` },
     ...(selectedPackage ? [{ label: "Durasi", value: selectedPackage.duration || "±2 jam" }] : []),
     ...addOnsRows,
   ];
