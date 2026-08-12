@@ -26,7 +26,7 @@ export default function DusunPage({ dusun, onClose }: { dusun: Dusun; onClose: (
     return () => { document.body.style.overflow = ""; };
   }, []);
 
-  const keunggulanList = detail.keunggulan ? detail.keunggulan.map(k => k.keunggulan) : ["Suasana tani organik dan asri", "Pemandangan pegunungan", "Warga yang ramah"];
+  const keunggulanList = detail.keunggulan ? detail.keunggulan.map(k => k.keunggulan) : [];
 
   return (
     <div 

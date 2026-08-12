@@ -1,4 +1,4 @@
-const API_ORIGIN = (import.meta.env.VITE_API_URL || 'http://rentrack.site/api').replace(/\/api\/?$/, '');
+const API_ORIGIN = (import.meta.env.VITE_API_URL || 'https://rentrack.site/api').replace(/\/api\/?$/, '');
 
 export function resolveImageUrl(value?: string | null): string {
   if (!value) return '';

@@ -1,108 +1,33 @@
 import { useEffect, useState } from "react";
-import { CheckCircle } from "lucide-react";
+import { CheckCircle, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { getTourPackages } from "../../services/tour-package.service";
 import { resolveImageUrl } from "../../utils/image";
 import type { TourPackage } from "../../types";
 
-const FALLBACK_PACKAGES: TourPackage[] = [
-  {
-    id: 1,
-    nama: "GENTA Explorer",
-    durasi: "±2 jam",
-    harga: 125000,
-    satuan: "orang",
-    tag: "Terpopuler",
-    min_participants: 5,
-    max_participants: 10,
-    gambar: "https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?w=500&h=320&fit=crop&auto=format",
-    deskripsi: "Menyusuri Sungai Blukar dengan arus alami.",
-    is_active: true,
-    created_by: 1,
-    created_at: "",
-    updated_at: ""
-  },
-  {
-    id: 2,
-    nama: "GEMPI Adventure",
-    durasi: "±3 jam",
-    harga: 110000,
-    satuan: "orang",
-    tag: null,
-    min_participants: 5,
-    max_participants: 10,
-    gambar: "https://images.unsplash.com/photo-1530866495561-507c9faab2ed?w=500&h=320&fit=crop&auto=format",
-    deskripsi: "Adventure tubing dengan rute lebih panjang dan safety gear lengkap.",
-    is_active: true,
-    created_by: 1,
-    created_at: "",
-    updated_at: ""
-  },
-  {
-    id: 3,
-    nama: "Genta Gempi Solo",
-    durasi: "1 malam",
-    harga: 80000,
-    satuan: "paket",
-    tag: null,
-    min_participants: 1,
-    max_participants: 1,
-    gambar: "https://images.unsplash.com/photo-1581579438747-1dc8d17bbce4?w=500&h=320&fit=crop&auto=format",
-    deskripsi: "Camping solo — 1 tenda, 1 peserta.",
-    is_active: true,
-    created_by: 1,
-    created_at: "",
-    updated_at: ""
-  },
-  {
-    id: 4,
-    nama: "Genta Gempi Buddy",
-    durasi: "1 malam",
-    harga: 130000,
-    satuan: "paket",
-    tag: null,
-    min_participants: 1,
-    max_participants: 2,
-    gambar: "https://images.unsplash.com/photo-1541855492-581f618f69a0?w=500&h=320&fit=crop&auto=format",
-    deskripsi: "Camping berdua — 1 tenda untuk 2 peserta.",
-    is_active: true,
-    created_by: 1,
-    created_at: "",
-    updated_at: ""
-  },
-  {
-    id: 5,
-    nama: "Genta Gempi Family",
-    durasi: "1 malam",
-    harga: 180000,
-    satuan: "paket",
-    tag: "Terbaru",
-    min_participants: 1,
-    max_participants: 2,
-    gambar: "https://images.unsplash.com/photo-1563299796-17596ed6b017?w=500&h=300&fit=crop&auto=format",
-    deskripsi: "Camping keluarga — 1 tenda per 2 peserta, termasuk makan malam & api unggun.",
-    is_active: true,
-    created_by: 1,
-    created_at: "",
-    updated_at: ""
-  }
-];
-
 export default function TourPackages() {
   const navigate = useNavigate();
-  const [packages, setPackages] = useState<TourPackage[]>(FALLBACK_PACKAGES);
+  const [packages, setPackages] = useState<TourPackage[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [hasError, setHasError] = useState(false);
   const [filter, setFilter] = useState("Semua");
   const categories = ["Semua", "Terpopuler", "Promo", "Grup"];
 
   useEffect(() => {
+    let cancelled = false;
     getTourPackages()
       .then(res => {
-        if (res?.data && res.data.length > 0) {
-          setPackages(res.data);
-        }
+        if (cancelled) return;
+        setPackages(res?.data ?? []);
+        setHasError(false);
       })
       .catch(() => {
+        if (!cancelled) setHasError(true);
+      })
+      .finally(() => {
+        if (!cancelled) setIsLoading(false);
       });
+    return () => { cancelled = true; };
   }, []);
 
   const filteredPackages = packages.filter(p => {
@@ -162,7 +87,26 @@ export default function TourPackages() {
             </div>
 
             {/* 2x2 grid */}
-            <div className="grid sm:grid-cols-2 gap-4">
+            {isLoading ? (
+              <div className="flex flex-col items-center justify-center py-16 gap-3 text-[#3d518c]" style={{ fontFamily: "Inter, sans-serif" }}>
+                <Loader2 className="w-8 h-8 animate-spin text-[#182cc1]" />
+                <span className="text-sm font-medium">Memuat paket wisata...</span>
+              </div>
+            ) : hasError ? (
+              <div className="flex flex-col items-center justify-center py-16 gap-3 text-center">
+                <p className="text-[#3d518c] text-sm" style={{ fontFamily: "Inter, sans-serif" }}>Gagal memuat paket wisata.</p>
+                <button onClick={() => window.location.reload()}
+                  className="px-5 py-2.5 bg-[#182cc1] hover:bg-[#1524a3] text-white text-sm font-bold rounded-full transition"
+                  style={{ fontFamily: "Poppins, sans-serif" }}>
+                  Coba Lagi
+                </button>
+              </div>
+            ) : filteredPackages.length === 0 ? (
+              <div className="text-center py-16">
+                <p className="text-[#3d518c] text-sm" style={{ fontFamily: "Inter, sans-serif" }}>Belum ada paket wisata tersedia.</p>
+              </div>
+            ) : (
+              <div className="grid sm:grid-cols-2 gap-4">
               {filteredPackages.map(p => (
                 <div key={p.id} className="bg-white rounded-2xl overflow-hidden shadow-sm border border-[#c5d0ff] group hover:shadow-lg hover:border-[#182cc1] transition-all cursor-pointer flex flex-col h-full relative"
                   onClick={() => navigate('/packages')}>
@@ -201,7 +145,8 @@ export default function TourPackages() {
                   </div>
                 </div>
               ))}
-            </div>
+              </div>
+            )}
           </div>
         </div>
       </div>

@@ -130,15 +130,17 @@ const BookingFormPage: React.FC = () => {
       if (res.data && res.data.kode_booking) {
         navigate(`/payment/${res.data.kode_booking}`);
       } else {
-        navigate('/booking/payment');
+        setSubmitError('Pesanan berhasil dibuat tetapi kode booking tidak dikembalikan. Silakan cek pesanan Anda.');
+        setIsSubmitting(false);
       }
     } catch (e) {
       if (e instanceof ApiValidationError) {
         const msgs = Object.values(e.errors).flat();
         setSubmitError(msgs.length > 0 ? msgs.join(' ') : e.message);
+      } else if (e instanceof Error && e.message) {
+        setSubmitError(e.message);
       } else {
-        // Fallback navigate to payment step for offline/mock development
-        navigate('/booking/payment');
+        setSubmitError('Terjadi kesalahan saat membuat pesanan. Silakan coba lagi.');
       }
       setIsSubmitting(false);
     }

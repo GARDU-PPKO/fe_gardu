@@ -156,48 +156,7 @@ const CheckBooking: React.FC = () => {
         });
       }
     } catch {
-      // Fallback local check if API fails
-      let foundData: BookingResult | null = null;
-      const savedDummy = localStorage.getItem('dummy_booking');
-      if (savedDummy) {
-        try {
-          const parsed = JSON.parse(savedDummy) as BookingResult;
-          if ((currentKode && parsed.kode_booking === currentKode) || (phone && parsed.no_wa_pemesan === phone)) {
-            foundData = parsed;
-          }
-        } catch { /* ignore */ }
-      }
-
-      if (!foundData) {
-        const fallbackKode = (currentKode && currentKode.toUpperCase().startsWith('GRD-'))
-          ? currentKode.toUpperCase()
-          : `GRD-${new Date().toISOString().slice(0,10).replace(/-/g,'')}-${Math.random().toString(36).substring(2,6).toUpperCase()}`;
-
-        const tomorrowDate = new Date();
-        tomorrowDate.setDate(tomorrowDate.getDate() + 5);
-
-        foundData = {
-          id: 999,
-          kode_booking: fallbackKode,
-          nama_pemesan: 'Budi Santoso',
-          no_wa_pemesan: phone || '08123456789',
-          kontak_darurat: 'Siti (istri) - 08987654321',
-          tanggal: tomorrowDate.toISOString().split('T')[0],
-          sesi: 'Pagi (08.00 - 11.00)',
-          jumlah_peserta: 2,
-          total_harga: 190000,
-          status: 'pending',
-          package: { id: 1, nama: 'Agro Education', durasi: '±3 jam' },
-          addons: [{ nama: 'Alat Bakaran', harga: 35000 }]
-        } as BookingResult;
-      }
-
-      setResult(foundData!);
-      setEditForm({
-        nama: foundData!.nama_pemesan,
-        wa: foundData!.no_wa_pemesan,
-        darurat: foundData!.kontak_darurat || ''
-      });
+      setError('Pesanan tidak ditemukan atau sedang terjadi gangguan. Silakan coba lagi.');
     } finally {
       setIsLoading(false);
     }
