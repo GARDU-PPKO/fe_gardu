@@ -33,7 +33,18 @@ const BookingSummary: React.FC<BookingSummaryProps> = ({
   const total = packageTotal + addOnsTotal;
 
   const formattedDate = date
-    ? new Date(date).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" })
+    ? (() => {
+        try {
+          const parts = date.split('-');
+          if (parts.length === 3) {
+            const d = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
+            return d.toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" });
+          }
+          return new Date(date).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" });
+        } catch {
+          return date;
+        }
+      })()
     : "—";
 
   const formattedSession = session ? session.split(" ")[0] : "—";
@@ -50,7 +61,7 @@ const BookingSummary: React.FC<BookingSummaryProps> = ({
     ...(name?.trim() ? [{ label: "Nama Pemesan", value: name.trim() }] : []),
     { label: "Tanggal", value: formattedDate },
     { label: "Sesi", value: formattedSession },
-    { label: "Peserta", value: `${participants} orang` },
+    { label: "Peserta", value: `${numParticipants} orang` },
     ...(selectedPackage ? [{ label: "Durasi", value: selectedPackage.duration || "±2 jam" }] : []),
     ...addOnsRows,
   ];

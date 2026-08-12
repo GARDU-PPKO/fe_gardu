@@ -229,9 +229,9 @@ const BookingPackage: React.FC = () => {
           {/* Add-on Modal Overlay */}
           {isAddonModalOpen && (
             <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#091540]/60 backdrop-blur-sm">
-              <div className="bg-white w-full max-w-2xl rounded-2xl shadow-2xl flex flex-col max-h-[90vh] overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+              <div className="bg-white w-full max-w-2xl rounded-2xl shadow-2xl flex flex-col max-h-[80vh] overflow-hidden animate-in fade-in zoom-in-95 duration-200">
                 {/* Modal Header */}
-                <div className="px-6 py-4 border-b flex items-center justify-between bg-gray-50">
+                <div className="px-6 py-4 border-b flex items-center justify-between bg-gray-50 flex-shrink-0">
                   <h3 className="text-lg font-bold text-[#091540]" style={{ fontFamily: "Poppins, sans-serif" }}>
                     Adds On
                   </h3>
