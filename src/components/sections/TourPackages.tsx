@@ -14,7 +14,7 @@ const FALLBACK_PACKAGES: TourPackage[] = [
     tag: "Terpopuler",
     min_participants: 1,
     max_participants: 10,
-    gambar: "https://images.unsplash.com/photo-1546058914-5000137323f0?w=500&h=320&fit=crop&auto=format",
+    gambar: "https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?w=500&h=320&fit=crop&auto=format",
     deskripsi: "Menyusuri Sungai Blukar sepanjang 1,5 km dengan arus alami.",
     is_active: true,
     created_by: 1,
@@ -30,7 +30,7 @@ const FALLBACK_PACKAGES: TourPackage[] = [
     tag: null,
     min_participants: 1,
     max_participants: 8,
-    gambar: "https://images.unsplash.com/photo-1561774711-b0fa364863b7?w=500&h=320&fit=crop&auto=format",
+    gambar: "https://images.unsplash.com/photo-1530866495561-507c9faab2ed?w=500&h=320&fit=crop&auto=format",
     deskripsi: "Eksplorasi sungai bersama guide berpengalaman dan safety equipment lengkap.",
     is_active: true,
     created_by: 1,
@@ -46,7 +46,7 @@ const FALLBACK_PACKAGES: TourPackage[] = [
     tag: "Promo",
     min_participants: 2,
     max_participants: 6,
-    gambar: "https://images.unsplash.com/photo-1520329612326-d6038d1395a1?w=500&h=320&fit=crop&auto=format",
+    gambar: "https://images.unsplash.com/photo-1581579438747-1dc8d17bbce4?w=500&h=320&fit=crop&auto=format",
     deskripsi: "Paket keluarga lengkap — tubing, makan siang, foto dokumentasi.",
     is_active: true,
     created_by: 1,
@@ -62,7 +62,7 @@ const FALLBACK_PACKAGES: TourPackage[] = [
     tag: null,
     min_participants: 20,
     max_participants: 100,
-    gambar: "https://images.unsplash.com/photo-1643215721864-cd4c354ac298?w=500&h=320&fit=crop&auto=format",
+    gambar: "https://images.unsplash.com/photo-1541855492-581f618f69a0?w=500&h=320&fit=crop&auto=format",
     deskripsi: "Paket rombongan (min 20) dengan guide dan makan siang.",
     is_active: true,
     created_by: 1,
@@ -78,7 +78,7 @@ const FALLBACK_PACKAGES: TourPackage[] = [
     tag: "Terbaru",
     min_participants: 1,
     max_participants: 4,
-    gambar: "https://images.unsplash.com/photo-1478131143081-80f7f84ca84d?w=500&h=300&fit=crop&auto=format",
+    gambar: "https://images.unsplash.com/photo-1563299796-17596ed6b017?w=500&h=300&fit=crop&auto=format",
     deskripsi: "Sewa tenda muat 4 orang. Termasuk area camping. Checkout 11:00, Checkin 13:00.",
     is_active: true,
     created_by: 1,
@@ -113,19 +113,19 @@ export default function TourPackages() {
   }).slice(0, 4);
 
   return (
-    <section id="paket" className="py-16 px-4 sm:px-8 bg-white">
+    <section id="paket" className="py-10 sm:py-16 px-4 sm:px-8 bg-white">
       <div className="max-w-7xl mx-auto">
-        <div className="grid lg:grid-cols-[380px_1fr] gap-14 items-start">
-          {/* Left text */}
-          <div className="sticky top-24">
+        <div className="grid lg:grid-cols-[340px_1fr] gap-8 lg:gap-14 items-start">
+          {/* Left text — sticky only on desktop */}
+          <div className="lg:sticky lg:top-24">
             <span className="text-xs font-bold uppercase tracking-widest text-[#182cc1]" style={{ fontFamily: "Inter, sans-serif" }}>Paket Wisata</span>
-            <h2 className="text-2xl sm:text-3xl font-bold text-[#091540] mt-2 mb-4 leading-tight" style={{ fontFamily: "Poppins, sans-serif" }}>
+            <h2 className="text-2xl sm:text-3xl font-bold text-[#091540] mt-2 mb-3 leading-tight" style={{ fontFamily: "Poppins, sans-serif" }}>
               Paket Tubing Seru<br />untuk Semua
             </h2>
-            <p className="text-[#3d518c] text-sm leading-relaxed mb-6" style={{ fontFamily: "Inter, sans-serif" }}>
+            <p className="text-[#3d518c] text-sm leading-relaxed mb-5" style={{ fontFamily: "Inter, sans-serif" }}>
               Pilih paket yang sesuai — dari petualangan solo hingga liburan keluarga besar. Semua dilengkapi peralatan keselamatan standar dan panduan profesional.
             </p>
-            <div className="space-y-3 mb-8">
+            <div className="space-y-2.5 mb-6">
               {["Helm & pelampung keselamatan tersedia", "Pemandu berlisensi nasional", "Dokumentasi foto & video", "Area parkir luas & toilet bersih"].map(f => (
                 <div key={f} className="flex items-center gap-2.5 text-sm text-[#091540]" style={{ fontFamily: "Inter, sans-serif" }}>
                   <CheckCircle size={14} className="text-[#182cc1] flex-shrink-0" />
@@ -134,7 +134,7 @@ export default function TourPackages() {
               ))}
             </div>
             <button onClick={() => navigate('/packages')}
-              className="flex items-center gap-2.5 px-6 py-3 bg-[#182cc1] hover:bg-[#1524a3] text-white font-semibold rounded-full transition shadow-md shadow-[#c5d0ff] w-fit"
+              className="flex items-center gap-2.5 px-6 py-3 bg-[#182cc1] hover:bg-[#1524a3] text-white font-semibold rounded-full transition shadow-md shadow-[#c5d0ff] w-fit text-sm sm:text-base"
               style={{ fontFamily: "Poppins, sans-serif" }}>
               Lihat Paket Lainnya <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
             </button>

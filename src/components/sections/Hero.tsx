@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { Users, Briefcase, Mountain, TreePine, Waves, Building2, Hash, Home, Award } from "lucide-react";
-import { getDusun } from "../../services/dusun.service";
 import { getSettings, getVillageStats } from "../../services/village.service";
 import DusunSlider from "./DusunSlider";
 import defaultHeroImg from "../../assets/image-6.png";
@@ -26,7 +25,6 @@ const DEFAULT_STATS = [
 export default function Hero({ onSelectDusun }: { onSelectDusun: (d: Dusun) => void }) {
   const [settings, setSettings] = useState<Record<string, string>>({});
   const [stats, setStats] = useState<VillageStat[]>([]);
-  const [heroImage, setHeroImage] = useState("");
 
   const [showStats, setShowStats] = useState(false);
 
@@ -34,8 +32,10 @@ export default function Hero({ onSelectDusun }: { onSelectDusun: (d: Dusun) => v
     const handleScroll = () => setShowStats(window.scrollY > 150);
     window.addEventListener("scroll", handleScroll);
     
-    getSettings('nama_desa').then(res => {
-      setSettings(Object.fromEntries(res.data.map((item: Setting) => [item.key, item.value])));
+    getSettings().then(res => {
+      if (res.data) {
+        setSettings(Object.fromEntries(res.data.map((item: Setting) => [item.key, item.value])));
+      }
     });
     getVillageStats().then(res => {
       if (res.data && res.data.length >= 6) {
@@ -44,13 +44,11 @@ export default function Hero({ onSelectDusun }: { onSelectDusun: (d: Dusun) => v
         setStats([]);
       }
     });
-    getDusun().then(res => {
-      const firstDusun = res.data.find((item: Dusun) => item.hero_img || item.thumbnail);
-      setHeroImage(firstDusun?.hero_img ?? firstDusun?.thumbnail ?? defaultHeroImg);
-    });
 
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  const heroImage = settings.hero_img || defaultHeroImg;
 
   const villageName = settings.nama_desa ?? "DESA WISATA GETAS";
   const displayTitle = villageName.toUpperCase().includes("GETAS")
@@ -78,7 +76,7 @@ export default function Hero({ onSelectDusun }: { onSelectDusun: (d: Dusun) => v
         <div className="absolute inset-0 bg-gradient-to-t from-[#091540] via-[#091540]/40 to-transparent" />
 
         {/* Big title like WANDER */}
-        <div className="absolute inset-0 flex flex-col justify-end pb-16 sm:pb-24 px-4 sm:px-8">
+        <div className="absolute inset-0 flex flex-col justify-end pb-20 sm:pb-28 px-4 sm:px-8">
           <div className="max-w-7xl mx-auto w-full relative">
             {/* Inline Badges */}
             <div className="flex flex-wrap items-center gap-3 mb-4">
@@ -125,11 +123,11 @@ export default function Hero({ onSelectDusun }: { onSelectDusun: (d: Dusun) => v
       </section>
 
       {/* Content below hero */}
-      <div className="bg-[#f8faff] px-4 sm:px-8 pb-8 pt-4">
+      <div className="bg-[#f8faff] px-3 sm:px-6 lg:px-8 pb-8 pt-4">
         <div className="max-w-7xl mx-auto">
           {/* ── Unified Stats Container ── */}
           <div className={`-mt-16 relative z-10 transition-all duration-1000 ease-out transform ${showStats ? 'translate-y-0 opacity-100' : 'translate-y-24 opacity-0'}`}>
-            <div className="bg-white/95 backdrop-blur-xl border border-[#c5d0ff] rounded-[2rem] p-6 shadow-xl shadow-[#091540]/5 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6 divide-y md:divide-y-0 lg:divide-x divide-[#e8edff]">
+            <div className="bg-white/95 backdrop-blur-xl border border-[#c5d0ff] rounded-2xl sm:rounded-[2rem] p-4 sm:p-6 shadow-xl shadow-[#091540]/5 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 sm:gap-6 divide-y sm:divide-y-0 lg:divide-x divide-[#e8edff]">
               {statItems.map((s, idx) => (
                 <div key={s.label} className={`flex flex-col sm:flex-row items-start sm:items-center gap-4 ${idx !== 0 && idx % 3 !== 0 ? 'lg:pl-6' : ''} ${idx !== 0 && idx % 2 !== 0 ? 'md:pl-6' : ''} pt-4 md:pt-0 first:pt-0`}>
                   <div className="w-12 h-12 rounded-2xl bg-[#e8edff] text-[#182cc1] flex items-center justify-center flex-shrink-0">

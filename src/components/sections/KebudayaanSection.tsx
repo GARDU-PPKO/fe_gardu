@@ -107,27 +107,27 @@ export default function KebudayaanSection() {
           </p>
         </div>
 
-        {/* masonry grid persis referensi screenshot (2+1 di atas, 1+1+1 di bawah) */}
-        <div className="grid grid-cols-3 grid-rows-2 gap-3 h-[360px] sm:h-[460px]">
+        {/* masonry grid - 2 col mobile, 3 col md+ */}
+        <div className="grid grid-cols-2 md:grid-cols-3 grid-rows-2 gap-2 sm:gap-3 h-[280px] sm:h-[380px] md:h-[460px]">
           {items.map((item, index) => (
             <div key={item.id} onClick={() => setLb(item)}
-              className={`relative rounded-2xl overflow-hidden cursor-pointer group bg-[#e8edff] ${index === 0 ? "col-span-2" : "col-span-1"}`}>
+              className={`relative rounded-xl sm:rounded-2xl overflow-hidden cursor-pointer group bg-[#e8edff] ${index === 0 ? "col-span-2 md:col-span-2" : "col-span-1"}`}>
               <img src={item.gambar} alt={item.judul}
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
               <div className="absolute inset-0 bg-gradient-to-t from-[#091540]/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300" />
               
               {/* always-visible category pill */}
-              <div className="absolute top-2.5 left-2.5">
-                <span className="px-2 py-0.5 rounded-full bg-white/90 backdrop-blur-sm text-[#182cc1] text-[10px] font-bold shadow">
+              <div className="absolute top-2 left-2 sm:top-2.5 sm:left-2.5">
+                <span className="px-2 py-0.5 rounded-full bg-white/90 backdrop-blur-sm text-[#182cc1] text-[9px] sm:text-[10px] font-bold shadow">
                   {item.kategori}
                 </span>
               </div>
               
               {/* hover reveal */}
-              <div className="absolute inset-0 flex flex-col justify-end p-4 opacity-0 group-hover:opacity-100 transition-all duration-300">
-                <div className="font-bold text-white text-sm leading-tight drop-shadow mb-1"
+              <div className="absolute inset-0 flex flex-col justify-end p-2 sm:p-4 opacity-0 group-hover:opacity-100 transition-all duration-300">
+                <div className="font-bold text-white text-xs sm:text-sm leading-tight drop-shadow mb-0.5 sm:mb-1"
                   style={{ fontFamily: "Poppins, sans-serif" }}>{item.judul}</div>
-                <p className="text-white/80 text-xs leading-relaxed line-clamp-2"
+                <p className="text-white/80 text-[10px] sm:text-xs leading-relaxed line-clamp-2 hidden sm:block"
                   style={{ fontFamily: "Inter, sans-serif" }}>{item.deskripsi}</p>
               </div>
             </div>

@@ -40,10 +40,10 @@ export default function UMKMSection() {
             <span className="text-xs font-bold uppercase tracking-widest text-[#182cc1]" style={{ fontFamily: "Inter, sans-serif" }}>Marketplace Desa</span>
             <h2 className="text-2xl sm:text-3xl font-bold text-[#091540] mt-1" style={{ fontFamily: "Poppins, sans-serif" }}>UMKM Desa Getas</h2>
           </div>
-          <div className="flex gap-1.5 flex-wrap bg-white p-1.5 rounded-2xl shadow-sm border border-[#c5d0ff]">
+          <div className="flex gap-1.5 flex-nowrap overflow-x-auto pb-1 bg-white p-1.5 rounded-2xl shadow-sm border border-[#c5d0ff] scrollbar-hide max-w-full">
             {CATS.map(c => (
               <button key={c} onClick={() => setCat(c)}
-                className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-300 ${cat === c ? "bg-[#182cc1] text-white shadow-md shadow-[#182cc1]/20" : "text-[#3d518c] hover:bg-[#e8edff] hover:text-[#182cc1]"}`}
+                className={`px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-300 whitespace-nowrap flex-shrink-0 ${cat === c ? "bg-[#182cc1] text-white shadow-md shadow-[#182cc1]/20" : "text-[#3d518c] hover:bg-[#e8edff] hover:text-[#182cc1]"}`}
                 style={{ fontFamily: "Inter, sans-serif" }}>
                 {c}
               </button>

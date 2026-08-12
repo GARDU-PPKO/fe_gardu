@@ -72,7 +72,7 @@ const BookingPackage: React.FC = () => {
 
   return (
     <BookingLayout currentStep={1} onBackClick={() => navigate('/packages')}>
-      <div className="grid lg:grid-cols-[1fr_340px] gap-8">
+      <div className="grid lg:grid-cols-[1fr_320px] xl:grid-cols-[1fr_340px] gap-6 sm:gap-8">
         <div>
           <div className="flex items-center justify-between mb-5">
             <h3 className="text-lg font-bold text-[#091540]" style={{ fontFamily: "Poppins, sans-serif" }}>
@@ -83,8 +83,8 @@ const BookingPackage: React.FC = () => {
             </button>
           </div>
           
-          <div className="bg-white rounded-2xl p-4 border border-[#c5d0ff] flex gap-4 items-center mb-8 shadow-sm">
-            <div className="w-24 h-24 rounded-xl overflow-hidden flex-shrink-0 bg-[#e8edff]">
+          <div className="bg-white rounded-2xl p-4 border border-[#c5d0ff] flex flex-col sm:flex-row gap-4 items-start sm:items-center mb-8 shadow-sm">
+            <div className="w-full sm:w-24 h-40 sm:h-24 rounded-xl overflow-hidden flex-shrink-0 bg-[#e8edff]">
               <img src={currentPackage.image} alt={currentPackage.name} className="w-full h-full object-cover" />
             </div>
             <div>
@@ -328,8 +328,8 @@ const BookingPackage: React.FC = () => {
           </div>
         </div>
 
-        {/* Sticky summary sidebar */}
-        <div className="lg:sticky lg:top-4 self-start">
+        {/* Sticky summary sidebar — shows BELOW on mobile, beside on desktop */}
+        <div className="lg:sticky lg:top-4 self-start order-last lg:order-none">
           <BookingSummary
             buttonText="Lanjut ke Data Pemesan"
             onButtonClick={handleNext}

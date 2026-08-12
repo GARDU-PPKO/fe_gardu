@@ -157,8 +157,15 @@ const FALLBACK_DUSUN: Dusun[] = [
   }
 ];
 
+const sortByRW = (list: Dusun[]) =>
+  [...list].sort((a, b) => {
+    const numA = parseInt((a.rw || '').replace(/\D/g, ''), 10) || 0;
+    const numB = parseInt((b.rw || '').replace(/\D/g, ''), 10) || 0;
+    return numA - numB;
+  });
+
 export default function DusunSlider({ onSelect }: { onSelect: (d: Dusun) => void }) {
-  const [dusunList, setDusunList] = useState<Dusun[]>(FALLBACK_DUSUN);
+  const [dusunList, setDusunList] = useState<Dusun[]>(sortByRW(FALLBACK_DUSUN));
   const trackRef = useRef<HTMLDivElement>(null);
   const [canPrev, setCanPrev] = useState(false);
   const [canNext, setCanNext] = useState(true);
@@ -168,7 +175,7 @@ export default function DusunSlider({ onSelect }: { onSelect: (d: Dusun) => void
     getDusun()
       .then(res => {
         if (res?.data && res.data.length > 0) {
-          setDusunList(res.data);
+          setDusunList(sortByRW(res.data));
         }
       })
       .catch(() => {});
@@ -222,7 +229,7 @@ export default function DusunSlider({ onSelect }: { onSelect: (d: Dusun) => void
 
         {dusunList.map((d) => (
             <div key={d.id}
-              className="flex-shrink-0 w-[260px] h-[340px] rounded-3xl overflow-hidden bg-[#091540] cursor-pointer relative group"
+              className="flex-shrink-0 w-[220px] sm:w-[260px] h-[300px] sm:h-[340px] rounded-2xl sm:rounded-3xl overflow-hidden bg-[#091540] cursor-pointer relative group"
               style={{ scrollSnapAlign: "start" }}
               onClick={() => onSelect(d)}>
 
