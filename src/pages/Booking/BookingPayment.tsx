@@ -143,19 +143,19 @@ const BookingPayment: React.FC = () => {
                   <p className="text-xs text-[#3d518c]" style={{ fontFamily: "Inter, sans-serif" }}>Format JPG, PNG, atau PDF (maks. 5MB)</p>
                 </div>
               ) : (
-                <div className="border border-[#c5d0ff] rounded-xl p-4 bg-[#f8faff] flex items-center justify-between w-full">
-                  <div className="flex items-center gap-3 overflow-hidden">
+                <div className="border border-[#c5d0ff] rounded-xl p-4 bg-[#f8faff] flex items-center justify-between w-full min-w-0 overflow-hidden">
+                  <div className="flex items-center gap-3 min-w-0 flex-1">
                     <div className="w-10 h-10 rounded-lg bg-[#e8edff] flex items-center justify-center flex-shrink-0">
                       <FileImage size={20} className="text-[#182cc1]" />
                     </div>
-                    <div className="truncate">
-                      <div className="text-sm font-semibold text-[#091540] truncate">{selectedFile.name}</div>
+                    <div className="min-w-0 flex-1">
+                      <div className="text-sm font-semibold text-[#091540] truncate" title={selectedFile.name}>{selectedFile.name}</div>
                       <div className="text-xs text-[#3d518c]">{(selectedFile.size / 1024 / 1024).toFixed(2)} MB</div>
                     </div>
                   </div>
                   <button
                     onClick={() => setSelectedFile(null)}
-                    className="w-8 h-8 rounded-full hover:bg-red-50 flex items-center justify-center text-red-500 transition-colors flex-shrink-0"
+                    className="w-8 h-8 rounded-full hover:bg-red-50 flex items-center justify-center text-red-500 transition-colors flex-shrink-0 ml-2"
                   >
                     <Trash2 size={16} />
                   </button>
