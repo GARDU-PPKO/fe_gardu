@@ -122,15 +122,15 @@ const BookingPayment: React.FC = () => {
 
   return (
     <BookingLayout currentStep={3} onBackClick={() => navigate('/booking/form')}>
-      <div className="grid lg:grid-cols-[1fr_340px] gap-6 sm:gap-8">
-        <div className="flex flex-col gap-6">
+      <div className="grid lg:grid-cols-[1fr_340px] gap-6 sm:gap-8 min-w-0">
+        <div className="flex flex-col gap-6 min-w-0">
 
           {/* Upload Bukti */}
-          <div className="flex flex-col">
+          <div className="flex flex-col min-w-0">
             <h3 className="text-base sm:text-lg font-bold text-[#091540] mb-4" style={{ fontFamily: "Poppins, sans-serif" }}>
               Upload Bukti Pembayaran
             </h3>
-            <div className="bg-white border border-[#c5d0ff] rounded-2xl p-4 sm:p-5 shadow-sm flex-1 flex flex-col justify-center">
+            <div className="bg-white border border-[#c5d0ff] rounded-2xl p-4 sm:p-5 shadow-sm flex-1 flex flex-col justify-center min-w-0 overflow-hidden">
               {!selectedFile ? (
                 <div
                   className="border-2 border-dashed border-[#c5d0ff] hover:border-[#182cc1] rounded-xl p-6 sm:p-8 text-center transition-colors cursor-pointer bg-[#fafcff] hover:bg-[#eef2ff] w-full"
@@ -143,13 +143,13 @@ const BookingPayment: React.FC = () => {
                   <p className="text-xs text-[#3d518c]" style={{ fontFamily: "Inter, sans-serif" }}>Format JPG, PNG, atau PDF (maks. 5MB)</p>
                 </div>
               ) : (
-                <div className="border border-[#c5d0ff] rounded-xl p-4 bg-[#f8faff] flex items-center justify-between w-full min-w-0 overflow-hidden">
-                  <div className="flex items-center gap-3 min-w-0 flex-1">
+                <div className="border border-[#c5d0ff] rounded-xl p-3.5 sm:p-4 bg-[#f8faff] flex items-center justify-between w-full min-w-0 overflow-hidden">
+                  <div className="flex items-center gap-3 min-w-0 flex-1 overflow-hidden">
                     <div className="w-10 h-10 rounded-lg bg-[#e8edff] flex items-center justify-center flex-shrink-0">
                       <FileImage size={20} className="text-[#182cc1]" />
                     </div>
-                    <div className="min-w-0 flex-1">
-                      <div className="text-sm font-semibold text-[#091540] truncate" title={selectedFile.name}>{selectedFile.name}</div>
+                    <div className="min-w-0 flex-1 overflow-hidden">
+                      <div className="text-sm font-semibold text-[#091540] truncate max-w-[170px] xs:max-w-[220px] sm:max-w-[320px] md:max-w-full block" title={selectedFile.name}>{selectedFile.name}</div>
                       <div className="text-xs text-[#3d518c]">{(selectedFile.size / 1024 / 1024).toFixed(2)} MB</div>
                     </div>
                   </div>
