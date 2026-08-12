@@ -1,6 +1,7 @@
 import React from 'react';
 import type { Package } from '../../types/booking';
 import { CheckCircle } from "lucide-react";
+import { resolveImageUrl } from '../../utils/image';
 
 interface PackageCardProps {
   pkg: Package;
@@ -21,7 +22,7 @@ const PackageCard: React.FC<PackageCardProps> = ({ pkg, isSelected, onSelect }) 
     >
       <div className="relative h-28 bg-[#e8edff] overflow-hidden">
         {pkg.image && (
-          <img src={pkg.image} alt={pkg.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+          <img src={resolveImageUrl(pkg.image)} alt={pkg.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
         {pkg.tag && (

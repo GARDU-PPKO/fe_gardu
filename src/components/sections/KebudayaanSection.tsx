@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { X, Clock } from "lucide-react";
 import { getBudaya } from "../../services/budaya.service";
+import { resolveImageUrl } from "../../utils/image";
 import type { Budaya } from "../../types";
 
 const DEFAULT_ACARA = [
@@ -112,7 +113,7 @@ export default function KebudayaanSection() {
           {items.map((item, index) => (
             <div key={item.id} onClick={() => setLb(item)}
               className={`relative rounded-xl sm:rounded-2xl overflow-hidden cursor-pointer group bg-[#e8edff] ${index === 0 ? "col-span-2 md:col-span-2" : "col-span-1"}`}>
-              <img src={item.gambar} alt={item.judul}
+              <img src={resolveImageUrl(item.gambar)} alt={item.judul}
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
               <div className="absolute inset-0 bg-gradient-to-t from-[#091540]/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300" />
               
@@ -157,7 +158,7 @@ export default function KebudayaanSection() {
           <div className="bg-white rounded-3xl overflow-hidden max-w-lg w-full shadow-2xl"
             onClick={e => e.stopPropagation()}>
             <div className="relative h-64 bg-[#e8edff]">
-              <img src={lb.gambar} alt={lb.judul} className="w-full h-full object-cover" />
+              <img src={resolveImageUrl(lb.gambar)} alt={lb.judul} className="w-full h-full object-cover" />
               <button onClick={() => setLb(null)}
                 className="absolute top-3 right-3 w-9 h-9 rounded-full bg-white/90 flex items-center justify-center text-[#091540] hover:bg-white transition shadow">
                 <X size={16} />

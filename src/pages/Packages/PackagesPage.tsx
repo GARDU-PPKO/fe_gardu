@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { ArrowRight, ArrowLeft, CheckCircle2, Clock, Users, Leaf } from "lucide-react";
 import { getTourPackages } from "../../services/tour-package.service";
 import { useBooking } from "../../hooks/useBooking";
+import { resolveImageUrl } from "../../utils/image";
 import Footer from "../../components/layout/Footer";
 import type { TourPackage } from "../../types";
 
@@ -192,7 +193,7 @@ export default function PackagesPage() {
                 {/* Image Section */}
                 <div className="relative h-48 sm:h-56 overflow-hidden flex-shrink-0 p-2">
                   <div className="w-full h-full rounded-[1.5rem] overflow-hidden relative shadow-inner">
-                    <img src={p.gambar} alt={p.nama} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                    <img src={resolveImageUrl(p.gambar)} alt={p.nama} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
                     <div className="absolute inset-0 bg-gradient-to-t from-[#091540]/60 via-transparent to-transparent opacity-90" />
                     
                     {p.tag && (

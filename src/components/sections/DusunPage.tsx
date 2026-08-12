@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Star, ChevronLeft, ChevronRight, MapPin, Navigation, X, CheckCircle2 } from "lucide-react";
 import { getDusunDetail } from "../../services/dusun.service";
+import { resolveImageUrl } from "../../utils/image";
 import type { Dusun } from "../../types";
 
 export default function DusunPage({ dusun, onClose }: { dusun: Dusun; onClose: () => void }) {
@@ -46,7 +47,7 @@ export default function DusunPage({ dusun, onClose }: { dusun: Dusun; onClose: (
         {/* ── Left Side: Gallery (Compact) ── */}
         <div className="relative w-full lg:w-[45%] h-[40%] lg:h-full bg-[#091540] group flex-shrink-0">
           <img
-            src={allImages[activeImg] || detail.thumbnail}
+            src={resolveImageUrl(allImages[activeImg] || detail.thumbnail)}
             alt={detail.nama}
             key={activeImg}
             className="w-full h-full object-cover transition-transform duration-700 hover:scale-105"

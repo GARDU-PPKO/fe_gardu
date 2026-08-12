@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { Users, Home, ChevronLeft, ChevronRight, Leaf, Eye } from "lucide-react";
 import { getDusun } from "../../services/dusun.service";
+import { resolveImageUrl } from "../../utils/image";
 import type { Dusun } from "../../types";
 
 const FALLBACK_DUSUN: Dusun[] = [
@@ -233,7 +234,7 @@ export default function DusunSlider({ onSelect }: { onSelect: (d: Dusun) => void
               style={{ scrollSnapAlign: "start" }}
               onClick={() => onSelect(d)}>
 
-              <img src={d.thumbnail} alt={d.nama} className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+              <img src={resolveImageUrl(d.thumbnail)} alt={d.nama} className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
               
               {/* Gradient overlay */}
               <div className="absolute inset-0 bg-gradient-to-t from-[#091540] via-[#091540]/50 to-transparent opacity-90 transition-opacity duration-500 group-hover:opacity-95" />

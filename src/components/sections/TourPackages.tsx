@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { CheckCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { getTourPackages } from "../../services/tour-package.service";
+import { resolveImageUrl } from "../../utils/image";
 import type { TourPackage } from "../../types";
 
 const FALLBACK_PACKAGES: TourPackage[] = [
@@ -166,7 +167,7 @@ export default function TourPackages() {
                 <div key={p.id} className="bg-white rounded-2xl overflow-hidden shadow-sm border border-[#c5d0ff] group hover:shadow-lg hover:border-[#182cc1] transition-all cursor-pointer flex flex-col h-full relative"
                   onClick={() => navigate('/packages')}>
                   <div className="relative h-40 bg-[#c5d0ff] overflow-hidden flex-shrink-0">
-                    <img src={p.gambar} alt={p.nama} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                    <img src={resolveImageUrl(p.gambar)} alt={p.nama} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
                     {p.tag && p.tag.toLowerCase() !== "promo" && (
                       <span className="absolute top-2 left-2 text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#182cc1] text-white shadow">

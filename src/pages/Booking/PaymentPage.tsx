@@ -17,6 +17,7 @@ import {
   AlertCircle,
 } from 'lucide-react';
 import type { BookingDetail } from '../../types';
+import { resolveImageUrl } from '../../utils/image';
 
 const STATUS_LABEL: Record<string, string> = {
   pending_payment: 'MENUNGGU PEMBAYARAN',
@@ -338,7 +339,7 @@ const PaymentPage: React.FC = () => {
                     </div>
                     {paymentInfo?.qris_image && (
                       <img
-                        src={paymentInfo.qris_image}
+                        src={resolveImageUrl(paymentInfo?.qris_image)}
                         alt="QRIS"
                         className="mt-4 w-40 h-40 object-contain rounded-xl border border-[#c5d0ff] bg-white mx-auto"
                       />

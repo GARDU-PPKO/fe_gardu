@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { MessageSquare } from "lucide-react";
 import { getUmkmProducts } from "../../services/umkm.service";
+import { resolveImageUrl } from "../../utils/image";
 import type { UmkmProduct } from "../../types";
 
 const CATS = ["Semua", "Makanan", "Kerajinan", "Pertanian", "Oleh-Oleh"];
@@ -68,7 +69,7 @@ export default function UMKMSection() {
               className="bg-white rounded-2xl overflow-hidden border border-[#c5d0ff] shadow-sm hover:shadow-lg hover:border-[#25D366] transition-all group cursor-pointer flex flex-col relative"
             >
               <div className="h-44 overflow-hidden bg-[#c5d0ff] relative">
-                <img src={p.gambar} alt={p.nama} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                <img src={resolveImageUrl(p.gambar)} alt={p.nama} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
               </div>
               <div className="p-4 flex flex-col flex-1">

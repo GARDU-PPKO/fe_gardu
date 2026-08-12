@@ -6,6 +6,7 @@ import BookingSummary from '../../components/booking/BookingSummary';
 import { useBooking } from '../../hooks/useBooking';
 import { getBookingSessions, getAddOns } from '../../services/booking.service';
 import { getTourPackageDetail } from '../../services/tour-package.service';
+import { resolveImageUrl } from '../../utils/image';
 import type { AddOnOption } from '../../services/booking.service';
 import type { BookingSession } from '../../types';
 
@@ -134,7 +135,7 @@ const BookingPackage: React.FC = () => {
           
           <div className="bg-white rounded-2xl p-4 border border-[#c5d0ff] flex flex-col sm:flex-row gap-4 items-start sm:items-center mb-8 shadow-sm">
             <div className="w-full sm:w-24 h-40 sm:h-24 rounded-xl overflow-hidden flex-shrink-0 bg-[#e8edff]">
-              <img src={currentPackage.image} alt={currentPackage.name} className="w-full h-full object-cover" />
+              <img src={resolveImageUrl(currentPackage.image)} alt={currentPackage.name} className="w-full h-full object-cover" />
             </div>
             <div>
               <h4 className="font-bold text-[#091540] text-lg mb-1" style={{ fontFamily: "Poppins, sans-serif" }}>{currentPackage.name}</h4>
