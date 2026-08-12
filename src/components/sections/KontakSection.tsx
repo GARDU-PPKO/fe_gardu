@@ -13,11 +13,16 @@ export default function KontakSection() {
     });
   }, []);
 
+  const getJamPelayanan = (val?: string) => {
+    if (!val) return "Setiap Hari: 08.00–15.00 WIB";
+    return val.replace(/Senin[–-]Jumat/gi, "Setiap Hari");
+  };
+
   const contactItems = [
     { icon: MapPin, title: "Alamat", desc: settings.alamat_desa || "Jl. Raya Getas No. 1, Kec. Singorojo, Kab. Kendal 51382" },
     { icon: Phone, title: "Telepon", desc: settings.wa_admin || "(0294) 381-XXX" },
     { icon: Mail, title: "Email", desc: settings.email_desa || "desagetas@kendalkab.go.id" },
-    { icon: Clock, title: "Jam Pelayanan", desc: settings.jam_pelayanan || "Setiap Hari: 08.00–15.00 WIB" },
+    { icon: Clock, title: "Jam Pelayanan", desc: getJamPelayanan(settings.jam_pelayanan) },
   ];
 
   return (

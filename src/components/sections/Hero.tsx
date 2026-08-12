@@ -48,7 +48,7 @@ export default function Hero({ onSelectDusun }: { onSelectDusun: (d: Dusun) => v
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const heroImage = settings.hero_img || defaultHeroImg;
+  const heroImage = defaultHeroImg;
 
   const villageName = settings.nama_desa ?? "DESA WISATA GETAS";
   const displayTitle = villageName.toUpperCase().includes("GETAS")
@@ -68,9 +68,12 @@ export default function Hero({ onSelectDusun }: { onSelectDusun: (d: Dusun) => v
     <>
       <section id="hero" className="relative w-full min-h-screen bg-[#091540]">
         <img
-          src={heroImage || defaultHeroImg}
+          src={heroImage}
           alt="Tubing Sungai Desa Getas"
           className="absolute inset-0 w-full h-full object-cover opacity-80"
+          onError={(e) => {
+            e.currentTarget.src = defaultHeroImg;
+          }}
         />
         {/* gradient overlay */}
         <div className="absolute inset-0 bg-gradient-to-t from-[#091540] via-[#091540]/40 to-transparent" />

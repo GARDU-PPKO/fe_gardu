@@ -22,13 +22,19 @@ const BookingPackage: React.FC = () => {
     }
   }, [bookingData.selectedPackage, navigate]);
 
-  const [localDate, setLocalDate] = useState(bookingData.date);
-  const [localSession, setLocalSession] = useState(bookingData.session || 'Pagi (07.00 - 09.00)');
+  const [localDate, setLocalDate] = useState(bookingData.date || '');
+  const [localSession, setLocalSession] = useState(bookingData.session || '');
   const [localParticipants, setLocalParticipants] = useState(bookingData.participants || 1);
-  const [localAddOns, setLocalAddOns] = useState(bookingData.selectedAddOns || []);
+  const [localAddOns, setLocalAddOns] = useState<typeof bookingData.selectedAddOns>(bookingData.selectedAddOns || []);
   const [addOnOptions, setAddOnOptions] = useState<AddOnOption[]>([]);
   const [isAddonModalOpen, setIsAddonModalOpen] = useState(false);
   const [packageDetail, setPackageDetail] = useState<{ min_participants: number; max_participants: number } | null>(null);
+
+  useEffect(() => {
+    setLocalDate(bookingData.date || '');
+    setLocalSession(bookingData.session || '');
+    setLocalAddOns(bookingData.selectedAddOns || []);
+  }, [bookingData.selectedPackage?.id, bookingData.date, bookingData.session, bookingData.selectedAddOns]);
 
   useEffect(() => {
     getAddOns().then(res => {
@@ -157,6 +163,7 @@ const BookingPackage: React.FC = () => {
                 className="w-full px-4 py-3 rounded-xl border border-[#c5d0ff] bg-white text-[#091540] text-sm focus:outline-none focus:border-[#182cc1] focus:ring-2 focus:ring-[#e8edff] transition"
                 style={{ fontFamily: "Inter, sans-serif" }}
               >
+                <option value="" disabled>-- Pilih Sesi Waktu --</option>
                 {sessions.length > 0 ? (
                   sessions.map((session) => (
                     <option key={session.id} value={session.sesi}>
@@ -254,62 +261,59 @@ const BookingPackage: React.FC = () => {
                     const priceLabel = addon.is_free || addon.harga === 0
                       ? 'Gratis'
                       : `+ Rp ${addon.harga.toLocaleString('id-ID')}${addon.satuan === 'per orang' ? ' / orang' : ''}`;
+
+                    const toggleAddon = () => {
+                      if (isSelected) {
+                        setLocalAddOns(localAddOns.filter(a => a.id !== String(addon.id)));
+                      } else {
+                        setLocalAddOns([...localAddOns, {
+                          id: String(addon.id),
+                          name: addon.nama,
+                          price: addon.harga,
+                          description: addon.deskripsi,
+                          satuan: addon.satuan,
+                          isFree: addon.is_free,
+                          quantity: 1,
+                        }]);
+                      }
+                    };
+
                     return (
-                      <label key={addon.id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-3.5 sm:p-4 rounded-2xl border cursor-pointer transition-all border-[#c5d0ff] bg-white hover:border-[#182cc1] hover:shadow-sm">
-                        <div className="flex items-center gap-3 w-full">
-                          
-                          {/* Text Details */}
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2 mb-1">
-                              <span className="font-bold text-[#091540] text-sm sm:text-base">{addon.nama}</span>
-                              {addon.is_free && (
-                                <span className="bg-green-100 text-green-700 text-[10px] font-bold px-2 py-0.5 rounded-full">FREE</span>
-                              )}
-                            </div>
-                            <p className="text-xs sm:text-sm text-[#3d518c] leading-snug line-clamp-2 pr-2" style={{ fontFamily: "Inter, sans-serif" }}>
-                              {addon.deskripsi}
-                            </p>
-                            
-                            {/* Mobile Layout Price */}
-                            <div className="sm:hidden mt-2 font-bold text-[#182cc1] text-sm">
-                              {priceLabel}
-                            </div>
+                      <div
+                        key={addon.id}
+                        onClick={toggleAddon}
+                        className={`p-3.5 sm:p-4 rounded-2xl border cursor-pointer transition-all flex items-center justify-between gap-3 ${
+                          isSelected
+                            ? 'border-[#182cc1] bg-[#f8faff] shadow-md shadow-[#182cc1]/10'
+                            : 'border-[#c5d0ff] bg-white hover:border-[#182cc1] hover:shadow-sm'
+                        }`}
+                      >
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="font-bold text-[#091540] text-sm sm:text-base">{addon.nama}</span>
+                            {addon.is_free && (
+                              <span className="bg-green-100 text-green-700 text-[10px] font-bold px-2 py-0.5 rounded-full">FREE</span>
+                            )}
                           </div>
-                        </div>
-                        
-                        {/* Desktop Right Side: Price & Checkbox */}
-                        <div className="hidden sm:flex items-center gap-4 flex-shrink-0 pl-4 border-l border-transparent">
-                          <span className="text-[#182cc1] font-bold whitespace-nowrap">
+                          <p className="text-xs sm:text-sm text-[#3d518c] leading-snug line-clamp-2 pr-2" style={{ fontFamily: "Inter, sans-serif" }}>
+                            {addon.deskripsi}
+                          </p>
+                          <div className="mt-1.5 font-bold text-[#182cc1] text-xs sm:text-sm">
                             {priceLabel}
-                          </span>
-                          <div className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-colors ${isSelected ? 'bg-[#182cc1] border-[#182cc1]' : 'border-[#c5d0ff] bg-white'}`}>
-                            {isSelected && <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"></path></svg>}
                           </div>
                         </div>
 
-                        {/* Mobile Layout Checkbox */}
-                        <div className="sm:hidden absolute right-4 top-4">
-                          <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${isSelected ? 'bg-[#182cc1] border-[#182cc1]' : 'border-[#c5d0ff] bg-white'}`}>
-                            {isSelected && <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"></path></svg>}
-                          </div>
+                        {/* Checkbox box indicator */}
+                        <div className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center flex-shrink-0 transition-colors ${
+                          isSelected ? 'bg-[#182cc1] border-[#182cc1]' : 'border-[#c5d0ff] bg-white'
+                        }`}>
+                          {isSelected && (
+                            <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
+                            </svg>
+                          )}
                         </div>
-
-                        <input type="checkbox" className="hidden" checked={isSelected} onChange={(e) => {
-                          if (e.target.checked) {
-                            setLocalAddOns([...localAddOns, {
-                              id: String(addon.id),
-                              name: addon.nama,
-                              price: addon.harga,
-                              description: addon.deskripsi,
-                              satuan: addon.satuan,
-                              isFree: addon.is_free,
-                              quantity: 1,
-                            }]);
-                          } else {
-                            setLocalAddOns(localAddOns.filter(a => a.id !== String(addon.id)));
-                          }
-                        }} />
-                      </label>
+                      </div>
                     );
                   })}
                 </div>
@@ -364,7 +368,7 @@ const BookingPackage: React.FC = () => {
           />
           {!isFormValid && (
             <p className="text-xs text-[#3d518c] text-center mt-2" style={{ fontFamily: "Inter, sans-serif" }}>
-              {localDate === "" ? "Pilih tanggal kunjungan terlebih dahulu" : `Minimal ${minParticipants} peserta untuk paket ini`}
+              {localDate === "" ? "Pilih tanggal kunjungan terlebih dahulu" : localSession === "" ? "Pilih sesi waktu terlebih dahulu" : `Minimal ${minParticipants} peserta untuk paket ini`}
             </p>
           )}
         </div>

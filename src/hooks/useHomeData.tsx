@@ -19,7 +19,7 @@ const FALLBACK_SETTINGS: Record<string, string> = {
   wa_admin: '6281234567890',
   alamat_desa: 'Jl. Raya Getas No. 1, Kec. Singorojo, Kab. Kendal 51382',
   email_desa: 'desagetas@kendalkab.go.id',
-  jam_pelayanan: 'Senin\u2013Jumat: 08.00\u201315.00 WIB',
+  jam_pelayanan: 'Setiap Hari: 08.00–15.00 WIB',
 };
 
 const HomeDataContext = createContext<HomeDataState | undefined>(undefined);

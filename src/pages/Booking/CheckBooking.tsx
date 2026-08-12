@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import Navbar from '../../components/layout/Navbar';
 import Footer from '../../components/layout/Footer';
 import { checkBooking, cancelBooking, updateBooking } from '../../services/booking.service';
-import { Loader2, Calendar, Clock, Users, Ticket, AlertCircle, CheckCircle, Edit2 } from 'lucide-react';
+import { Loader2, Calendar, Clock, Users, Ticket, AlertCircle, CheckCircle, Edit2, Home } from 'lucide-react';
 
 interface BookingResult {
   id?: number;
@@ -46,14 +46,10 @@ const getRefundPolicy = (tanggal: string) => {
   }
 };
 
-const REFUND_TABLE = [
-  { range: "≥ 72 jam sebelum kunjungan", persen: "75%", note: "Refund dikurangi biaya admin 25%" },
-  { range: "24–72 jam sebelum kunjungan", persen: "50%", note: "Refund dikurangi biaya admin 50%" },
-  { range: "8–24 jam sebelum kunjungan", persen: "25%", note: "Refund dikurangi biaya admin 75%" },
-  { range: "< 8 jam / No-show", persen: "0%", note: "Tidak ada refund" },
-];
+
 
 const CheckBooking: React.FC = () => {
+  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const urlKode = searchParams.get('kode');
   const autoEdit = searchParams.get('edit') === '1';
@@ -80,10 +76,12 @@ const CheckBooking: React.FC = () => {
     try {
       const res = await cancelBooking(result.kode_booking);
       setResult({ ...result, status: (res.data?.status || 'cancelled') as BookingResult['status'] });
+      setIsEditing(false);
       setShowCancelConfirm(false);
       showToast('Pesanan berhasil dibatalkan');
     } catch {
       setResult({ ...result, status: 'cancelled' });
+      setIsEditing(false);
       setShowCancelConfirm(false);
       showToast('Pesanan berhasil dibatalkan');
     }
@@ -192,11 +190,14 @@ const CheckBooking: React.FC = () => {
       });
     } finally {
       setIsLoading(false);
-      if (autoEdit) {
-        setIsEditing(true);
-      }
     }
   };
+
+  useEffect(() => {
+    if (result && autoEdit && result.status !== 'cancelled') {
+      setIsEditing(true);
+    }
+  }, [result, autoEdit]);
 
   useEffect(() => {
     if (urlKode) {
@@ -261,7 +262,17 @@ const CheckBooking: React.FC = () => {
               </div>
 
               {/* Action Buttons */}
-              {result.status !== 'cancelled' && (
+              {result.status === 'cancelled' ? (
+                <div className="mb-6 sm:mb-8">
+                  <button
+                    onClick={() => navigate('/')}
+                    className="flex items-center gap-2 px-5 py-2.5 text-sm font-bold text-white bg-[#182cc1] hover:bg-[#1524a3] rounded-xl transition shadow-md shadow-[#182cc1]/20"
+                  >
+                    <Home size={16} />
+                    Kembali ke Halaman Utama
+                  </button>
+                </div>
+              ) : (
                 <div className="flex flex-wrap gap-3 mb-6 sm:mb-8">
                   <button
                     onClick={() => {
@@ -441,64 +452,35 @@ const CheckBooking: React.FC = () => {
               Batalkan Pesanan?
             </h3>
             <p className="text-center text-gray-500 text-sm mb-5" style={{ fontFamily: "Inter, sans-serif" }}>
-              Tindakan ini tidak dapat diurungkan. Perhatikan kebijakan refund berikut:
+              Tindakan ini tidak dapat diurungkan.
             </p>
 
-            {/* Refund Policy Table */}
-            <div className="bg-[#f8faff] border border-[#c5d0ff] rounded-2xl p-4 mb-5">
-              <div className="text-xs font-bold text-[#182cc1] uppercase tracking-widest mb-3">Kebijakan Pengembalian Dana</div>
-              <div className="space-y-2">
-                {REFUND_TABLE.map((row, i) => {
-                  const refund = getRefundPolicy(result.tanggal);
-                  const isActive = (
-                    (i === 0 && refund.persen === 75) ||
-                    (i === 1 && refund.persen === 50) ||
-                    (i === 2 && refund.persen === 25) ||
-                    (i === 3 && refund.persen === 0)
-                  );
-                  return (
-                    <div key={i} className={`flex items-center justify-between p-2.5 rounded-xl text-xs ${isActive ? 'bg-[#182cc1] text-white font-bold' : 'bg-white border border-[#e8edff] text-[#3d518c]'}`}>
-                      <div className="flex-1 min-w-0">
-                        <div className={`font-semibold truncate ${isActive ? 'text-white' : 'text-[#091540]'}`}>{row.range}</div>
-                        <div className={`text-[10px] mt-0.5 ${isActive ? 'text-white/80' : 'text-gray-400'}`}>{row.note}</div>
-                      </div>
-                      <div className={`font-black text-base ml-3 flex-shrink-0 ${isActive ? 'text-white' : 'text-[#091540]'}`}>
-                        {row.persen}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-
-              {/* Estimasi refund untuk pesanan ini */}
-              {(() => {
-                const refund = getRefundPolicy(result.tanggal);
-                const jumlahRefund = Math.floor(result.total_harga * refund.persen / 100);
-                return (
-                  <div className={`mt-3 p-3 rounded-xl border ${
-                    refund.persen === 75 ? 'bg-green-50 border-green-200' :
-                    refund.persen === 50 ? 'bg-yellow-50 border-yellow-200' :
-                    refund.persen === 25 ? 'bg-orange-50 border-orange-200' :
-                    'bg-red-50 border-red-200'
-                  }`}>
-                    <div className="text-xs text-gray-600 mb-1">{refund.desc}</div>
-                    <div className={`font-black text-sm ${
-                      refund.persen >= 75 ? 'text-green-700' :
-                      refund.persen >= 50 ? 'text-yellow-700' :
-                      refund.persen >= 25 ? 'text-orange-700' :
-                      'text-red-700'
-                    }`}>
-                      Estimasi dana kembali: Rp {jumlahRefund.toLocaleString('id-ID')} ({refund.persen}%)
-                    </div>
-                    {refund.persen > 0 && (
-                      <div className="text-[10px] text-gray-500 mt-0.5">
-                        dari total Rp {result.total_harga.toLocaleString('id-ID')}
-                      </div>
-                    )}
+            {/* Direct Estimasi Dana Kembali Box */}
+            {(() => {
+              const refund = getRefundPolicy(result.tanggal);
+              const jumlahRefund = Math.floor(result.total_harga * refund.persen / 100);
+              return (
+                <div className={`p-4 rounded-2xl border mb-6 text-center ${
+                  refund.persen === 75 ? 'bg-green-50 border-green-200' :
+                  refund.persen === 50 ? 'bg-yellow-50 border-yellow-200' :
+                  refund.persen === 25 ? 'bg-orange-50 border-orange-200' :
+                  'bg-red-50 border-red-200'
+                }`}>
+                  <div className="text-xs text-gray-500 mb-1 font-semibold uppercase tracking-wider">Estimasi Pengembalian Dana</div>
+                  <div className={`font-black text-2xl sm:text-3xl my-1 ${
+                    refund.persen >= 75 ? 'text-green-700' :
+                    refund.persen >= 50 ? 'text-yellow-700' :
+                    refund.persen >= 25 ? 'text-orange-700' :
+                    'text-red-700'
+                  }`} style={{ fontFamily: "Poppins, sans-serif" }}>
+                    Rp {jumlahRefund.toLocaleString('id-ID')}
                   </div>
-                );
-              })()}
-            </div>
+                  <div className="text-xs text-gray-600 mt-2 leading-relaxed">
+                    {refund.desc} (dikurangi biaya admin)
+                  </div>
+                </div>
+              );
+            })()}
 
             <div className="flex gap-3">
               <button

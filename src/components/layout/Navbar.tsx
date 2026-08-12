@@ -41,7 +41,7 @@ export default function Navbar({ onOpenBooking }: { onOpenBooking?: () => void }
 
       {/* ── Pill navbar ── */}
       <nav
-        className={`pointer-events-auto transition-all duration-300 rounded-full w-full max-w-5xl ${
+        className={`pointer-events-auto transition-all duration-300 rounded-full w-full max-w-7xl ${
           scrolled
             ? "bg-white/95 backdrop-blur-md shadow-lg border border-[#c5d0ff]"
             : "bg-white/85 backdrop-blur-md border border-white/50 shadow-sm"
@@ -133,7 +133,7 @@ export default function Navbar({ onOpenBooking }: { onOpenBooking?: () => void }
 
       {/* ── Mobile/Tablet dropdown — stacks BELOW the pill ── */}
       {open && (
-        <div className="pointer-events-auto w-full max-w-5xl bg-white/97 backdrop-blur-md border border-[#c5d0ff] rounded-3xl px-3 py-3 shadow-2xl shadow-[#182cc1]/10 flex flex-col gap-1 lg:hidden">
+        <div className="pointer-events-auto w-full max-w-7xl bg-white/97 backdrop-blur-md border border-[#c5d0ff] rounded-3xl px-3 py-3 shadow-2xl shadow-[#182cc1]/10 flex flex-col gap-1 lg:hidden">
           {/* AR Explore */}
           <button
             onClick={() => handleNavClick("#ar")}

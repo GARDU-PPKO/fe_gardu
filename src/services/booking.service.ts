@@ -77,8 +77,27 @@ export const uploadBuktiBayar = (kode: string, file: File) => {
 };
 
 /** Batalkan booking */
-export const cancelBooking = (kode: string) =>
-  api.patch<{ kode_booking: string; status: string }>(`/bookings/${kode}/cancel`);
+export const cancelBooking = async (kode: string) => {
+  try {
+    return await api.patch<{ kode_booking: string; status: string }>(`/bookings/${kode}/cancel`, {
+      reason: 'Dibatalkan oleh pemesan',
+      alasan: 'Dibatalkan oleh pemesan',
+      status: 'cancelled',
+    });
+  } catch (err: unknown) {
+    const errorObj = err as { response?: { status?: number } };
+    if (errorObj.response?.status === 422 || errorObj.response?.status === 405 || errorObj.response?.status === 404) {
+      try {
+        return await api.post<{ kode_booking: string; status: string }>(`/bookings/${kode}/cancel`, {
+          reason: 'Dibatalkan oleh pemesan',
+        });
+      } catch {
+        return await api.patch<BookingDetail>(`/bookings/${kode}`, { status: 'cancelled' });
+      }
+    }
+    throw err;
+  }
+};
 
 /** Kirim ulang notifikasi/WA link pembayaran */
 export const resendPaymentLink = (kode: string) =>
