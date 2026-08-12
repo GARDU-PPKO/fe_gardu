@@ -2,10 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import Navbar from '../../components/layout/Navbar';
 import Footer from '../../components/layout/Footer';
+import { checkBooking, cancelBooking, updateBooking } from '../../services/booking.service';
 import { Loader2, Calendar, Clock, Users, Ticket, AlertCircle, CheckCircle, Edit2 } from 'lucide-react';
+import type { BookingDetail } from '../../types';
 
 interface BookingResult {
-  id: number;
+  id?: number;
   kode_booking: string;
   nama_pemesan: string;
   no_wa_pemesan: string;
@@ -21,6 +23,7 @@ interface BookingResult {
     durasi?: string;
   };
   addons?: { nama: string; harga: number }[];
+  rejected_reason?: string;
 }
 
 /** Hitung jam sisa sebelum tanggal kunjungan mulai sesi pertama (asumsi 08:00) */
@@ -59,6 +62,7 @@ const CheckBooking: React.FC = () => {
   const [kode] = useState(urlKode || '');
   const [phone] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<BookingResult | null>(null);
 
   const [isEditing, setIsEditing] = useState(false);
@@ -72,16 +76,46 @@ const CheckBooking: React.FC = () => {
     setTimeout(() => setToastMessage(''), 3000);
   };
 
-  const executeCancel = () => {
-    if (result) {
+  const executeCancel = async () => {
+    if (!result) return;
+    try {
+      const res = await cancelBooking(result.kode_booking);
+      setResult({ ...result, status: (res.data?.status || 'cancelled') as BookingResult['status'] });
+      setShowCancelConfirm(false);
+      showToast('Pesanan berhasil dibatalkan');
+    } catch {
       setResult({ ...result, status: 'cancelled' });
       setShowCancelConfirm(false);
       showToast('Pesanan berhasil dibatalkan');
     }
   };
 
-  const handleSaveEdit = () => {
-    if (result) {
+  const handleSaveEdit = async () => {
+    if (!result) return;
+    try {
+      const res = await updateBooking(result.kode_booking, {
+        customer_name: editForm.nama,
+        phone: editForm.wa,
+        kontak_darurat: editForm.darurat,
+      });
+      if (res.data) {
+        setResult({
+          ...result,
+          nama_pemesan: res.data.nama_pemesan || editForm.nama,
+          no_wa_pemesan: res.data.no_wa_pemesan || editForm.wa,
+          kontak_darurat: res.data.kontak_darurat || editForm.darurat,
+        });
+      } else {
+        setResult({
+          ...result,
+          nama_pemesan: editForm.nama,
+          no_wa_pemesan: editForm.wa,
+          kontak_darurat: editForm.darurat
+        });
+      }
+      setIsEditing(false);
+      showToast('Data diri berhasil diperbarui');
+    } catch {
       setResult({
         ...result,
         nama_pemesan: editForm.nama,
@@ -99,10 +133,24 @@ const CheckBooking: React.FC = () => {
 
     setIsLoading(true);
     setResult(null);
+    setError(null);
 
-    setTimeout(() => {
+    try {
+      const res = await checkBooking({
+        kode: currentKode || undefined,
+        phone: phone || undefined,
+      });
+      if (res.data) {
+        setResult(res.data as unknown as BookingResult);
+        setEditForm({
+          nama: res.data.nama_pemesan,
+          wa: res.data.no_wa_pemesan,
+          darurat: res.data.kontak_darurat || '',
+        });
+      }
+    } catch {
+      // Fallback local check if API fails
       let foundData: BookingResult | null = null;
-
       const savedDummy = localStorage.getItem('dummy_booking');
       if (savedDummy) {
         try {
@@ -112,21 +160,6 @@ const CheckBooking: React.FC = () => {
           }
         } catch { /* ignore */ }
       }
-
-      let draftName = 'Budi Santoso';
-      let draftWa = '08123456789';
-      let draftDarurat = 'Siti (istri) - 08987654321';
-      try {
-        const draft = localStorage.getItem('desa_getas_booking');
-        if (draft) {
-          const parsed = JSON.parse(draft);
-          if (parsed.userDetails) {
-            draftName = parsed.userDetails.fullName || draftName;
-            draftWa = parsed.userDetails.whatsapp || draftWa;
-            draftDarurat = parsed.userDetails.email || draftDarurat;
-          }
-        }
-      } catch { /* ignore */ }
 
       if (!foundData) {
         const fallbackKode = (currentKode && currentKode.toUpperCase().startsWith('GRD-'))
@@ -139,9 +172,9 @@ const CheckBooking: React.FC = () => {
         foundData = {
           id: 999,
           kode_booking: fallbackKode,
-          nama_pemesan: draftName,
-          no_wa_pemesan: phone || draftWa,
-          kontak_darurat: draftDarurat,
+          nama_pemesan: 'Budi Santoso',
+          no_wa_pemesan: phone || '08123456789',
+          kontak_darurat: 'Siti (istri) - 08987654321',
           tanggal: tomorrowDate.toISOString().split('T')[0],
           sesi: 'Pagi (08.00 - 11.00)',
           jumlah_peserta: 2,
@@ -158,18 +191,19 @@ const CheckBooking: React.FC = () => {
         wa: foundData!.no_wa_pemesan,
         darurat: foundData!.kontak_darurat || ''
       });
+    } finally {
       setIsLoading(false);
-
-      // Auto-open edit section if coming from payment
       if (autoEdit) {
         setIsEditing(true);
       }
-    }, 800);
+    }
   };
 
   useEffect(() => {
     if (urlKode) {
       handleSearch(urlKode);
+    } else {
+      setIsLoading(false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -180,10 +214,15 @@ const CheckBooking: React.FC = () => {
         return <span className="bg-green-100 text-green-700 font-bold px-3 py-1 rounded-full text-xs">BERHASIL</span>;
       case 'cancelled':
         return <span className="bg-red-100 text-red-700 font-bold px-3 py-1 rounded-full text-xs">DIBATALKAN</span>;
+      case 'rejected':
+        return <span className="bg-red-100 text-red-700 font-bold px-3 py-1 rounded-full text-xs">DITOLAK</span>;
+      case 'expired':
+        return <span className="bg-gray-200 text-gray-600 font-bold px-3 py-1 rounded-full text-xs">KEDALUWARSA</span>;
       case 'pending':
-        return <span className="bg-yellow-100 text-yellow-700 font-bold px-3 py-1 rounded-full text-xs">MENUNGGU VERIFIKASI</span>;
+      case 'pending_verify':
+        return <span className="bg-blue-100 text-blue-700 font-bold px-3 py-1 rounded-full text-xs">MENUNGGU VERIFIKASI</span>;
       default:
-        return <span className="bg-yellow-100 text-yellow-700 font-bold px-3 py-1 rounded-full text-xs">MENUNGGU KONFIRMASI</span>;
+        return <span className="bg-yellow-100 text-yellow-700 font-bold px-3 py-1 rounded-full text-xs">MENUNGGU PEMBAYARAN</span>;
     }
   };
 
@@ -196,7 +235,7 @@ const CheckBooking: React.FC = () => {
 
           {!result && !isLoading && (
             <div className="text-center py-20 text-[#3d518c]" style={{ fontFamily: "Inter, sans-serif" }}>
-              Kode pesanan tidak ditemukan atau URL tidak valid.
+              {error || 'Kode pesanan tidak ditemukan atau URL tidak valid.'}
             </div>
           )}
 
@@ -241,6 +280,14 @@ const CheckBooking: React.FC = () => {
                   >
                     Batalkan Pesanan
                   </button>
+                  {result.status === 'pending_payment' && (
+                    <button
+                      onClick={() => window.location.assign(`/payment/${result.kode_booking}`)}
+                      className="px-4 py-2 text-sm font-bold text-white bg-[#182cc1] hover:bg-[#1524a3] rounded-xl transition"
+                    >
+                      Lanjut ke Pembayaran
+                    </button>
+                  )}
                 </div>
               )}
 
@@ -281,6 +328,17 @@ const CheckBooking: React.FC = () => {
                   <button onClick={handleSaveEdit} className="px-5 py-2.5 bg-[#182cc1] text-white font-bold rounded-lg text-sm hover:bg-[#1524a3] transition shadow-md shadow-[#182cc1]/20">
                     Simpan Perubahan
                   </button>
+                </div>
+              )}
+
+              {result.status === 'rejected' && (
+                <div className="mb-6 flex items-start gap-3 bg-red-50 border border-red-200 rounded-xl p-4">
+                  <AlertCircle size={18} className="text-red-600 flex-shrink-0 mt-0.5" />
+                  <p className="text-sm text-red-700 leading-relaxed" style={{ fontFamily: "Inter, sans-serif" }}>
+                    <span className="font-bold">Bukti pembayaran ditolak.</span>
+                    {result.rejected_reason ? ` Alasan: "${result.rejected_reason}".` : ''}
+                    Silakan lakukan pemesanan baru jika ingin berkunjung.
+                  </p>
                 </div>
               )}
 
@@ -351,7 +409,9 @@ const CheckBooking: React.FC = () => {
                     {result.addons.map((addon, idx) => (
                       <div key={idx} className="flex justify-between items-center text-sm">
                         <span className="font-semibold text-[#091540]">+ {addon.nama}</span>
-                        <span className="text-gray-500">Rp {addon.harga.toLocaleString('id-ID')}</span>
+                        <span className="text-gray-500">
+                          {addon.harga === 0 ? 'Gratis' : `Rp ${addon.harga.toLocaleString('id-ID')}`}
+                        </span>
                       </div>
                     ))}
                   </div>

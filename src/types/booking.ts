@@ -2,9 +2,10 @@ export interface AddOnItem {
   id: string;
   name: string;
   price: number;
-  description?: string;
+  description: string;
+  satuan?: string;
   isFree?: boolean;
-  quantity?: number;
+  quantity: number;
 }
 
 export interface Package {
@@ -28,7 +29,7 @@ export interface Package {
 export interface UserDetails {
   fullName: string;
   whatsapp: string;
-  email: string;
+  kontakDarurat: string;
   city: string;
   notes: string;
 }
@@ -51,36 +52,8 @@ export const INITIAL_BOOKING_STATE: BookingState = {
   userDetails: {
     fullName: '',
     whatsapp: '',
-    email: '',
+    kontakDarurat: '',
     city: '',
     notes: '',
   }
 };
-
-export const AVAILABLE_ADD_ONS: AddOnItem[] = [
-  {
-    id: 'snack',
-    name: 'Paket Snack & Camilan',
-    price: 15000,
-    description: 'Aneka camilan khas Getas + kopi/teh hangat',
-  },
-  {
-    id: 'bbq',
-    name: 'Alat Bakaran & Arang',
-    price: 25000,
-    description: 'Set panggangan BBQ lengkap arang & penjepit',
-  },
-  {
-    id: 'atv',
-    name: 'Sewa ATV (30 Menit)',
-    price: 35000,
-    description: 'Jelajah jalur offroad ringan dengan ATV 150cc',
-  },
-  {
-    id: 'archery',
-    name: 'Sesi Panahan (Archery)',
-    price: 0,
-    isFree: true,
-    description: 'Fasilitas memanah gratis (10 anak panah per peserta)',
-  },
-];

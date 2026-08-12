@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import BookingLayout from '../../components/layout/BookingLayout';
 import BookingSummary from '../../components/booking/BookingSummary';
 import { useBooking } from '../../hooks/useBooking';
+import { createBooking } from '../../services/booking.service';
+import { ApiValidationError } from '../../services/api';
 import { CheckCircle, AlertCircle, X } from "lucide-react";
 
 const validatePhone = (val: string) => {
@@ -11,7 +13,6 @@ const validatePhone = (val: string) => {
 };
 
 const validateEmail = (val: string) => {
-  // email digunakan sebagai kontak darurat (no WA/nama keluarga) — hanya validasi tidak kosong
   return val.trim().length >= 3;
 };
 
@@ -30,7 +31,7 @@ const BookingFormPage: React.FC = () => {
   const [formData, setFormData] = useState({
     fullName: userDetails.fullName || '',
     whatsapp: userDetails.whatsapp || '',
-    email: userDetails.email || '',
+    email: userDetails.kontakDarurat || userDetails.email || '',
     city: userDetails.city || '',
     notes: userDetails.notes || '',
   });
@@ -38,6 +39,8 @@ const BookingFormPage: React.FC = () => {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [touched, setTouched] = useState<Record<string, boolean>>({});
   const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   const validate = (data: typeof formData) => {
     const newErrors: Record<string, string> = {};
@@ -77,7 +80,6 @@ const BookingFormPage: React.FC = () => {
   const isFormValid = Object.keys(validate(formData)).length === 0;
 
   const handleSubmit = () => {
-    // Mark all required fields as touched
     const allTouched = { fullName: true, whatsapp: true, email: true };
     setTouched(allTouched);
     const newErrors = validate(formData);
@@ -86,9 +88,49 @@ const BookingFormPage: React.FC = () => {
     setShowConfirmModal(true);
   };
 
-  const handleConfirmProceed = () => {
+  const handleConfirmProceed = async () => {
     setShowConfirmModal(false);
-    navigate('/booking/payment');
+
+    const { selectedPackage, date, session, participants, selectedAddOns } = bookingData;
+    if (!selectedPackage || !date || !session) {
+      navigate('/booking/package');
+      return;
+    }
+
+    setIsSubmitting(true);
+    setSubmitError(null);
+
+    try {
+      const res = await createBooking({
+        package_id: selectedPackage.id,
+        customer_name: formData.fullName.trim(),
+        phone: formData.whatsapp.trim(),
+        kontak_darurat: formData.email.trim(),
+        kota_asal: formData.city.trim(),
+        date,
+        session_time: session,
+        participants,
+        notes: formData.notes.trim() || undefined,
+        addons: (selectedAddOns || []).map(a => ({
+          id: a.id,
+        })),
+      });
+
+      if (res.data && res.data.kode_booking) {
+        navigate(`/payment/${res.data.kode_booking}`);
+      } else {
+        navigate('/booking/payment');
+      }
+    } catch (e) {
+      if (e instanceof ApiValidationError) {
+        const msgs = Object.values(e.errors).flat();
+        setSubmitError(msgs.length > 0 ? msgs.join(' ') : e.message);
+      } else {
+        // Fallback navigate to payment step for offline/mock development
+        navigate('/booking/payment');
+      }
+      setIsSubmitting(false);
+    }
   };
 
   const fields = [
@@ -158,10 +200,16 @@ const BookingFormPage: React.FC = () => {
         </div>
 
         <div className="lg:sticky lg:top-4 self-start order-last lg:order-none">
+          {submitError && (
+            <div className="mb-4 flex items-start gap-2 bg-red-50 border border-red-200 rounded-xl p-3">
+              <AlertCircle size={16} className="text-red-500 flex-shrink-0 mt-0.5" />
+              <p className="text-xs text-red-700 leading-relaxed">{submitError}</p>
+            </div>
+          )}
           <BookingSummary
-            buttonText="Lanjut ke Pembayaran"
+            buttonText={isSubmitting ? "Membuat Pesanan..." : "Lanjut ke Pembayaran"}
             onButtonClick={handleSubmit}
-            buttonDisabled={false}
+            buttonDisabled={isSubmitting}
             showPaymentInfo={false}
           />
         </div>
@@ -216,9 +264,10 @@ const BookingFormPage: React.FC = () => {
               </button>
               <button
                 onClick={handleConfirmProceed}
+                disabled={isSubmitting}
                 className="flex-1 py-3 px-4 font-bold text-white bg-[#182cc1] hover:bg-[#1524a3] rounded-xl transition shadow-lg shadow-[#182cc1]/20 text-sm"
               >
-                Ya, Sudah Benar
+                {isSubmitting ? "Memproses..." : "Ya, Sudah Benar"}
               </button>
             </div>
           </div>

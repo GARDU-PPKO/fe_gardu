@@ -1,6 +1,7 @@
 import React from 'react';
 import { ArrowRight } from 'lucide-react';
 import { useBooking } from '../../hooks/useBooking';
+import type { AddOnItem } from '../../types/booking';
 
 interface BookingSummaryProps {
   buttonText: string;
@@ -23,16 +24,12 @@ const BookingSummary: React.FC<BookingSummaryProps> = ({
   const { selectedPackage, date, session, participants, userDetails, selectedAddOns } = bookingData;
   const name = userDetails?.fullName;
 
-  const numParticipants = participants || 1;
-  const isPerPerson = !selectedPackage?.unit || selectedPackage.unit === 'orang';
-  const packageTotal = selectedPackage 
-    ? (isPerPerson ? selectedPackage.price * numParticipants : selectedPackage.price) 
-    : 0;
-
-  const addOnsTotal = (selectedAddOns || []).reduce(
-    (acc, curr) => acc + (curr.price * (curr.quantity || 1)), 
-    0
-  );
+  const packageTotal = selectedPackage ? selectedPackage.price * participants : 0;
+  const isPerOrang = (addon: AddOnItem) => addon.satuan === 'per orang';
+  const addOnsTotal = (selectedAddOns || []).reduce((acc, curr) => {
+    const qty = isPerOrang(curr) ? participants : (curr.quantity || 1);
+    return acc + (curr.price * qty);
+  }, 0);
   const total = packageTotal + addOnsTotal;
 
   const formattedDate = date
@@ -53,13 +50,10 @@ const BookingSummary: React.FC<BookingSummaryProps> = ({
   const formattedSession = session ? session.split(" ")[0] : "—";
 
   const addOnsRows = (selectedAddOns || []).map(addon => {
-    const qty = addon.quantity || 1;
-    const itemTotal = addon.price * qty;
-    const qtyLabel = qty > 1 ? ` (x${qty})` : '';
-    return {
-      label: `+ ${addon.name}${qtyLabel}`,
-      value: itemTotal === 0 ? "Gratis" : `Rp ${itemTotal.toLocaleString('id-ID')}`
-    };
+    const qty = isPerOrang(addon) ? participants : (addon.quantity || 1);
+    const label = isPerOrang(addon) ? `+ ${addon.name} × ${participants} orang` : `+ ${addon.name}`;
+    const value = addon.price === 0 ? "Gratis" : `Rp ${(addon.price * qty).toLocaleString('id-ID')}`;
+    return { label, value };
   });
 
   const rows = [
