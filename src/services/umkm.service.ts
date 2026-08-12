@@ -1,5 +1,14 @@
 import api from './api';
 import type { UmkmProduct } from '../types';
+import type { ApiPagination } from './api';
+import type { AxiosResponse } from 'axios';
 
-export const getUmkmProducts = (kategori?: string) =>
-  api.get<UmkmProduct[]>('/umkm-products', { params: { kategori } });
+interface UmkmResponse extends AxiosResponse<UmkmProduct[]> {
+  pagination?: ApiPagination;
+}
+
+export const getUmkmProducts = (params?: {
+  kategori?: string;
+  page?: number;
+  limit?: number;
+}) => api.get<UmkmProduct[]>('/umkm-products', { params }) as Promise<UmkmResponse>;

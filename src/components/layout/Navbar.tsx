@@ -77,7 +77,7 @@ export default function Navbar({ onOpenBooking }: { onOpenBooking?: () => void }
 
         {/* ── Right: Pesan Sekarang ── */}
         <div className="flex items-center gap-2 flex-shrink-0">
-          <button onClick={onOpenBooking}
+          <button onClick={() => onOpenBooking?.()}
             className="hidden sm:flex items-center gap-1.5 px-4 py-2 bg-[#182cc1] hover:bg-[#1524a3] text-white text-sm font-bold rounded-full transition shadow-md shadow-[#c5d0ff]/60"
             style={{ fontFamily: "Poppins, sans-serif" }}>
             <Ticket size={14} />
@@ -109,7 +109,7 @@ export default function Navbar({ onOpenBooking }: { onOpenBooking?: () => void }
           ))}
 
           <div className="pt-2">
-            <button onClick={() => { onOpenBooking(); setOpen(false); }}
+            <button onClick={() => { onOpenBooking?.(); setOpen(false); }}
               className="w-full py-3 bg-[#182cc1] text-white font-bold rounded-full text-sm flex items-center justify-center gap-2 shadow-md"
               style={{ fontFamily: "Poppins, sans-serif" }}>
               <Ticket size={15} /> Pesan Sekarang

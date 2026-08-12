@@ -5,9 +5,10 @@ import HomePage from '../pages/Home/HomePage';
 import PackagesPage from '../pages/Packages/PackagesPage';
 import BookingPackage from '../pages/Booking/BookingPackage';
 import BookingFormPage from '../pages/Booking/BookingForm';
-import BookingPayment from '../pages/Booking/BookingPayment';
+import PaymentPage from '../pages/Booking/PaymentPage';
 import CheckBooking from '../pages/Booking/CheckBooking';
 import { BookingProvider } from '../hooks/useBooking';
+import { HomeDataProvider } from '../hooks/useHomeData';
 
 const PageWrapper = ({ children }: { children: React.ReactNode }) => (
   <motion.div
@@ -26,9 +27,11 @@ const AnimatedRoutes: React.FC = () => {
     <AnimatePresence mode="wait">
       <Routes location={location} key={location.pathname}>
         <Route path="/" element={<PageWrapper><HomePage /></PageWrapper>} />
-        
+
         <Route path="/packages" element={<PageWrapper><PackagesPage /></PageWrapper>} />
-        
+
+        <Route path="/payment/:kode" element={<PageWrapper><PaymentPage /></PageWrapper>} />
+
         <Route path="/cek-pesanan" element={<PageWrapper><CheckBooking /></PageWrapper>} />
 
         <Route path="/booking/*" element={
@@ -36,7 +39,6 @@ const AnimatedRoutes: React.FC = () => {
             <Routes>
               <Route path="package" element={<BookingPackage />} />
               <Route path="form" element={<BookingFormPage />} />
-              <Route path="payment" element={<BookingPayment />} />
               <Route path="*" element={<Navigate to="package" replace />} />
             </Routes>
           </PageWrapper>
@@ -52,7 +54,9 @@ const AppRoutes: React.FC = () => {
   return (
     <BrowserRouter>
       <BookingProvider>
-        <AnimatedRoutes />
+        <HomeDataProvider>
+          <AnimatedRoutes />
+        </HomeDataProvider>
       </BookingProvider>
     </BrowserRouter>
   );

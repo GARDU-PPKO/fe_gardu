@@ -1,6 +1,7 @@
 import React from 'react';
 import { ArrowRight } from 'lucide-react';
 import { useBooking } from '../../hooks/useBooking';
+import type { AddOnItem } from '../../types/booking';
 
 interface BookingSummaryProps {
   buttonText: string;
@@ -24,7 +25,11 @@ const BookingSummary: React.FC<BookingSummaryProps> = ({
   const name = userDetails?.fullName;
 
   const packageTotal = selectedPackage ? selectedPackage.price * participants : 0;
-  const addOnsTotal = (selectedAddOns || []).reduce((acc, curr) => acc + (curr.price * curr.quantity), 0);
+  const isPerOrang = (addon: AddOnItem) => addon.satuan === 'per orang';
+  const addOnsTotal = (selectedAddOns || []).reduce((acc, curr) => {
+    const qty = isPerOrang(curr) ? participants : (curr.quantity || 1);
+    return acc + (curr.price * qty);
+  }, 0);
   const total = packageTotal + addOnsTotal;
 
   const formattedDate = date
@@ -33,10 +38,12 @@ const BookingSummary: React.FC<BookingSummaryProps> = ({
 
   const formattedSession = session ? session.split(" ")[0] : "—";
 
-  const addOnsRows = (selectedAddOns || []).map(addon => ({
-    label: `+ ${addon.name}`,
-    value: addon.price === 0 ? "Gratis" : `Rp ${addon.price.toLocaleString('id-ID')}`
-  }));
+  const addOnsRows = (selectedAddOns || []).map(addon => {
+    const qty = isPerOrang(addon) ? participants : (addon.quantity || 1);
+    const label = isPerOrang(addon) ? `+ ${addon.name} × ${participants} orang` : `+ ${addon.name}`;
+    const value = addon.price === 0 ? "Gratis" : `Rp ${(addon.price * qty).toLocaleString('id-ID')}`;
+    return { label, value };
+  });
 
   const rows = [
     { label: "Paket", value: selectedPackage ? selectedPackage.name : "-" },

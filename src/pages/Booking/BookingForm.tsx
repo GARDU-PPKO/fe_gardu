@@ -3,7 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import BookingLayout from '../../components/layout/BookingLayout';
 import BookingSummary from '../../components/booking/BookingSummary';
 import { useBooking } from '../../hooks/useBooking';
-import { CheckCircle } from "lucide-react";
+import { createBooking } from '../../services/booking.service';
+import { ApiValidationError } from '../../services/api';
+import { CheckCircle, AlertCircle } from "lucide-react";
 
 const BookingFormPage: React.FC = () => {
   const navigate = useNavigate();
@@ -20,7 +22,7 @@ const BookingFormPage: React.FC = () => {
   const [formData, setFormData] = useState({
     fullName: userDetails.fullName || '',
     whatsapp: userDetails.whatsapp || '',
-    email: userDetails.email || '',
+    email: userDetails.kontakDarurat || '',
     city: userDetails.city || '',
     notes: userDetails.notes || '',
   });
@@ -34,9 +36,47 @@ const BookingFormPage: React.FC = () => {
 
   const isFormValid = formData.fullName.trim() !== '' && formData.whatsapp.trim() !== '' && formData.email.trim() !== '';
 
-  const handleSubmit = () => {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+
+  const handleSubmit = async () => {
     if (!isFormValid) return;
-    navigate('/booking/payment');
+
+    const { selectedPackage, date, session, participants, selectedAddOns } = bookingData;
+    if (!selectedPackage || !date || !session) {
+      navigate('/booking/package');
+      return;
+    }
+
+    setIsSubmitting(true);
+    setSubmitError(null);
+
+    try {
+      const res = await createBooking({
+        package_id: selectedPackage.id,
+        customer_name: formData.fullName.trim(),
+        phone: formData.whatsapp.trim(),
+        kontak_darurat: formData.email.trim(),
+        kota_asal: formData.city.trim(),
+        date,
+        session_time: session,
+        participants,
+        notes: formData.notes.trim() || undefined,
+        addons: (selectedAddOns || []).map(a => ({
+          id: a.id,
+        })),
+      });
+
+      navigate(`/payment/${res.data.kode_booking}`);
+    } catch (e) {
+      if (e instanceof ApiValidationError) {
+        const msgs = Object.values(e.errors).flat();
+        setSubmitError(msgs.length > 0 ? msgs.join(' ') : e.message);
+      } else {
+        setSubmitError('Gagal membuat pemesanan. Silakan coba lagi.');
+      }
+      setIsSubmitting(false);
+    }
   };
 
   const fields = [
@@ -95,10 +135,16 @@ const BookingFormPage: React.FC = () => {
         </div>
 
         <div className="lg:sticky lg:top-4 self-start">
+          {submitError && (
+            <div className="mb-4 flex items-start gap-2 bg-red-50 border border-red-200 rounded-xl p-3">
+              <AlertCircle size={16} className="text-red-500 flex-shrink-0 mt-0.5" />
+              <p className="text-xs text-red-700 leading-relaxed">{submitError}</p>
+            </div>
+          )}
           <BookingSummary
-            buttonText="Lanjut ke Pembayaran"
+            buttonText={isSubmitting ? "Membuat Pesanan..." : "Buat Pesanan & Lanjut ke Pembayaran"}
             onButtonClick={handleSubmit}
-            buttonDisabled={!isFormValid}
+            buttonDisabled={!isFormValid || isSubmitting}
             showPaymentInfo={false}
           />
         </div>
