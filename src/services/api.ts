@@ -45,7 +45,7 @@ export class ApiValidationError extends Error {
 
 // ── Axios instance ──
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'https://api.gardu.site/api',
+  baseURL: import.meta.env.VITE_API_URL || 'https://rentrack.site/api',
   headers: {
     Accept: 'application/json',
   },
