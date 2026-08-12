@@ -61,7 +61,7 @@ const BookingSummary: React.FC<BookingSummaryProps> = ({
     ...(name?.trim() ? [{ label: "Nama Pemesan", value: name.trim() }] : []),
     { label: "Tanggal", value: formattedDate },
     { label: "Sesi", value: formattedSession },
-    { label: "Peserta", value: `${numParticipants} orang` },
+    { label: "Peserta", value: `${participants} orang` },
     ...(selectedPackage ? [{ label: "Durasi", value: selectedPackage.duration || "±2 jam" }] : []),
     ...addOnsRows,
   ];

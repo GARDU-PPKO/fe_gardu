@@ -68,7 +68,7 @@ const BookingPayment: React.FC = () => {
           package_id: selectedPackage.id,
           customer_name: userDetails.fullName || 'Tamu',
           phone: userDetails.whatsapp || '',
-          email: userDetails.email,
+          email: userDetails.email || userDetails.kontakDarurat || '',
           date: date || new Date().toISOString().split('T')[0],
           session_time: session || 'Pagi (07.00 - 09.00)',
           participants: participants,
@@ -76,10 +76,9 @@ const BookingPayment: React.FC = () => {
           notes: notesWithPayment
         });
 
-        if (response.data && response.data.data && response.data.data.kode_booking) {
-          const kode = response.data.data.kode_booking;
+        if (response.data && response.data.kode_booking) {
+          const kode = response.data.kode_booking;
           saveDummyToLocal(kode);
-          // Redirect ke cek pesanan dengan edit data diri langsung terbuka
           navigate(`/cek-pesanan?kode=${kode}&edit=1`);
         } else {
           const fallbackKode = `GRD-${new Date().toISOString().slice(0,10).replace(/-/g,'')}-${Math.random().toString(36).substring(2,6).toUpperCase()}`;
@@ -104,7 +103,7 @@ const BookingPayment: React.FC = () => {
         kode_booking: kode,
         nama_pemesan: userDetails.fullName || 'Tamu',
         no_wa_pemesan: userDetails.whatsapp || '',
-        kontak_darurat: userDetails.email || '',
+        kontak_darurat: userDetails.email || userDetails.kontakDarurat || '',
         tanggal: date || new Date().toISOString().split('T')[0],
         sesi: session || 'Pagi (07.00 - 09.00)',
         jumlah_peserta: participants,

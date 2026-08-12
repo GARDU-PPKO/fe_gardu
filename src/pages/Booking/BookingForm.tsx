@@ -84,7 +84,7 @@ const BookingFormPage: React.FC = () => {
     setTouched(allTouched);
     const newErrors = validate(formData);
     setErrors(newErrors);
-    if (Object.keys(newErrors).length > 0) return;
+    if (!isFormValid || Object.keys(newErrors).length > 0) return;
     setShowConfirmModal(true);
   };
 

@@ -25,6 +25,7 @@ export interface CreateBookingPayload {
   date: string;
   session_time: string;
   participants: number;
+  total_harga?: number;
   notes?: string;
   addons?: { id: string | number; quantity?: number }[];
 }

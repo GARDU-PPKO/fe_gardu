@@ -4,7 +4,6 @@ import Navbar from '../../components/layout/Navbar';
 import Footer from '../../components/layout/Footer';
 import { checkBooking, cancelBooking, updateBooking } from '../../services/booking.service';
 import { Loader2, Calendar, Clock, Users, Ticket, AlertCircle, CheckCircle, Edit2 } from 'lucide-react';
-import type { BookingDetail } from '../../types';
 
 interface BookingResult {
   id?: number;
