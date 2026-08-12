@@ -11,7 +11,7 @@ const NAV = [
 ];
 
 const MITRA = [
-  { label: "Disbusparekraf Kendal", url: "https://disbusparekraf.kendalkab.go.id" },
+  { label: "Disbusparekraf Jawa Tengah", url: "https://www.disbudparekraf.jatengprov.go.id" },
   { label: "Disporapar Kendal", url: "https://disporapar.kendalkab.go.id" },
   { label: "Puskesmas Singorojo 1", url: "https://puskesmassingorojo1.kendalkab.go.id" },
   { label: "Kecamatan Singorojo", url: "https://kecamatan-singorojo.kendalkab.go.id" },

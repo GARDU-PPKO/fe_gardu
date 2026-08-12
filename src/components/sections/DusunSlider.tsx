@@ -1,8 +1,9 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { Users, Home, ChevronLeft, ChevronRight, Leaf, Eye, Loader2 } from "lucide-react";
 import { getDusun } from "../../services/dusun.service";
+import { getSettings } from "../../services/village.service";
 import { resolveImageUrl } from "../../utils/image";
-import type { Dusun } from "../../types";
+import type { Dusun, Setting } from "../../types";
 
 const sortByRW = (list: Dusun[]) =>
   [...list].sort((a, b) => {
@@ -13,19 +14,32 @@ const sortByRW = (list: Dusun[]) =>
 
 export default function DusunSlider({ onSelect }: { onSelect: (d: Dusun) => void }) {
   const [dusunList, setDusunList] = useState<Dusun[]>([]);
+  const [villageName, setVillageName] = useState<string>("Desa Getas");
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
   const trackRef = useRef<HTMLDivElement>(null);
   const [canPrev, setCanPrev] = useState(false);
   const [canNext, setCanNext] = useState(true);
   const [activeIdx, setActiveIdx] = useState(0);
+  const [totalDots, setTotalDots] = useState(1);
 
   useEffect(() => {
     let cancelled = false;
-    getDusun()
-      .then(res => {
+
+    Promise.all([
+      getDusun(),
+      getSettings('nama_desa')
+    ])
+      .then(([dusunRes, settingsRes]) => {
         if (cancelled) return;
-        setDusunList(sortByRW(res?.data ?? []));
+        const sorted = sortByRW(dusunRes?.data ?? []);
+        setDusunList(sorted);
+
+        const settingObj = settingsRes?.data?.find((item: Setting) => item.key === 'nama_desa');
+        if (settingObj?.value) {
+          setVillageName(settingObj.value);
+        }
+
         setHasError(false);
       })
       .catch(() => {
@@ -34,28 +48,61 @@ export default function DusunSlider({ onSelect }: { onSelect: (d: Dusun) => void
       .finally(() => {
         if (!cancelled) setIsLoading(false);
       });
+
     return () => { cancelled = true; };
   }, []);
 
-  const CARD_W = 252;
-  const GAP = 12;
-  const STEP = (CARD_W + GAP) * 3;
-  const TOTAL_SLIDES = 2;
+  const getStep = useCallback(() => {
+    const el = trackRef.current;
+    if (!el) return 240;
+    return el.clientWidth < 640 ? 232 : Math.floor(el.clientWidth * 0.75);
+  }, []);
 
-  const updateState = () => {
+  const updateState = useCallback(() => {
     const el = trackRef.current;
     if (!el) return;
+    const maxScroll = el.scrollWidth - el.clientWidth;
     setCanPrev(el.scrollLeft > 8);
-    setCanNext(el.scrollLeft < el.scrollWidth - el.clientWidth - 8);
-    setActiveIdx(Math.min(Math.round(el.scrollLeft / STEP), TOTAL_SLIDES - 1));
-  };
+    setCanNext(el.scrollLeft < maxScroll - 8);
+
+    if (maxScroll <= 0) {
+      setActiveIdx(0);
+      setTotalDots(1);
+      return;
+    }
+
+    const step = getStep();
+    const dotsCount = Math.max(1, Math.ceil(maxScroll / step) + 1);
+    setTotalDots(dotsCount);
+
+    if (el.scrollLeft >= maxScroll - 16) {
+      setActiveIdx(dotsCount - 1);
+    } else {
+      const idx = Math.min(Math.round(el.scrollLeft / step), dotsCount - 1);
+      setActiveIdx(idx);
+    }
+  }, [getStep]);
+
+  useEffect(() => {
+    updateState();
+    window.addEventListener("resize", updateState);
+    return () => window.removeEventListener("resize", updateState);
+  }, [dusunList, updateState]);
 
   const slide = (dir: "prev" | "next") => {
-    trackRef.current?.scrollBy({ left: dir === "next" ? STEP : -STEP, behavior: "smooth" });
+    const el = trackRef.current;
+    if (!el) return;
+    const step = getStep();
+    el.scrollBy({ left: dir === "next" ? step : -step, behavior: "smooth" });
   };
 
   const goTo = (idx: number) => {
-    trackRef.current?.scrollTo({ left: idx * STEP, behavior: "smooth" });
+    const el = trackRef.current;
+    if (!el) return;
+    const maxScroll = el.scrollWidth - el.clientWidth;
+    const step = getStep();
+    const target = idx === totalDots - 1 ? maxScroll : idx * step;
+    el.scrollTo({ left: target, behavior: "smooth" });
   };
 
   return (
@@ -64,7 +111,7 @@ export default function DusunSlider({ onSelect }: { onSelect: (d: Dusun) => void
       <div className="flex items-center justify-between mb-4">
         <div>
           <p className="text-xs font-bold uppercase tracking-widest text-[#182cc1]" style={{ fontFamily: "Inter, sans-serif" }}>Wilayah Desa</p>
-          <h3 className="text-lg font-bold text-[#091540]" style={{ fontFamily: "Poppins, sans-serif" }}>Dusun di Desa Getas</h3>
+          <h3 className="text-lg font-bold text-[#091540]" style={{ fontFamily: "Poppins, sans-serif" }}>Dusun di {villageName}</h3>
         </div>
         <div className="flex items-center gap-2">
           <button onClick={() => slide("prev")} disabled={!canPrev}
@@ -80,8 +127,8 @@ export default function DusunSlider({ onSelect }: { onSelect: (d: Dusun) => void
 
       {/* track */}
       <div ref={trackRef} onScroll={updateState}
-        className="flex gap-3 overflow-x-auto pb-4"
-        style={{ scrollSnapType: "x mandatory", scrollbarWidth: "none", msOverflowStyle: "none" }}>
+        className="flex gap-3 overflow-x-auto pb-4 snap-x snap-mandatory scroll-smooth"
+        style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}>
 
         {isLoading ? (
           <div className="flex items-center justify-center gap-3 py-16 w-full text-[#3d518c]" style={{ fontFamily: "Inter, sans-serif" }}>
@@ -103,8 +150,7 @@ export default function DusunSlider({ onSelect }: { onSelect: (d: Dusun) => void
           </div>
         ) : dusunList.map((d) => (
             <div key={d.id}
-              className="flex-shrink-0 w-[220px] sm:w-[260px] h-[300px] sm:h-[340px] rounded-2xl sm:rounded-3xl overflow-hidden bg-[#091540] cursor-pointer relative group"
-              style={{ scrollSnapAlign: "start" }}
+              className="flex-shrink-0 w-[220px] sm:w-[260px] h-[300px] sm:h-[340px] rounded-2xl sm:rounded-3xl overflow-hidden bg-[#091540] cursor-pointer relative group snap-start"
               onClick={() => onSelect(d)}>
 
               <img src={resolveImageUrl(d.thumbnail)} alt={d.nama} className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
@@ -126,13 +172,13 @@ export default function DusunSlider({ onSelect }: { onSelect: (d: Dusun) => void
                 {/* stats */}
                 <div className="flex items-center gap-3 mb-2 text-white/90">
                   <div className="flex items-center gap-1.5 text-[11px]" style={{ fontFamily: "Inter, sans-serif" }}>
-                    <Users size={12} className="text-[#a5b4fc]" /> {d.jumlah_penduduk || "400"}
+                    <Users size={12} className="text-[#a5b4fc]" /> {d.jumlah_penduduk ? d.jumlah_penduduk.toLocaleString('id-ID') : "-"}
                   </div>
                   <div className="flex items-center gap-1.5 text-[11px]" style={{ fontFamily: "Inter, sans-serif" }}>
-                    <Home size={12} className="text-[#a5b4fc]" /> {d.jumlah_rt || "3"} RT
+                    <Home size={12} className="text-[#a5b4fc]" /> {d.jumlah_rt ?? 0} RT
                   </div>
                   <div className="flex items-center gap-1.5 text-[11px] ml-auto">
-                    <Leaf size={12} className="text-[#a5b4fc]" /> {d.luas_wilayah || "1,2 km²"}
+                    <Leaf size={12} className="text-[#a5b4fc]" /> {d.luas_wilayah || "-"}
                   </div>
                 </div>
 
@@ -153,12 +199,14 @@ export default function DusunSlider({ onSelect }: { onSelect: (d: Dusun) => void
       </div>
 
       {/* dots */}
-      <div className="flex justify-center gap-1.5 mt-1">
-        {Array.from({ length: TOTAL_SLIDES }).map((_, i) => (
-          <button key={i} onClick={() => goTo(i)}
-            className={`rounded-full transition-all duration-300 ${activeIdx === i ? "w-5 h-1.5 bg-[#182cc1]" : "w-1.5 h-1.5 bg-[#c5d0ff] hover:bg-[#abd2fa]"}`} />
-        ))}
-      </div>
+      {totalDots > 1 && (
+        <div className="flex justify-center gap-1.5 mt-1">
+          {Array.from({ length: totalDots }).map((_, i) => (
+            <button key={i} onClick={() => goTo(i)}
+              className={`rounded-full transition-all duration-300 ${activeIdx === i ? "w-5 h-1.5 bg-[#182cc1]" : "w-1.5 h-1.5 bg-[#c5d0ff] hover:bg-[#abd2fa]"}`} />
+          ))}
+        </div>
+      )}
     </div>
   );
 }
