@@ -52,7 +52,6 @@ const CheckBooking: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const urlKode = searchParams.get('kode');
-  const autoEdit = searchParams.get('edit') === '1';
 
   const [kode] = useState(urlKode || '');
   const [phone] = useState('');
@@ -70,6 +69,17 @@ const CheckBooking: React.FC = () => {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(''), 3000);
   };
+
+  useEffect(() => {
+    if (showCancelConfirm) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [showCancelConfirm]);
 
   const executeCancel = async () => {
     if (!result) return;
@@ -193,11 +203,7 @@ const CheckBooking: React.FC = () => {
     }
   };
 
-  useEffect(() => {
-    if (result && autoEdit && result.status !== 'cancelled') {
-      setIsEditing(true);
-    }
-  }, [result, autoEdit]);
+
 
   useEffect(() => {
     if (urlKode) {
@@ -443,8 +449,14 @@ const CheckBooking: React.FC = () => {
 
       {/* Cancel Confirmation Modal — with refund info */}
       {showCancelConfirm && result && (
-        <div className="fixed inset-0 bg-[#091540]/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl p-5 sm:p-8 max-w-md w-full shadow-2xl animate-in zoom-in-95 duration-200 overflow-y-auto max-h-[90vh]">
+        <div 
+          className="fixed inset-0 bg-[#091540]/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto"
+          onClick={() => setShowCancelConfirm(false)}
+        >
+          <div 
+            className="bg-white rounded-3xl p-5 sm:p-8 max-w-md w-full shadow-2xl animate-in zoom-in-95 duration-200 overflow-y-auto max-h-[90vh] overscroll-contain my-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <AlertCircle className="w-8 h-8 text-red-600" />
             </div>

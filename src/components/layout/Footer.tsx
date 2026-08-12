@@ -66,7 +66,7 @@ export default function Footer() {
           {/* Mitra Kami */}
           <div className="sm:col-span-2 md:col-span-2">
             <h4 className="font-semibold mb-4 text-sm" style={{ fontFamily: "Poppins, sans-serif" }}>Mitra Kami</h4>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <div className="flex flex-col space-y-2.5">
               {MITRA.map(m => (
                 <a
                   key={m.label}
@@ -77,7 +77,7 @@ export default function Footer() {
                   style={{ fontFamily: "Inter, sans-serif" }}
                 >
                   <ExternalLink size={11} className="flex-shrink-0 group-hover:translate-x-0.5 transition-transform" />
-                  <span className="truncate">{m.label}</span>
+                  <span>{m.label}</span>
                 </a>
               ))}
             </div>

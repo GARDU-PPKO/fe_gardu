@@ -37,36 +37,36 @@ export default function Navbar({ onOpenBooking }: { onOpenBooking?: () => void }
 
   return (
     /* Outer wrapper — flex-col so pill + dropdown stack vertically */
-    <div className="fixed top-3 left-0 right-0 z-50 flex flex-col items-center px-3 sm:px-4 pointer-events-none gap-2">
+    <div className="fixed top-3 left-0 right-0 z-50 flex flex-col items-center px-2.5 sm:px-4 md:px-6 pointer-events-none gap-2">
 
       {/* ── Pill navbar ── */}
       <nav
-        className={`pointer-events-auto transition-all duration-300 rounded-full w-full max-w-7xl ${
+        className={`pointer-events-auto transition-all duration-300 rounded-full w-full max-w-7xl overflow-hidden ${
           scrolled
             ? "bg-white/95 backdrop-blur-md shadow-lg border border-[#c5d0ff]"
             : "bg-white/85 backdrop-blur-md border border-white/50 shadow-sm"
         }`}
       >
-        <div className="px-3 sm:px-5 md:px-7 h-14 sm:h-16 flex items-center justify-between gap-3">
+        <div className="px-3 sm:px-5 md:px-7 h-14 sm:h-16 flex items-center justify-between gap-2 sm:gap-3">
 
           {/* Left: Logo + Brand */}
           <button
             onClick={() => handleNavClick("#hero")}
-            className="flex items-center gap-2 flex-shrink-0"
+            className="flex items-center gap-2 min-w-0 flex-shrink text-left"
           >
             <img
               src={LogoGardu}
               alt="Logo Desa Getas"
-              className="h-9 sm:h-10 w-auto object-contain flex-shrink-0"
+              className="h-8 sm:h-9 md:h-10 w-auto object-contain flex-shrink-0"
             />
-            <div className="flex flex-col leading-tight">
+            <div className="flex flex-col leading-tight min-w-0">
               <div
-                className="font-black text-[#091540] text-[11px] sm:text-xs md:text-sm leading-tight"
+                className="font-black text-[#091540] text-[11px] sm:text-xs md:text-sm leading-tight truncate"
                 style={{ fontFamily: "Poppins, sans-serif" }}
               >
                 DESA WISATA <span className="text-[#182cc1]">GETAS</span>
               </div>
-              <div className="text-[#3d518c] text-[8px] sm:text-[9px] leading-tight tracking-wide">
+              <div className="text-[#3d518c] text-[8px] sm:text-[9px] leading-tight tracking-wide truncate hidden sm:block">
                 Kec. Singorojo · Kendal
               </div>
             </div>
@@ -98,7 +98,7 @@ export default function Navbar({ onOpenBooking }: { onOpenBooking?: () => void }
           </div>
 
           {/* Right: Buttons + Hamburger */}
-          <div className="flex items-center gap-2 flex-shrink-0">
+          <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
             {/* Desktop */}
             <button
               onClick={onOpenBooking}
@@ -112,7 +112,7 @@ export default function Navbar({ onOpenBooking }: { onOpenBooking?: () => void }
             {/* Tablet: compact Pesan */}
             <button
               onClick={onOpenBooking}
-              className="hidden md:flex lg:hidden items-center gap-1.5 px-3 py-2 bg-[#182cc1] hover:bg-[#1524a3] text-white text-xs font-bold rounded-full transition shadow-md"
+              className="hidden sm:flex lg:hidden items-center gap-1.5 px-3 py-1.5 bg-[#182cc1] hover:bg-[#1524a3] text-white text-xs font-bold rounded-full transition shadow-md"
               style={{ fontFamily: "Poppins, sans-serif" }}
             >
               <Ticket size={12} />
@@ -122,7 +122,7 @@ export default function Navbar({ onOpenBooking }: { onOpenBooking?: () => void }
             {/* Hamburger */}
             <button
               onClick={() => setOpen((v) => !v)}
-              className="lg:hidden w-9 h-9 flex items-center justify-center rounded-full text-[#1d2e80] hover:bg-[#e8edff] transition flex-shrink-0"
+              className="lg:hidden w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center rounded-full text-[#1d2e80] hover:bg-[#e8edff] transition flex-shrink-0"
               aria-label={open ? "Tutup menu" : "Buka menu"}
             >
               {open ? <X size={18} /> : <Menu size={18} />}

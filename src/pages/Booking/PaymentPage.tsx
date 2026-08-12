@@ -57,7 +57,7 @@ const PaymentPage: React.FC = () => {
         setBooking(res.data);
         // Skip screen 3: If already uploaded / pending_verify, redirect straight to CheckBooking screen (screen 4)
         if (res.data && res.data.status === 'pending_verify') {
-          navigate(`/cek-pesanan?kode=${kode}&edit=1`, { replace: true });
+          navigate(`/cek-pesanan?kode=${kode}`, { replace: true });
         }
       })
       .catch(() => setError('Booking tidak ditemukan atau link tidak valid.'))
@@ -80,7 +80,7 @@ const PaymentPage: React.FC = () => {
     try {
       await uploadBuktiBayar(kode, selectedFile);
       // Skip screen 3: Navigate directly to CheckBooking screen (screen 4)
-      navigate(`/cek-pesanan?kode=${kode}&edit=1`);
+      navigate(`/cek-pesanan?kode=${kode}`);
     } catch {
       setToastMessage('Gagal mengunggah bukti. Coba lagi.');
     } finally {

@@ -130,15 +130,15 @@ export default function Hero({ onSelectDusun }: { onSelectDusun: (d: Dusun) => v
         <div className="max-w-7xl mx-auto">
           {/* ── Unified Stats Container ── */}
           <div className={`-mt-16 relative z-10 transition-all duration-1000 ease-out transform ${showStats ? 'translate-y-0 opacity-100' : 'translate-y-24 opacity-0'}`}>
-            <div className="bg-white/95 backdrop-blur-xl border border-[#c5d0ff] rounded-2xl sm:rounded-[2rem] p-4 sm:p-6 shadow-xl shadow-[#091540]/5 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 sm:gap-6 divide-y sm:divide-y-0 lg:divide-x divide-[#e8edff]">
-              {statItems.map((s, idx) => (
-                <div key={s.label} className={`flex flex-col sm:flex-row items-start sm:items-center gap-4 ${idx !== 0 && idx % 3 !== 0 ? 'lg:pl-6' : ''} ${idx !== 0 && idx % 2 !== 0 ? 'md:pl-6' : ''} pt-4 md:pt-0 first:pt-0`}>
-                  <div className="w-12 h-12 rounded-2xl bg-[#e8edff] text-[#182cc1] flex items-center justify-center flex-shrink-0">
-                    <s.icon size={22} />
+            <div className="bg-white/95 backdrop-blur-xl border border-[#c5d0ff] rounded-2xl sm:rounded-[2rem] p-3.5 sm:p-6 shadow-xl shadow-[#091540]/5 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-6">
+              {statItems.map((s) => (
+                <div key={s.label} className="flex flex-col sm:flex-row items-start sm:items-center gap-2.5 sm:gap-4 p-3 sm:p-0 rounded-xl bg-[#f8faff] sm:bg-transparent border border-[#e8edff] sm:border-0">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-[#e8edff] text-[#182cc1] flex items-center justify-center flex-shrink-0">
+                    <s.icon className="w-5 h-5 sm:w-6 sm:h-6" />
                   </div>
-                  <div>
-                    <div className="font-black text-[#091540] text-lg leading-tight mb-0.5" style={{ fontFamily: "Poppins, sans-serif" }}>{s.value}</div>
-                    <div className="text-[#3d518c] text-xs font-medium" style={{ fontFamily: "Inter, sans-serif" }}>{s.label}</div>
+                  <div className="min-w-0">
+                    <div className="font-black text-[#091540] text-sm sm:text-lg leading-tight mb-0.5 truncate" style={{ fontFamily: "Poppins, sans-serif" }}>{s.value}</div>
+                    <div className="text-[#3d518c] text-[10px] sm:text-xs font-medium leading-tight truncate" style={{ fontFamily: "Inter, sans-serif" }}>{s.label}</div>
                   </div>
                 </div>
               ))}

@@ -140,47 +140,34 @@ export default function PackagesPage() {
 
       <div className="flex-1 flex flex-col z-10">
         {/* Sleek Top Header */}
-        <header className="flex-shrink-0 flex items-center justify-between px-6 sm:px-10 py-6">
+        <header className="flex-shrink-0 flex items-center justify-between px-4 sm:px-10 py-6">
           <button onClick={() => navigate('/')} 
             className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-white hover:bg-[#e8edff] shadow-md hover:shadow-lg border border-[#e8edff] transition-all text-sm font-semibold text-[#3d518c]">
             <ArrowLeft size={16} /> Kembali ke Beranda
           </button>
-          <div className="hidden sm:flex bg-white shadow-md border border-[#e8edff] rounded-full p-1.5">
+        </header>
+
+        {/* Main Content */}
+        <main className="flex-1 flex flex-col px-4 sm:px-6 lg:px-10 pb-20 pt-2">
+          {/* Filter Pills — Symmetrical & Responsive */}
+          <div className="flex flex-wrap items-center gap-2 mb-8">
             {categories.map(cat => (
               <button
                 key={cat}
                 onClick={() => setFilter(cat)}
-                className={`px-6 py-2 rounded-full text-xs font-bold transition-all ${
-                  filter === cat 
-                    ? "bg-[#182cc1] text-white shadow-md transform scale-105" 
-                    : "text-[#3d518c] hover:text-[#091540] hover:bg-[#f8faff]"
+                className={`px-5 py-2 rounded-full text-xs sm:text-sm font-bold transition-all duration-200 border ${
+                  filter === cat
+                    ? "bg-[#182cc1] text-white border-[#182cc1] shadow-md shadow-[#182cc1]/20 scale-105"
+                    : "bg-white text-[#3d518c] border-[#c5d0ff] hover:border-[#182cc1] hover:bg-[#e8edff]"
                 }`}
+                style={{ fontFamily: "Inter, sans-serif" }}
               >
                 {cat}
               </button>
             ))}
           </div>
-        </header>
 
-        {/* Mobile Filters */}
-        <div className="sm:hidden px-6 overflow-x-auto pb-2 flex gap-2">
-          {categories.map(cat => (
-            <button
-              key={cat}
-              onClick={() => setFilter(cat)}
-              className={`px-5 py-2 rounded-full text-xs font-bold whitespace-nowrap transition-all shadow-sm ${
-                filter === cat 
-                  ? "bg-[#182cc1] text-white" 
-                  : "bg-white text-[#3d518c] border border-[#e8edff]"
-              }`}
-            >
-              {cat}
-            </button>
-          ))}
-        </div>
 
-        {/* Main Content */}
-        <main className="flex-1 flex flex-col px-6 sm:px-10 pb-20 pt-4">
           <div className="mb-10 max-w-2xl">
             <span className="text-[#182cc1] text-sm font-bold tracking-widest uppercase mb-2 block flex items-center gap-2">
               <span className="w-8 h-0.5 bg-[#182cc1] rounded-full"></span>

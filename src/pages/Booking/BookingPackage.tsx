@@ -71,6 +71,17 @@ const BookingPackage: React.FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentPackage?.id]);
 
+  useEffect(() => {
+    if (isAddonModalOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isAddonModalOpen]);
+
   const minParticipants = packageDetail?.min_participants ?? currentPackage?.minParticipants ?? 1;
   const maxParticipants = packageDetail?.max_participants ?? currentPackage?.maxParticipants ?? 10;
   const participants = packageDetail
@@ -235,8 +246,14 @@ const BookingPackage: React.FC = () => {
 
           {/* Add-on Modal Overlay */}
           {isAddonModalOpen && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#091540]/60 backdrop-blur-sm">
-              <div className="bg-white w-full max-w-2xl rounded-2xl shadow-2xl flex flex-col max-h-[80vh] overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+            <div 
+              className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#091540]/60 backdrop-blur-sm overflow-y-auto"
+              onClick={() => setIsAddonModalOpen(false)}
+            >
+              <div 
+                className="bg-white w-full max-w-2xl rounded-2xl shadow-2xl flex flex-col max-h-[85vh] overflow-hidden animate-in fade-in zoom-in-95 duration-200 my-auto"
+                onClick={(e) => e.stopPropagation()}
+              >
                 {/* Modal Header */}
                 <div className="px-6 py-4 border-b flex items-center justify-between bg-gray-50 flex-shrink-0">
                   <h3 className="text-lg font-bold text-[#091540]" style={{ fontFamily: "Poppins, sans-serif" }}>
@@ -251,7 +268,7 @@ const BookingPackage: React.FC = () => {
                 </div>
                 
                 {/* Modal Body */}
-                <div className="p-4 sm:p-6 overflow-y-auto space-y-4 bg-gray-50/50">
+                <div className="p-4 sm:p-6 overflow-y-auto space-y-4 bg-gray-50/50 flex-1 overscroll-contain">
                   {addOnOptions.length === 0 ? (
                     <div className="text-center py-8 text-sm text-[#3d518c]">
                       Belum ada layanan tambahan tersedia.

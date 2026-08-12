@@ -17,7 +17,7 @@ const BookingLayout: React.FC<BookingLayoutProps> = ({ children, currentStep, on
   return (
     <div className="min-h-screen flex flex-col bg-[#eef2ff]">
       {/* ── Header ── */}
-      <div className="flex items-center justify-between px-3 sm:px-6 md:px-8 py-3 sm:py-4 bg-white border-b border-[#c5d0ff] shadow-sm flex-shrink-0">
+      <div className="flex items-center justify-between px-4 sm:px-6 md:px-8 py-3 sm:py-4 bg-white border-b border-[#c5d0ff] shadow-sm flex-shrink-0">
         <div className="flex items-center gap-2 sm:gap-3 min-w-0">
           <img
             src={LogoGardu}
@@ -45,7 +45,7 @@ const BookingLayout: React.FC<BookingLayoutProps> = ({ children, currentStep, on
 
       {/* ── Body ── */}
       <div className="flex-1 overflow-y-auto flex flex-col">
-        <div className="max-w-5xl mx-auto px-3 sm:px-6 lg:px-8 py-5 sm:py-8 w-full flex-1">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-5 sm:py-8 w-full flex-1">
           {children}
         </div>
         <Footer />

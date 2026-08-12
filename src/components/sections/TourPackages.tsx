@@ -142,16 +142,16 @@ export default function TourPackages() {
 
           {/* Right cards with filter */}
           <div className="flex flex-col gap-5">
-            {/* Filter Pills */}
-            <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-hide">
+            {/* Filter Pills — Symmetrical & Responsive */}
+            <div className="flex flex-wrap items-center gap-2 mb-2">
               {categories.map(cat => (
                 <button
                   key={cat}
                   onClick={() => setFilter(cat)}
-                  className={`px-4 py-1.5 rounded-full text-sm font-semibold whitespace-nowrap transition-all ${
+                  className={`px-4 py-2 sm:px-5 sm:py-2 rounded-full text-xs sm:text-sm font-bold transition-all duration-200 border ${
                     filter === cat 
-                      ? "bg-[#091540] text-white shadow-md" 
-                      : "bg-[#e8edff] text-[#3d518c] hover:bg-[#c5d0ff] hover:text-[#1d2e80]"
+                      ? "bg-[#182cc1] text-white border-[#182cc1] shadow-md shadow-[#182cc1]/20" 
+                      : "bg-white text-[#3d518c] border-[#c5d0ff] hover:border-[#182cc1] hover:bg-[#e8edff]"
                   }`}
                   style={{ fontFamily: "Inter, sans-serif" }}
                 >

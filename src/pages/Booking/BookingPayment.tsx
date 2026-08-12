@@ -79,18 +79,18 @@ const BookingPayment: React.FC = () => {
         if (response.data && response.data.kode_booking) {
           const kode = response.data.kode_booking;
           saveDummyToLocal(kode);
-          navigate(`/cek-pesanan?kode=${kode}&edit=1`);
+          navigate(`/cek-pesanan?kode=${kode}`);
         } else {
           const fallbackKode = `GRD-${new Date().toISOString().slice(0,10).replace(/-/g,'')}-${Math.random().toString(36).substring(2,6).toUpperCase()}`;
           saveDummyToLocal(fallbackKode);
-          navigate(`/cek-pesanan?kode=${fallbackKode}&edit=1`);
+          navigate(`/cek-pesanan?kode=${fallbackKode}`);
         }
       }
     } catch (e) {
       console.error('Failed to submit booking to backend:', e);
       const fallbackKode = `GRD-${new Date().toISOString().slice(0,10).replace(/-/g,'')}-${Math.random().toString(36).substring(2,6).toUpperCase()}`;
       saveDummyToLocal(fallbackKode);
-      navigate(`/cek-pesanan?kode=${fallbackKode}&edit=1`);
+      navigate(`/cek-pesanan?kode=${fallbackKode}`);
     } finally {
       setIsSubmitting(false);
     }
