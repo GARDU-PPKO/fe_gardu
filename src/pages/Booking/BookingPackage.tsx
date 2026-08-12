@@ -255,16 +255,8 @@ const BookingPackage: React.FC = () => {
                       ? 'Gratis'
                       : `+ Rp ${addon.harga.toLocaleString('id-ID')}${addon.satuan === 'per orang' ? ' / orang' : ''}`;
                     return (
-                      <label key={addon.id} className={`flex flex-col sm:flex-row items-start sm:items-center justify-between p-3 rounded-2xl border cursor-pointer transition-all ${isSelected ? 'border-[#182cc1] bg-[#f8faff] shadow-md shadow-[#182cc1]/10' : 'border-[#c5d0ff] bg-white hover:border-[#182cc1] hover:shadow-sm'}`}>
-                        <div className="flex items-center gap-4 w-full">
-                          {/* Add-on Image */}
-                          <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl overflow-hidden flex-shrink-0 bg-[#e8edff]">
-                            {addon.gambar ? (
-                              <img src={addon.gambar} alt={addon.nama} className="w-full h-full object-cover" />
-                            ) : (
-                              <div className="w-full h-full bg-gradient-to-tr from-[#182cc1]/20 to-[#eef2ff]" />
-                            )}
-                          </div>
+                      <label key={addon.id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-3.5 sm:p-4 rounded-2xl border cursor-pointer transition-all border-[#c5d0ff] bg-white hover:border-[#182cc1] hover:shadow-sm">
+                        <div className="flex items-center gap-3 w-full">
                           
                           {/* Text Details */}
                           <div className="flex-1">

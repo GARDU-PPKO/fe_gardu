@@ -53,10 +53,16 @@ const PaymentPage: React.FC = () => {
     }
 
     getBookingByKode(kode)
-      .then((res) => setBooking(res.data))
+      .then((res) => {
+        setBooking(res.data);
+        // Skip screen 3: If already uploaded / pending_verify, redirect straight to CheckBooking screen (screen 4)
+        if (res.data && res.data.status === 'pending_verify') {
+          navigate(`/cek-pesanan?kode=${kode}&edit=1`, { replace: true });
+        }
+      })
       .catch(() => setError('Booking tidak ditemukan atau link tidak valid.'))
       .finally(() => setIsLoading(false));
-  }, [kode]);
+  }, [kode, navigate]);
 
   const handleExpire = useCallback(() => {
     setBooking((prev) => (prev ? { ...prev, status: 'expired' } : prev));
@@ -73,7 +79,8 @@ const PaymentPage: React.FC = () => {
     setIsSubmitting(true);
     try {
       await uploadBuktiBayar(kode, selectedFile);
-      navigate(`/cek-pesanan?kode=${kode}`);
+      // Skip screen 3: Navigate directly to CheckBooking screen (screen 4)
+      navigate(`/cek-pesanan?kode=${kode}&edit=1`);
     } catch {
       setToastMessage('Gagal mengunggah bukti. Coba lagi.');
     } finally {
@@ -135,13 +142,13 @@ const PaymentPage: React.FC = () => {
     <div className="min-h-screen flex flex-col bg-[#f8faff] text-[#091540] font-sans">
       <Navbar />
 
-      <main className="flex-1 pt-24 pb-16 px-4 sm:px-6">
+      <main className="flex-1 pt-20 sm:pt-24 pb-16 px-3 sm:px-6">
         <div className="max-w-3xl mx-auto">
           {/* Header */}
-          <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-xl shadow-[#182cc1]/5 border border-[#c5d0ff] mb-6">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 pb-6 border-b border-gray-100">
+          <div className="bg-white rounded-2xl sm:rounded-3xl p-4 sm:p-6 lg:p-8 shadow-xl shadow-[#182cc1]/5 border border-[#c5d0ff] mb-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 mb-5 sm:mb-6 pb-5 sm:pb-6 border-b border-gray-100">
               <div>
-                <div className="text-sm text-gray-500 mb-1">Status Pemesanan</div>
+                <div className="text-xs sm:text-sm text-gray-500 mb-1">Status Pemesanan</div>
                 <span
                   className={`inline-block px-3 py-1 rounded-full text-xs font-bold ${
                     booking.status === 'confirmed'
@@ -161,8 +168,8 @@ const PaymentPage: React.FC = () => {
                 </span>
               </div>
               <div className="text-left sm:text-right">
-                <div className="text-sm text-gray-500 mb-1">Kode Booking</div>
-                <div className="text-2xl font-black text-[#182cc1]" style={{ fontFamily: 'Poppins, sans-serif' }}>
+                <div className="text-xs sm:text-sm text-gray-500 mb-1">Kode Booking</div>
+                <div className="text-xl sm:text-2xl font-black text-[#182cc1] break-all" style={{ fontFamily: 'Poppins, sans-serif' }}>
                   {booking.kode_booking}
                 </div>
               </div>
