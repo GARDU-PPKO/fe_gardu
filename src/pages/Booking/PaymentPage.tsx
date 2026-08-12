@@ -55,8 +55,8 @@ const PaymentPage: React.FC = () => {
     getBookingByKode(kode)
       .then((res) => {
         setBooking(res.data);
-        // Skip screen 3: If already uploaded / pending_verify, redirect straight to CheckBooking screen (screen 4)
-        if (res.data && res.data.status === 'pending_verify') {
+        // If status is not pending_payment (already uploaded / pending_verify / confirmed / cancelled / rejected), redirect straight to CheckBooking screen
+        if (res.data && res.data.status !== 'pending_payment') {
           navigate(`/cek-pesanan?kode=${kode}`, { replace: true });
         }
       })
