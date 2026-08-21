@@ -32,7 +32,7 @@ export default function Hero({ onSelectDusun }: { onSelectDusun: (d: Dusun) => v
     const handleScroll = () => setShowStats(window.scrollY > 150);
     window.addEventListener("scroll", handleScroll);
     
-    getSettings().then(res => {
+    getSettings('nama_desa,hero_image').then(res => {
       if (res.data) {
         setSettings(Object.fromEntries(res.data.map((item: Setting) => [item.key, item.value])));
       }
@@ -48,7 +48,9 @@ export default function Hero({ onSelectDusun }: { onSelectDusun: (d: Dusun) => v
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const heroImage = defaultHeroImg;
+  const heroImage = settings.hero_image
+    ? (settings.hero_image.startsWith('http') ? settings.hero_image : `${(import.meta.env.VITE_API_URL || 'https://rentrack.site/api').replace(/\/api\/?$/, '')}${settings.hero_image}`)
+    : defaultHeroImg;
 
   const villageName = settings.nama_desa ?? "DESA WISATA GETAS";
   const displayTitle = villageName.toUpperCase().includes("GETAS")
@@ -85,13 +87,6 @@ export default function Hero({ onSelectDusun }: { onSelectDusun: (d: Dusun) => v
             <div className="flex flex-wrap items-center gap-3 mb-4">
               <span className="px-3.5 py-1.5 rounded-full bg-white/10 text-white text-xs font-semibold backdrop-blur-md border border-white/20 flex items-center gap-2">
                 <TreePine size={14} className="text-[#a5f3fc]" /> Desa Wisata Alam
-              </span>
-              <span className="px-3.5 py-1.5 rounded-full bg-white/10 text-white text-xs font-semibold backdrop-blur-md border border-white/20 flex items-center gap-2">
-                <span className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
-                </span>
-                Online
               </span>
             </div>
 

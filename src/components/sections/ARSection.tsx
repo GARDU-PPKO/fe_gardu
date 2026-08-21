@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { Camera, ExternalLink, Box, Scan, Smartphone, RotateCcw, X } from "lucide-react";
 
-const AR_URL = "https://feby-akliji23.github.io/AR-BETA_V01/";
+const AR_URL = "https://getas-gardu.vercel.app/";
+
 
 export default function ARSection() {
   const [modal, setModal] = useState(false);

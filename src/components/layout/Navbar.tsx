@@ -29,6 +29,17 @@ export default function Navbar({ onOpenBooking }: { onOpenBooking?: () => void }
     }
   };
 
+  const handleBooking = () => {
+    setOpen(false);
+    if (onOpenBooking) {
+      onOpenBooking();
+    } else if (location.pathname === "/") {
+      document.querySelector("#paket")?.scrollIntoView({ behavior: "smooth" });
+    } else {
+      navigate("/packages");
+    }
+  };
+
   useEffect(() => {
     const fn = () => setScrolled(window.scrollY > 20);
     window.addEventListener("scroll", fn);
@@ -101,7 +112,7 @@ export default function Navbar({ onOpenBooking }: { onOpenBooking?: () => void }
           <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
             {/* Desktop */}
             <button
-              onClick={onOpenBooking}
+              onClick={handleBooking}
               className="hidden lg:flex items-center gap-1.5 px-4 py-2 bg-[#182cc1] hover:bg-[#1524a3] text-white text-sm font-bold rounded-full transition shadow-md shadow-[#c5d0ff]/60"
               style={{ fontFamily: "Poppins, sans-serif" }}
             >
@@ -111,7 +122,7 @@ export default function Navbar({ onOpenBooking }: { onOpenBooking?: () => void }
 
             {/* Tablet: compact Pesan */}
             <button
-              onClick={onOpenBooking}
+              onClick={handleBooking}
               className="hidden sm:flex lg:hidden items-center gap-1.5 px-3 py-1.5 bg-[#182cc1] hover:bg-[#1524a3] text-white text-xs font-bold rounded-full transition shadow-md"
               style={{ fontFamily: "Poppins, sans-serif" }}
             >
@@ -164,7 +175,7 @@ export default function Navbar({ onOpenBooking }: { onOpenBooking?: () => void }
           {/* Pesan Sekarang — mobile only */}
           <div className="pt-1 pb-1 px-1 md:hidden">
             <button
-              onClick={() => { onOpenBooking?.(); setOpen(false); }}
+              onClick={handleBooking}
               className="w-full py-3 bg-[#182cc1] hover:bg-[#1524a3] text-white font-bold rounded-2xl text-sm flex items-center justify-center gap-2 shadow-md transition"
               style={{ fontFamily: "Poppins, sans-serif" }}
             >

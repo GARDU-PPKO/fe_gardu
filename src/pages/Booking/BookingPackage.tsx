@@ -177,16 +177,23 @@ const BookingPackage: React.FC = () => {
               >
                 <option value="" disabled>-- Pilih Sesi Waktu --</option>
                 {sessions.length > 0 ? (
-                  sessions.map((session) => (
-                    <option key={session.id} value={session.sesi}>
-                      {session.sesi}
-                    </option>
-                  ))
+                  sessions.map((session) => {
+                    const jamMulai = session.jam_mulai ? session.jam_mulai.slice(0, 5) : '';
+                    const jamSelesai = session.jam_selesai ? session.jam_selesai.slice(0, 5) : '';
+                    const label = jamMulai && jamSelesai
+                      ? `${session.sesi} (${jamMulai} – ${jamSelesai})`
+                      : session.sesi;
+                    return (
+                      <option key={session.id} value={label}>
+                        {label}
+                      </option>
+                    );
+                  })
                 ) : (
                   <>
-                    <option value="Pagi (07.00 - 09.00)">Pagi (07.00 - 09.00)</option>
-                    <option value="Siang (10.00 - 12.00)">Siang (10.00 - 12.00)</option>
-                    <option value="Sore (14.00 - 16.00)">Sore (14.00 - 16.00)</option>
+                    <option value="Pagi (07.00 - 10.00)">Pagi (07.00 - 10.00)</option>
+                    <option value="Siang (10.00 - 13.00)">Siang (10.00 - 13.00)</option>
+                    <option value="Sore (14.00 - 17.00)">Sore (14.00 - 17.00)</option>
                   </>
                 )}
               </select>

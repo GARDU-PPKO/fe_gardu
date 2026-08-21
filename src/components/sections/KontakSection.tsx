@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { MapPin, Phone, Mail, Clock } from "lucide-react";
-import { FaInstagram } from "react-icons/fa";
+import { MapPin, Phone, Mail, Clock, Globe } from "lucide-react";
+import { FaInstagram, FaFacebook, FaYoutube, FaTiktok } from "react-icons/fa";
 import { getSettings } from "../../services/village.service";
 import type { Setting } from "../../types";
 
@@ -8,7 +8,7 @@ export default function KontakSection() {
   const [settings, setSettings] = useState<Record<string, string>>({});
 
   useEffect(() => {
-    getSettings('alamat_desa,wa_admin,email_desa,jam_pelayanan').then(res => {
+    getSettings('alamat_desa,wa_admin,email_desa,jam_pelayanan,sosmed_ig,sosmed_fb,sosmed_yt,sosmed_tiktok,sosmed_web').then(res => {
       setSettings(Object.fromEntries(res.data.map((item: Setting) => [item.key, item.value])));
     });
   }, []);
@@ -20,9 +20,53 @@ export default function KontakSection() {
 
   const contactItems = [
     { icon: MapPin, title: "Alamat", desc: settings.alamat_desa || "Jl. Raya Getas No. 1, Kec. Singorojo, Kab. Kendal 51382" },
-    { icon: Phone, title: "Telepon", desc: settings.wa_admin || "(0294) 381-XXX" },
-    { icon: Mail, title: "Email", desc: settings.email_desa || "desagetas@kendalkab.go.id" },
+    { icon: Phone, title: "Telepon", desc: settings.wa_admin || "–" },
+    { icon: Mail, title: "Email", desc: settings.email_desa || "–" },
     { icon: Clock, title: "Jam Pelayanan", desc: getJamPelayanan(settings.jam_pelayanan) },
+  ];
+
+  // Social media dynamic from API
+  const socialLinks = [
+    settings.sosmed_ig && {
+      href: settings.sosmed_ig,
+      label: "Instagram",
+      icon: <FaInstagram size={16} className="group-hover:scale-110 transition-transform" />,
+      hoverColor: "hover:border-[#E1306C] hover:text-[#E1306C]",
+    },
+    settings.sosmed_fb && {
+      href: settings.sosmed_fb,
+      label: "Facebook",
+      icon: <FaFacebook size={16} className="group-hover:scale-110 transition-transform" />,
+      hoverColor: "hover:border-[#1877F2] hover:text-[#1877F2]",
+    },
+    settings.sosmed_yt && {
+      href: settings.sosmed_yt,
+      label: "YouTube",
+      icon: <FaYoutube size={16} className="group-hover:scale-110 transition-transform" />,
+      hoverColor: "hover:border-[#FF0000] hover:text-[#FF0000]",
+    },
+    settings.sosmed_tiktok && {
+      href: settings.sosmed_tiktok,
+      label: "TikTok",
+      icon: <FaTiktok size={16} className="group-hover:scale-110 transition-transform" />,
+      hoverColor: "hover:border-[#010101] hover:text-[#010101]",
+    },
+    settings.sosmed_web && {
+      href: settings.sosmed_web,
+      label: "Website",
+      icon: <Globe size={16} className="group-hover:scale-110 transition-transform" />,
+      hoverColor: "hover:border-[#182cc1] hover:text-[#182cc1]",
+    },
+  ].filter(Boolean) as { href: string; label: string; icon: React.ReactNode; hoverColor: string }[];
+
+  // Fallback: always show IG if no social media loaded yet
+  const displaySocials = socialLinks.length > 0 ? socialLinks : [
+    {
+      href: "https://www.instagram.com/gardutourism.id/",
+      label: "Instagram",
+      icon: <FaInstagram size={16} className="group-hover:scale-110 transition-transform" />,
+      hoverColor: "hover:border-[#E1306C] hover:text-[#E1306C]",
+    },
   ];
 
   return (
@@ -30,7 +74,7 @@ export default function KontakSection() {
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-10">
           <span className="text-xs font-bold uppercase tracking-widest text-[#182cc1]" style={{ fontFamily: "Inter, sans-serif" }}>Hubungi Kami</span>
-          <h2 className="text-2xl sm:text-3xl font-bold text-[#091540] mt-1" style={{ fontFamily: "Poppins, sans-serif" }}>Kontak & Lokasi</h2>
+          <h2 className="text-2xl sm:text-3xl font-bold text-[#091540] mt-1" style={{ fontFamily: "Poppins, sans-serif" }}>Kontak &amp; Lokasi</h2>
         </div>
         <div className="grid md:grid-cols-2 gap-6 sm:gap-8">
           <div className="space-y-3 sm:space-y-4">
@@ -48,22 +92,25 @@ export default function KontakSection() {
             <div className="p-3 sm:p-4 rounded-xl sm:rounded-2xl border border-[#c5d0ff] bg-[#eef2ff]">
               <div className="text-[#3d518c] text-xs mb-3" style={{ fontFamily: "Inter, sans-serif" }}>Media Sosial</div>
               <div className="flex gap-3 flex-wrap">
-                <a
-                  href="https://www.instagram.com/gardutourism.id/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label="Instagram @gardutourism.id"
-                  className="w-9 h-9 rounded-full border border-[#c5d0ff] bg-white hover:border-[#E1306C] hover:text-[#E1306C] text-[#3d518c] transition flex items-center justify-center group"
-                >
-                  <FaInstagram size={16} className="group-hover:scale-110 transition-transform" />
-                </a>
+                {displaySocials.map(s => (
+                  <a
+                    key={s.label}
+                    href={s.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={s.label}
+                    className={`w-9 h-9 rounded-full border border-[#c5d0ff] bg-white ${s.hoverColor} text-[#3d518c] transition flex items-center justify-center group`}
+                  >
+                    {s.icon}
+                  </a>
+                ))}
               </div>
             </div>
           </div>
           <div className="rounded-xl sm:rounded-2xl overflow-hidden border border-[#c5d0ff] shadow-sm h-64 sm:h-80 md:h-auto">
             <iframe
               title="Peta Desa Getas"
-              src="https://maps.google.com/maps?q=Desa+Getas,+Kecamatan+Singorojo,+Kabupaten+Kendal,+Jawa+Tengah&t=&z=14&ie=UTF8&iwloc=&output=embed"
+              src="https://maps.google.com/maps?q=-7.0817,110.1522&t=&z=15&ie=UTF8&iwloc=&output=embed"
               className="w-full h-full border-0"
               allowFullScreen
               loading="lazy"

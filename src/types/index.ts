@@ -66,7 +66,9 @@ export interface BookingSession {
   id: number;
   package_id: number;
   tanggal: string;
-  sesi: string; // full string: "Pagi (07.00 - 09.00)"
+  sesi: string; // e.g. "Pagi"
+  jam_mulai?: string; // e.g. "07:00:00"
+  jam_selesai?: string; // e.g. "10:00:00"
   kuota: number;
   terisi: number;
   is_active: boolean;

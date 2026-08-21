@@ -7,6 +7,7 @@ import { HomeDataProvider } from '../hooks/useHomeData';
 
 const HomePage = lazy(() => import('../pages/Home/HomePage'));
 const PackagesPage = lazy(() => import('../pages/Packages/PackagesPage'));
+const PackageDetailRedirect = lazy(() => import('../pages/Packages/PackageDetailRedirect'));
 const BookingPackage = lazy(() => import('../pages/Booking/BookingPackage'));
 const BookingFormPage = lazy(() => import('../pages/Booking/BookingForm'));
 const PaymentPage = lazy(() => import('../pages/Booking/PaymentPage'));
@@ -31,6 +32,8 @@ const AnimatedRoutes: React.FC = () => {
         <Route path="/" element={<PageWrapper><HomePage /></PageWrapper>} />
 
         <Route path="/packages" element={<PageWrapper><PackagesPage /></PageWrapper>} />
+
+        <Route path="/packages/:id" element={<PageWrapper><PackageDetailRedirect /></PageWrapper>} />
 
         <Route path="/payment/:kode" element={<PageWrapper><PaymentPage /></PageWrapper>} />
 
