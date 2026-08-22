@@ -17,6 +17,7 @@ import {
   AlertCircle,
 } from 'lucide-react';
 import type { BookingDetail } from '../../types';
+import { resolveImageUrl } from '../../utils/image';
 
 const STATUS_LABEL: Record<string, string> = {
   pending_payment: 'MENUNGGU PEMBAYARAN',
@@ -53,10 +54,16 @@ const PaymentPage: React.FC = () => {
     }
 
     getBookingByKode(kode)
-      .then((res) => setBooking(res.data))
+      .then((res) => {
+        setBooking(res.data);
+        // If status is not pending_payment (already uploaded / pending_verify / confirmed / cancelled / rejected), redirect straight to CheckBooking screen
+        if (res.data && res.data.status !== 'pending_payment') {
+          navigate(`/cek-pesanan?kode=${kode}`, { replace: true });
+        }
+      })
       .catch(() => setError('Booking tidak ditemukan atau link tidak valid.'))
       .finally(() => setIsLoading(false));
-  }, [kode]);
+  }, [kode, navigate]);
 
   const handleExpire = useCallback(() => {
     setBooking((prev) => (prev ? { ...prev, status: 'expired' } : prev));
@@ -73,6 +80,7 @@ const PaymentPage: React.FC = () => {
     setIsSubmitting(true);
     try {
       await uploadBuktiBayar(kode, selectedFile);
+      // Skip screen 3: Navigate directly to CheckBooking screen (screen 4)
       navigate(`/cek-pesanan?kode=${kode}`);
     } catch {
       setToastMessage('Gagal mengunggah bukti. Coba lagi.');
@@ -135,13 +143,13 @@ const PaymentPage: React.FC = () => {
     <div className="min-h-screen flex flex-col bg-[#f8faff] text-[#091540] font-sans">
       <Navbar />
 
-      <main className="flex-1 pt-24 pb-16 px-4 sm:px-6">
+      <main className="flex-1 pt-20 sm:pt-24 pb-16 px-3 sm:px-6">
         <div className="max-w-3xl mx-auto">
           {/* Header */}
-          <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-xl shadow-[#182cc1]/5 border border-[#c5d0ff] mb-6">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 pb-6 border-b border-gray-100">
+          <div className="bg-white rounded-2xl sm:rounded-3xl p-4 sm:p-6 lg:p-8 shadow-xl shadow-[#182cc1]/5 border border-[#c5d0ff] mb-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 mb-5 sm:mb-6 pb-5 sm:pb-6 border-b border-gray-100">
               <div>
-                <div className="text-sm text-gray-500 mb-1">Status Pemesanan</div>
+                <div className="text-xs sm:text-sm text-gray-500 mb-1">Status Pemesanan</div>
                 <span
                   className={`inline-block px-3 py-1 rounded-full text-xs font-bold ${
                     booking.status === 'confirmed'
@@ -161,8 +169,8 @@ const PaymentPage: React.FC = () => {
                 </span>
               </div>
               <div className="text-left sm:text-right">
-                <div className="text-sm text-gray-500 mb-1">Kode Booking</div>
-                <div className="text-2xl font-black text-[#182cc1]" style={{ fontFamily: 'Poppins, sans-serif' }}>
+                <div className="text-xs sm:text-sm text-gray-500 mb-1">Kode Booking</div>
+                <div className="text-xl sm:text-2xl font-black text-[#182cc1] break-all" style={{ fontFamily: 'Poppins, sans-serif' }}>
                   {booking.kode_booking}
                 </div>
               </div>
@@ -237,14 +245,14 @@ const PaymentPage: React.FC = () => {
 
           {/* Payment action area */}
           {isActive ? (
-            <div className="grid md:grid-cols-2 gap-6 items-stretch">
+            <div className="grid md:grid-cols-2 gap-6 items-stretch min-w-0">
               {/* Upload bukti */}
-              <div className="flex flex-col">
+              <div className="flex flex-col min-w-0">
                 <h3 className="text-lg font-bold text-[#091540] mb-4" style={{ fontFamily: 'Poppins, sans-serif' }}>
                   Upload Bukti Pembayaran
                 </h3>
 
-                <div className="bg-white border border-[#c5d0ff] rounded-2xl p-5 shadow-sm flex-1 flex flex-col justify-center">
+                <div className="bg-white border border-[#c5d0ff] rounded-2xl p-5 shadow-sm flex-1 flex flex-col justify-center min-w-0 overflow-hidden">
                   {!selectedFile ? (
                     <div
                       className="border-2 border-dashed border-[#c5d0ff] hover:border-[#182cc1] rounded-xl p-8 text-center transition-colors cursor-pointer bg-[#fafcff] hover:bg-[#eef2ff] w-full"
@@ -259,19 +267,19 @@ const PaymentPage: React.FC = () => {
                       <p className="text-xs text-[#3d518c]">Format JPG, PNG, atau PDF (maks. 5MB)</p>
                     </div>
                   ) : (
-                    <div className="border border-[#c5d0ff] rounded-xl p-4 bg-[#f8faff] flex items-center justify-between w-full">
-                      <div className="flex items-center gap-3 overflow-hidden">
+                    <div className="border border-[#c5d0ff] rounded-xl p-3.5 sm:p-4 bg-[#f8faff] flex items-center justify-between w-full min-w-0 overflow-hidden">
+                      <div className="flex items-center gap-3 min-w-0 flex-1 overflow-hidden">
                         <div className="w-10 h-10 rounded-lg bg-[#e8edff] flex items-center justify-center flex-shrink-0">
                           <FileImage size={20} className="text-[#182cc1]" />
                         </div>
-                        <div className="truncate">
-                          <div className="text-sm font-semibold text-[#091540] truncate">{selectedFile.name}</div>
+                        <div className="min-w-0 flex-1 overflow-hidden">
+                          <div className="text-sm font-semibold text-[#091540] truncate max-w-[170px] xs:max-w-[220px] sm:max-w-[320px] md:max-w-full block" title={selectedFile.name}>{selectedFile.name}</div>
                           <div className="text-xs text-[#3d518c]">{(selectedFile.size / 1024 / 1024).toFixed(2)} MB</div>
                         </div>
                       </div>
                       <button
                         onClick={() => setSelectedFile(null)}
-                        className="w-8 h-8 rounded-full hover:bg-red-50 flex items-center justify-center text-red-500 transition-colors flex-shrink-0"
+                        className="w-8 h-8 rounded-full hover:bg-red-50 flex items-center justify-center text-red-500 transition-colors flex-shrink-0 ml-2"
                       >
                         <Trash2 size={16} />
                       </button>
@@ -331,7 +339,7 @@ const PaymentPage: React.FC = () => {
                     </div>
                     {paymentInfo?.qris_image && (
                       <img
-                        src={paymentInfo.qris_image}
+                        src={resolveImageUrl(paymentInfo?.qris_image)}
                         alt="QRIS"
                         className="mt-4 w-40 h-40 object-contain rounded-xl border border-[#c5d0ff] bg-white mx-auto"
                       />

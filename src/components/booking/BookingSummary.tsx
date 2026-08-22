@@ -1,6 +1,7 @@
 import React from 'react';
 import { ArrowRight } from 'lucide-react';
 import { useBooking } from '../../hooks/useBooking';
+import { resolveImageUrl } from '../../utils/image';
 import type { AddOnItem } from '../../types/booking';
 
 interface BookingSummaryProps {
@@ -61,7 +62,7 @@ const BookingSummary: React.FC<BookingSummaryProps> = ({
     ...(name?.trim() ? [{ label: "Nama Pemesan", value: name.trim() }] : []),
     { label: "Tanggal", value: formattedDate },
     { label: "Sesi", value: formattedSession },
-    { label: "Peserta", value: `${numParticipants} orang` },
+    { label: "Peserta", value: `${participants} orang` },
     ...(selectedPackage ? [{ label: "Durasi", value: selectedPackage.duration || "±2 jam" }] : []),
     ...addOnsRows,
   ];
@@ -72,7 +73,7 @@ const BookingSummary: React.FC<BookingSummaryProps> = ({
         <div className="bg-white rounded-2xl border border-[#c5d0ff] overflow-hidden shadow-sm">
           <div className="relative h-28">
             {selectedPackage?.image ? (
-              <img src={selectedPackage.image} alt={selectedPackage.name} className="w-full h-full object-cover" />
+              <img src={resolveImageUrl(selectedPackage.image)} alt={selectedPackage.name} className="w-full h-full object-cover" />
             ) : (
               <div className="w-full h-full bg-gradient-to-tr from-[#182cc1]/20 to-[#eef2ff]" />
             )}

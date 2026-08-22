@@ -6,6 +6,7 @@ import BookingSummary from '../../components/booking/BookingSummary';
 import { useBooking } from '../../hooks/useBooking';
 import { getBookingSessions, getAddOns } from '../../services/booking.service';
 import { getTourPackageDetail } from '../../services/tour-package.service';
+import { resolveImageUrl } from '../../utils/image';
 import type { AddOnOption } from '../../services/booking.service';
 import type { BookingSession } from '../../types';
 
@@ -22,13 +23,19 @@ const BookingPackage: React.FC = () => {
     }
   }, [bookingData.selectedPackage, navigate]);
 
-  const [localDate, setLocalDate] = useState(bookingData.date);
-  const [localSession, setLocalSession] = useState(bookingData.session || 'Pagi (07.00 - 09.00)');
+  const [localDate, setLocalDate] = useState(bookingData.date || '');
+  const [localSession, setLocalSession] = useState(bookingData.session || '');
   const [localParticipants, setLocalParticipants] = useState(bookingData.participants || 1);
-  const [localAddOns, setLocalAddOns] = useState(bookingData.selectedAddOns || []);
+  const [localAddOns, setLocalAddOns] = useState<typeof bookingData.selectedAddOns>(bookingData.selectedAddOns || []);
   const [addOnOptions, setAddOnOptions] = useState<AddOnOption[]>([]);
   const [isAddonModalOpen, setIsAddonModalOpen] = useState(false);
   const [packageDetail, setPackageDetail] = useState<{ min_participants: number; max_participants: number } | null>(null);
+
+  useEffect(() => {
+    setLocalDate(bookingData.date || '');
+    setLocalSession(bookingData.session || '');
+    setLocalAddOns(bookingData.selectedAddOns || []);
+  }, [bookingData.selectedPackage?.id, bookingData.date, bookingData.session, bookingData.selectedAddOns]);
 
   useEffect(() => {
     getAddOns().then(res => {
@@ -64,6 +71,17 @@ const BookingPackage: React.FC = () => {
       .catch(() => setPackageDetail(null));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentPackage?.id]);
+
+  useEffect(() => {
+    if (isAddonModalOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isAddonModalOpen]);
 
   const minParticipants = packageDetail?.min_participants ?? currentPackage?.minParticipants ?? 1;
   const maxParticipants = packageDetail?.max_participants ?? currentPackage?.maxParticipants ?? 10;
@@ -104,7 +122,7 @@ const BookingPackage: React.FC = () => {
 
   return (
     <BookingLayout currentStep={1} onBackClick={() => navigate('/packages')}>
-      <div className="grid lg:grid-cols-[1fr_340px] gap-8">
+      <div className="grid lg:grid-cols-[1fr_320px] xl:grid-cols-[1fr_340px] gap-6 sm:gap-8">
         <div>
           <div className="flex items-center justify-between mb-5">
             <h3 className="text-lg font-bold text-[#091540]" style={{ fontFamily: "Poppins, sans-serif" }}>
@@ -115,9 +133,9 @@ const BookingPackage: React.FC = () => {
             </button>
           </div>
           
-          <div className="bg-white rounded-2xl p-4 border border-[#c5d0ff] flex gap-4 items-center mb-8 shadow-sm">
-            <div className="w-24 h-24 rounded-xl overflow-hidden flex-shrink-0 bg-[#e8edff]">
-              <img src={currentPackage.image} alt={currentPackage.name} className="w-full h-full object-cover" />
+          <div className="bg-white rounded-2xl p-4 border border-[#c5d0ff] flex flex-col sm:flex-row gap-4 items-start sm:items-center mb-8 shadow-sm">
+            <div className="w-full sm:w-24 h-40 sm:h-24 rounded-xl overflow-hidden flex-shrink-0 bg-[#e8edff]">
+              <img src={resolveImageUrl(currentPackage.image)} alt={currentPackage.name} className="w-full h-full object-cover" />
             </div>
             <div>
               <h4 className="font-bold text-[#091540] text-lg mb-1" style={{ fontFamily: "Poppins, sans-serif" }}>{currentPackage.name}</h4>
@@ -157,17 +175,25 @@ const BookingPackage: React.FC = () => {
                 className="w-full px-4 py-3 rounded-xl border border-[#c5d0ff] bg-white text-[#091540] text-sm focus:outline-none focus:border-[#182cc1] focus:ring-2 focus:ring-[#e8edff] transition"
                 style={{ fontFamily: "Inter, sans-serif" }}
               >
+                <option value="" disabled>-- Pilih Sesi Waktu --</option>
                 {sessions.length > 0 ? (
-                  sessions.map((session) => (
-                    <option key={session.id} value={session.sesi}>
-                      {session.sesi}
-                    </option>
-                  ))
+                  sessions.map((session) => {
+                    const jamMulai = session.jam_mulai ? session.jam_mulai.slice(0, 5) : '';
+                    const jamSelesai = session.jam_selesai ? session.jam_selesai.slice(0, 5) : '';
+                    const label = jamMulai && jamSelesai
+                      ? `${session.sesi} (${jamMulai} – ${jamSelesai})`
+                      : session.sesi;
+                    return (
+                      <option key={session.id} value={label}>
+                        {label}
+                      </option>
+                    );
+                  })
                 ) : (
                   <>
-                    <option value="Pagi (07.00 - 09.00)">Pagi (07.00 - 09.00)</option>
-                    <option value="Siang (10.00 - 12.00)">Siang (10.00 - 12.00)</option>
-                    <option value="Sore (14.00 - 16.00)">Sore (14.00 - 16.00)</option>
+                    <option value="Pagi (07.00 - 10.00)">Pagi (07.00 - 10.00)</option>
+                    <option value="Siang (10.00 - 13.00)">Siang (10.00 - 13.00)</option>
+                    <option value="Sore (14.00 - 17.00)">Sore (14.00 - 17.00)</option>
                   </>
                 )}
               </select>
@@ -228,8 +254,14 @@ const BookingPackage: React.FC = () => {
 
           {/* Add-on Modal Overlay */}
           {isAddonModalOpen && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#091540]/60 backdrop-blur-sm">
-              <div className="bg-white w-full max-w-2xl rounded-2xl shadow-2xl flex flex-col max-h-[80vh] overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+            <div 
+              className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#091540]/60 backdrop-blur-sm overflow-y-auto"
+              onClick={() => setIsAddonModalOpen(false)}
+            >
+              <div 
+                className="bg-white w-full max-w-2xl rounded-2xl shadow-2xl flex flex-col max-h-[85vh] overflow-hidden animate-in fade-in zoom-in-95 duration-200 my-auto"
+                onClick={(e) => e.stopPropagation()}
+              >
                 {/* Modal Header */}
                 <div className="px-6 py-4 border-b flex items-center justify-between bg-gray-50 flex-shrink-0">
                   <h3 className="text-lg font-bold text-[#091540]" style={{ fontFamily: "Poppins, sans-serif" }}>
@@ -244,7 +276,7 @@ const BookingPackage: React.FC = () => {
                 </div>
                 
                 {/* Modal Body */}
-                <div className="p-4 sm:p-6 overflow-y-auto space-y-4 bg-gray-50/50">
+                <div className="p-4 sm:p-6 overflow-y-auto space-y-4 bg-gray-50/50 flex-1 overscroll-contain">
                   {addOnOptions.length === 0 ? (
                     <div className="text-center py-8 text-sm text-[#3d518c]">
                       Belum ada layanan tambahan tersedia.
@@ -254,70 +286,59 @@ const BookingPackage: React.FC = () => {
                     const priceLabel = addon.is_free || addon.harga === 0
                       ? 'Gratis'
                       : `+ Rp ${addon.harga.toLocaleString('id-ID')}${addon.satuan === 'per orang' ? ' / orang' : ''}`;
+
+                    const toggleAddon = () => {
+                      if (isSelected) {
+                        setLocalAddOns(localAddOns.filter(a => a.id !== String(addon.id)));
+                      } else {
+                        setLocalAddOns([...localAddOns, {
+                          id: String(addon.id),
+                          name: addon.nama,
+                          price: addon.harga,
+                          description: addon.deskripsi,
+                          satuan: addon.satuan,
+                          isFree: addon.is_free,
+                          quantity: 1,
+                        }]);
+                      }
+                    };
+
                     return (
-                      <label key={addon.id} className={`flex flex-col sm:flex-row items-start sm:items-center justify-between p-3 rounded-2xl border cursor-pointer transition-all ${isSelected ? 'border-[#182cc1] bg-[#f8faff] shadow-md shadow-[#182cc1]/10' : 'border-[#c5d0ff] bg-white hover:border-[#182cc1] hover:shadow-sm'}`}>
-                        <div className="flex items-center gap-4 w-full">
-                          {/* Add-on Image */}
-                          <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl overflow-hidden flex-shrink-0 bg-[#e8edff]">
-                            {addon.gambar ? (
-                              <img src={addon.gambar} alt={addon.nama} className="w-full h-full object-cover" />
-                            ) : (
-                              <div className="w-full h-full bg-gradient-to-tr from-[#182cc1]/20 to-[#eef2ff]" />
+                      <div
+                        key={addon.id}
+                        onClick={toggleAddon}
+                        className={`p-3.5 sm:p-4 rounded-2xl border cursor-pointer transition-all flex items-center justify-between gap-3 ${
+                          isSelected
+                            ? 'border-[#182cc1] bg-[#f8faff] shadow-md shadow-[#182cc1]/10'
+                            : 'border-[#c5d0ff] bg-white hover:border-[#182cc1] hover:shadow-sm'
+                        }`}
+                      >
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="font-bold text-[#091540] text-sm sm:text-base">{addon.nama}</span>
+                            {addon.is_free && (
+                              <span className="bg-green-100 text-green-700 text-[10px] font-bold px-2 py-0.5 rounded-full">FREE</span>
                             )}
                           </div>
-                          
-                          {/* Text Details */}
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2 mb-1">
-                              <span className="font-bold text-[#091540] text-sm sm:text-base">{addon.nama}</span>
-                              {addon.is_free && (
-                                <span className="bg-green-100 text-green-700 text-[10px] font-bold px-2 py-0.5 rounded-full">FREE</span>
-                              )}
-                            </div>
-                            <p className="text-xs sm:text-sm text-[#3d518c] leading-snug line-clamp-2 pr-2" style={{ fontFamily: "Inter, sans-serif" }}>
-                              {addon.deskripsi}
-                            </p>
-                            
-                            {/* Mobile Layout Price */}
-                            <div className="sm:hidden mt-2 font-bold text-[#182cc1] text-sm">
-                              {priceLabel}
-                            </div>
-                          </div>
-                        </div>
-                        
-                        {/* Desktop Right Side: Price & Checkbox */}
-                        <div className="hidden sm:flex items-center gap-4 flex-shrink-0 pl-4 border-l border-transparent">
-                          <span className="text-[#182cc1] font-bold whitespace-nowrap">
+                          <p className="text-xs sm:text-sm text-[#3d518c] leading-snug line-clamp-2 pr-2" style={{ fontFamily: "Inter, sans-serif" }}>
+                            {addon.deskripsi}
+                          </p>
+                          <div className="mt-1.5 font-bold text-[#182cc1] text-xs sm:text-sm">
                             {priceLabel}
-                          </span>
-                          <div className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-colors ${isSelected ? 'bg-[#182cc1] border-[#182cc1]' : 'border-[#c5d0ff] bg-white'}`}>
-                            {isSelected && <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"></path></svg>}
                           </div>
                         </div>
 
-                        {/* Mobile Layout Checkbox */}
-                        <div className="sm:hidden absolute right-4 top-4">
-                          <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${isSelected ? 'bg-[#182cc1] border-[#182cc1]' : 'border-[#c5d0ff] bg-white'}`}>
-                            {isSelected && <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"></path></svg>}
-                          </div>
+                        {/* Checkbox box indicator */}
+                        <div className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center flex-shrink-0 transition-colors ${
+                          isSelected ? 'bg-[#182cc1] border-[#182cc1]' : 'border-[#c5d0ff] bg-white'
+                        }`}>
+                          {isSelected && (
+                            <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
+                            </svg>
+                          )}
                         </div>
-
-                        <input type="checkbox" className="hidden" checked={isSelected} onChange={(e) => {
-                          if (e.target.checked) {
-                            setLocalAddOns([...localAddOns, {
-                              id: String(addon.id),
-                              name: addon.nama,
-                              price: addon.harga,
-                              description: addon.deskripsi,
-                              satuan: addon.satuan,
-                              isFree: addon.is_free,
-                              quantity: 1,
-                            }]);
-                          } else {
-                            setLocalAddOns(localAddOns.filter(a => a.id !== String(addon.id)));
-                          }
-                        }} />
-                      </label>
+                      </div>
                     );
                   })}
                 </div>
@@ -363,8 +384,8 @@ const BookingPackage: React.FC = () => {
           </div>
         </div>
 
-        {/* Sticky summary sidebar */}
-        <div className="lg:sticky lg:top-4 self-start">
+        {/* Sticky summary sidebar — shows BELOW on mobile, beside on desktop */}
+        <div className="lg:sticky lg:top-4 self-start order-last lg:order-none">
           <BookingSummary
             buttonText="Lanjut ke Data Pemesan"
             onButtonClick={handleNext}
@@ -372,7 +393,7 @@ const BookingPackage: React.FC = () => {
           />
           {!isFormValid && (
             <p className="text-xs text-[#3d518c] text-center mt-2" style={{ fontFamily: "Inter, sans-serif" }}>
-              {localDate === "" ? "Pilih tanggal kunjungan terlebih dahulu" : `Minimal ${minParticipants} peserta untuk paket ini`}
+              {localDate === "" ? "Pilih tanggal kunjungan terlebih dahulu" : localSession === "" ? "Pilih sesi waktu terlebih dahulu" : `Minimal ${minParticipants} peserta untuk paket ini`}
             </p>
           )}
         </div>

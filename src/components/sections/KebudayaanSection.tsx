@@ -1,98 +1,33 @@
 import { useState, useEffect } from "react";
-import { X, Clock } from "lucide-react";
+import { X, Clock, Loader2 } from "lucide-react";
 import { getBudaya } from "../../services/budaya.service";
+import { resolveImageUrl } from "../../utils/image";
 import type { Budaya } from "../../types";
 
-const DEFAULT_ACARA = [
-  { icon: "🥁", title: "Kuda Lumping", jadwal: "Setiap bulan Suro & hari nasional" },
-  { icon: "🎨", title: "Workshop Batik Tulis", jadwal: "Sabtu–Minggu, 08.00–12.00 WIB" },
-  { icon: "🎭", title: "Pentas Seni Malam Jumat", jadwal: "Setiap Jumat malam di Dusun Sanggar" },
-];
-
-const FALLBACK_BUDAYA: Budaya[] = [
-  {
-    id: 1,
-    judul: "Kuda Lumping",
-    kategori: "Seni Pertunjukan",
-    deskripsi: "Tarian tradisional kuda lumping yang digelar setiap peringatan hari besar dan acara adat desa.",
-    gambar: "https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=700&h=460&fit=crop&auto=format",
-    span_grid: 2,
-    is_active: true,
-    created_by: 1,
-  },
-  {
-    id: 2,
-    judul: "Batik Tulis Getas",
-    kategori: "Kerajinan Tradisional",
-    deskripsi: "Batik tulis tangan bermotif sungai dan alam, warisan leluhur yang terus dilestarikan.",
-    gambar: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&h=600&fit=crop&auto=format",
-    span_grid: 0,
-    is_active: true,
-    created_by: 1,
-  },
-  {
-    id: 3,
-    judul: "Pesta Panen & Sedekah Bumi",
-    kategori: "Upacara Adat",
-    deskripsi: "Tradisi syukur atas hasil bumi yang digelar setiap tahun dengan arak-arakan dan doa bersama.",
-    gambar: "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=400&h=300&fit=crop&auto=format",
-    span_grid: 0,
-    is_active: true,
-    created_by: 1,
-  },
-  {
-    id: 4,
-    judul: "Sanggar Tari Tradisional",
-    kategori: "Seni Pertunjukan",
-    deskripsi: "Sanggar aktif melatih generasi muda dalam tari-tarian Jawa, rebana, dan seni wayang.",
-    gambar: "https://images.unsplash.com/photo-1552664730-d307ca884978?w=400&h=300&fit=crop&auto=format",
-    span_grid: 0,
-    is_active: true,
-    created_by: 1,
-  },
-  {
-    id: 5,
-    judul: "Perkebun & Agraris",
-    kategori: "Kearifan Lokal",
-    deskripsi: "Sistem pertanian organik berbasis kearifan lokal yang diwariskan secara turun-temurun.",
-    gambar: "https://images.unsplash.com/photo-1683506684881-efbb5203eacf?w=400&h=300&fit=crop&auto=format",
-    span_grid: 0,
-    is_active: true,
-    created_by: 1,
-  },
-];
-
 export default function KebudayaanSection() {
-  const [items, setItems] = useState<Budaya[]>(FALLBACK_BUDAYA);
+  const [items, setItems] = useState<Budaya[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [hasError, setHasError] = useState(false);
   const [lb, setLb] = useState<Budaya | null>(null);
 
   useEffect(() => {
+    let cancelled = false;
     getBudaya()
       .then(res => {
-        if (res?.data && res.data.length > 0) {
-          // Selalu pertahankan persis gambar dan jumlah 5 item original sesuai design ppko 1 page
-          const synced = res.data.slice(0, 5).map((item, idx) => ({
-            ...item,
-            gambar: FALLBACK_BUDAYA[idx % FALLBACK_BUDAYA.length].gambar,
-            kategori: FALLBACK_BUDAYA[idx % FALLBACK_BUDAYA.length].kategori
-          }));
-          while (synced.length < 5) {
-            synced.push(FALLBACK_BUDAYA[synced.length]);
-          }
-          setItems(synced);
-        }
+        if (cancelled) return;
+        setItems(res?.data ?? []);
+        setHasError(false);
       })
       .catch(() => {
-        // Gunakan data fallback
+        if (!cancelled) setHasError(true);
+      })
+      .finally(() => {
+        if (!cancelled) setIsLoading(false);
       });
+    return () => { cancelled = true; };
   }, []);
 
   const schedules = items.flatMap(i => i.schedules ?? []).slice(0, 3);
-  const displayAcara = schedules.length >= 3 ? schedules.map((s, idx) => ({
-    icon: idx === 0 ? "🥁" : idx === 1 ? "🎨" : "🎭",
-    title: s.nama_acara,
-    jadwal: `${s.hari}, ${s.jam}`
-  })) : DEFAULT_ACARA;
 
   return (
     <section id="budaya" className="py-16 px-4 sm:px-8 bg-white">
@@ -107,42 +42,62 @@ export default function KebudayaanSection() {
           </p>
         </div>
 
-        {/* masonry grid persis referensi screenshot (2+1 di atas, 1+1+1 di bawah) */}
-        <div className="grid grid-cols-3 grid-rows-2 gap-3 h-[360px] sm:h-[460px]">
+        {/* masonry grid - 2 col mobile, 3 col md+ */}
+        {isLoading ? (
+          <div className="flex flex-col items-center justify-center gap-3 py-16 text-[#3d518c]" style={{ fontFamily: "Inter, sans-serif" }}>
+            <Loader2 className="w-8 h-8 animate-spin text-[#182cc1]" />
+            <span className="text-sm font-medium">Memuat kebudayaan...</span>
+          </div>
+        ) : hasError ? (
+          <div className="flex flex-col items-center justify-center gap-3 py-16 text-center">
+            <p className="text-[#3d518c] text-sm" style={{ fontFamily: "Inter, sans-serif" }}>Gagal memuat data kebudayaan.</p>
+            <button onClick={() => window.location.reload()}
+              className="px-5 py-2.5 bg-[#182cc1] hover:bg-[#1524a3] text-white text-sm font-bold rounded-full transition"
+              style={{ fontFamily: "Poppins, sans-serif" }}>
+              Coba Lagi
+            </button>
+          </div>
+        ) : items.length === 0 ? (
+          <div className="text-center py-16">
+            <p className="text-[#3d518c] text-sm" style={{ fontFamily: "Inter, sans-serif" }}>Belum ada data kebudayaan.</p>
+          </div>
+        ) : (
+        <div className="grid grid-cols-2 md:grid-cols-3 grid-rows-2 gap-2 sm:gap-3 h-[280px] sm:h-[380px] md:h-[460px]">
           {items.map((item, index) => (
             <div key={item.id} onClick={() => setLb(item)}
-              className={`relative rounded-2xl overflow-hidden cursor-pointer group bg-[#e8edff] ${index === 0 ? "col-span-2" : "col-span-1"}`}>
-              <img src={item.gambar} alt={item.judul}
+              className={`relative rounded-xl sm:rounded-2xl overflow-hidden cursor-pointer group bg-[#e8edff] ${index === 0 ? "col-span-2 md:col-span-2" : "col-span-1"}`}>
+              <img src={resolveImageUrl(item.gambar)} alt={item.judul}
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
               <div className="absolute inset-0 bg-gradient-to-t from-[#091540]/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300" />
               
               {/* always-visible category pill */}
-              <div className="absolute top-2.5 left-2.5">
-                <span className="px-2 py-0.5 rounded-full bg-white/90 backdrop-blur-sm text-[#182cc1] text-[10px] font-bold shadow">
+              <div className="absolute top-2 left-2 sm:top-2.5 sm:left-2.5">
+                <span className="px-2 py-0.5 rounded-full bg-white/90 backdrop-blur-sm text-[#182cc1] text-[9px] sm:text-[10px] font-bold shadow">
                   {item.kategori}
                 </span>
               </div>
               
               {/* hover reveal */}
-              <div className="absolute inset-0 flex flex-col justify-end p-4 opacity-0 group-hover:opacity-100 transition-all duration-300">
-                <div className="font-bold text-white text-sm leading-tight drop-shadow mb-1"
+              <div className="absolute inset-0 flex flex-col justify-end p-2 sm:p-4 opacity-0 group-hover:opacity-100 transition-all duration-300">
+                <div className="font-bold text-white text-xs sm:text-sm leading-tight drop-shadow mb-0.5 sm:mb-1"
                   style={{ fontFamily: "Poppins, sans-serif" }}>{item.judul}</div>
-                <p className="text-white/80 text-xs leading-relaxed line-clamp-2"
+                <p className="text-white/80 text-[10px] sm:text-xs leading-relaxed line-clamp-2 hidden sm:block"
                   style={{ fontFamily: "Inter, sans-serif" }}>{item.deskripsi}</p>
               </div>
             </div>
           ))}
         </div>
+        )}
 
         {/* cards below grid */}
         <div className="grid sm:grid-cols-3 gap-4 mt-6">
-          {displayAcara.map(c => (
-            <div key={c.title} className="flex items-center gap-4 bg-[#eef2ff] border border-[#c5d0ff] rounded-2xl p-4 hover:border-[#182cc1]/40 hover:shadow-md transition-all">
-              <div className="text-3xl flex-shrink-0">{c.icon}</div>
+          {schedules.map((s, idx) => (
+            <div key={s.id} className="flex items-center gap-4 bg-[#eef2ff] border border-[#c5d0ff] rounded-2xl p-4 hover:border-[#182cc1]/40 hover:shadow-md transition-all">
+              <div className="text-3xl flex-shrink-0">{idx === 0 ? "🥁" : idx === 1 ? "🎨" : "🎭"}</div>
               <div>
-                <div className="font-bold text-[#091540] text-sm" style={{ fontFamily: "Poppins, sans-serif" }}>{c.title}</div>
+                <div className="font-bold text-[#091540] text-sm" style={{ fontFamily: "Poppins, sans-serif" }}>{s.nama_acara}</div>
                 <div className="text-[#3d518c] text-xs mt-0.5 flex items-center gap-1" style={{ fontFamily: "Inter, sans-serif" }}>
-                  <Clock size={10} /> {c.jadwal}
+                  <Clock size={10} /> {s.hari}, {s.jam}
                 </div>
               </div>
             </div>
@@ -157,7 +112,7 @@ export default function KebudayaanSection() {
           <div className="bg-white rounded-3xl overflow-hidden max-w-lg w-full shadow-2xl"
             onClick={e => e.stopPropagation()}>
             <div className="relative h-64 bg-[#e8edff]">
-              <img src={lb.gambar} alt={lb.judul} className="w-full h-full object-cover" />
+              <img src={resolveImageUrl(lb.gambar)} alt={lb.judul} className="w-full h-full object-cover" />
               <button onClick={() => setLb(null)}
                 className="absolute top-3 right-3 w-9 h-9 rounded-full bg-white/90 flex items-center justify-center text-[#091540] hover:bg-white transition shadow">
                 <X size={16} />

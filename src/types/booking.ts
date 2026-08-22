@@ -30,6 +30,7 @@ export interface UserDetails {
   fullName: string;
   whatsapp: string;
   kontakDarurat: string;
+  email?: string;
   city: string;
   notes: string;
 }

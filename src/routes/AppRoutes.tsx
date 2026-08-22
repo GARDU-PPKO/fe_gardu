@@ -1,14 +1,17 @@
-import React from 'react';
+import React, { Suspense, lazy } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
-import HomePage from '../pages/Home/HomePage';
-import PackagesPage from '../pages/Packages/PackagesPage';
-import BookingPackage from '../pages/Booking/BookingPackage';
-import BookingFormPage from '../pages/Booking/BookingForm';
-import PaymentPage from '../pages/Booking/PaymentPage';
-import CheckBooking from '../pages/Booking/CheckBooking';
+import { Loader2 } from 'lucide-react';
 import { BookingProvider } from '../hooks/useBooking';
 import { HomeDataProvider } from '../hooks/useHomeData';
+
+const HomePage = lazy(() => import('../pages/Home/HomePage'));
+const PackagesPage = lazy(() => import('../pages/Packages/PackagesPage'));
+const PackageDetailRedirect = lazy(() => import('../pages/Packages/PackageDetailRedirect'));
+const BookingPackage = lazy(() => import('../pages/Booking/BookingPackage'));
+const BookingFormPage = lazy(() => import('../pages/Booking/BookingForm'));
+const PaymentPage = lazy(() => import('../pages/Booking/PaymentPage'));
+const CheckBooking = lazy(() => import('../pages/Booking/CheckBooking'));
 
 const PageWrapper = ({ children }: { children: React.ReactNode }) => (
   <motion.div
@@ -30,6 +33,8 @@ const AnimatedRoutes: React.FC = () => {
 
         <Route path="/packages" element={<PageWrapper><PackagesPage /></PageWrapper>} />
 
+        <Route path="/packages/:id" element={<PageWrapper><PackageDetailRedirect /></PageWrapper>} />
+
         <Route path="/payment/:kode" element={<PageWrapper><PaymentPage /></PageWrapper>} />
 
         <Route path="/cek-pesanan" element={<PageWrapper><CheckBooking /></PageWrapper>} />
@@ -50,12 +55,20 @@ const AnimatedRoutes: React.FC = () => {
   );
 };
 
+const PageLoader = () => (
+  <div className="min-h-screen flex items-center justify-center bg-[#f8faff]">
+    <Loader2 className="w-8 h-8 animate-spin text-[#182cc1]" />
+  </div>
+);
+
 const AppRoutes: React.FC = () => {
   return (
     <BrowserRouter>
       <BookingProvider>
         <HomeDataProvider>
-          <AnimatedRoutes />
+          <Suspense fallback={<PageLoader />}>
+            <AnimatedRoutes />
+          </Suspense>
         </HomeDataProvider>
       </BookingProvider>
     </BrowserRouter>

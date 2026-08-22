@@ -35,7 +35,10 @@ export const BookingProvider: React.FC<{ children: ReactNode }> = ({ children })
   }, [bookingData]);
 
   const updatePackage = useCallback((pkg: Package) => {
-    setBookingData((prev) => ({ ...prev, selectedPackage: pkg }));
+    setBookingData({
+      ...INITIAL_BOOKING_STATE,
+      selectedPackage: pkg,
+    });
   }, []);
 
   const updateSchedule = useCallback((date: string, session: string, participants: number) => {

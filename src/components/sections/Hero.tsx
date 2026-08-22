@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { Users, Briefcase, Mountain, TreePine, Waves, Building2, Hash, Home, Award } from "lucide-react";
-import { getDusun } from "../../services/dusun.service";
 import { getSettings, getVillageStats } from "../../services/village.service";
 import DusunSlider from "./DusunSlider";
 import defaultHeroImg from "../../assets/image-6.png";
@@ -26,7 +25,6 @@ const DEFAULT_STATS = [
 export default function Hero({ onSelectDusun }: { onSelectDusun: (d: Dusun) => void }) {
   const [settings, setSettings] = useState<Record<string, string>>({});
   const [stats, setStats] = useState<VillageStat[]>([]);
-  const [heroImage, setHeroImage] = useState("");
 
   const [showStats, setShowStats] = useState(false);
 
@@ -34,8 +32,10 @@ export default function Hero({ onSelectDusun }: { onSelectDusun: (d: Dusun) => v
     const handleScroll = () => setShowStats(window.scrollY > 150);
     window.addEventListener("scroll", handleScroll);
     
-    getSettings('nama_desa').then(res => {
-      setSettings(Object.fromEntries(res.data.map((item: Setting) => [item.key, item.value])));
+    getSettings('nama_desa,hero_image').then(res => {
+      if (res.data) {
+        setSettings(Object.fromEntries(res.data.map((item: Setting) => [item.key, item.value])));
+      }
     });
     getVillageStats().then(res => {
       if (res.data && res.data.length >= 6) {
@@ -44,13 +44,13 @@ export default function Hero({ onSelectDusun }: { onSelectDusun: (d: Dusun) => v
         setStats([]);
       }
     });
-    getDusun().then(res => {
-      const firstDusun = res.data.find((item: Dusun) => item.hero_img || item.thumbnail);
-      setHeroImage(firstDusun?.hero_img ?? firstDusun?.thumbnail ?? defaultHeroImg);
-    });
 
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  const heroImage = settings.hero_image
+    ? (settings.hero_image.startsWith('http') ? settings.hero_image : `${(import.meta.env.VITE_API_URL || 'https://rentrack.site/api').replace(/\/api\/?$/, '')}${settings.hero_image}`)
+    : defaultHeroImg;
 
   const villageName = settings.nama_desa ?? "DESA WISATA GETAS";
   const displayTitle = villageName.toUpperCase().includes("GETAS")
@@ -70,27 +70,23 @@ export default function Hero({ onSelectDusun }: { onSelectDusun: (d: Dusun) => v
     <>
       <section id="hero" className="relative w-full min-h-screen bg-[#091540]">
         <img
-          src={heroImage || defaultHeroImg}
+          src={heroImage}
           alt="Tubing Sungai Desa Getas"
           className="absolute inset-0 w-full h-full object-cover opacity-80"
+          onError={(e) => {
+            e.currentTarget.src = defaultHeroImg;
+          }}
         />
         {/* gradient overlay */}
         <div className="absolute inset-0 bg-gradient-to-t from-[#091540] via-[#091540]/40 to-transparent" />
 
         {/* Big title like WANDER */}
-        <div className="absolute inset-0 flex flex-col justify-end pb-16 sm:pb-24 px-4 sm:px-8">
+        <div className="absolute inset-0 flex flex-col justify-end pb-20 sm:pb-28 px-4 sm:px-8">
           <div className="max-w-7xl mx-auto w-full relative">
             {/* Inline Badges */}
             <div className="flex flex-wrap items-center gap-3 mb-4">
               <span className="px-3.5 py-1.5 rounded-full bg-white/10 text-white text-xs font-semibold backdrop-blur-md border border-white/20 flex items-center gap-2">
                 <TreePine size={14} className="text-[#a5f3fc]" /> Desa Wisata Alam
-              </span>
-              <span className="px-3.5 py-1.5 rounded-full bg-white/10 text-white text-xs font-semibold backdrop-blur-md border border-white/20 flex items-center gap-2">
-                <span className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
-                </span>
-                Online
               </span>
             </div>
 
@@ -125,19 +121,19 @@ export default function Hero({ onSelectDusun }: { onSelectDusun: (d: Dusun) => v
       </section>
 
       {/* Content below hero */}
-      <div className="bg-[#f8faff] px-4 sm:px-8 pb-8 pt-4">
+      <div className="bg-[#f8faff] px-4 sm:px-6 lg:px-8 pb-8 pt-4">
         <div className="max-w-7xl mx-auto">
           {/* ── Unified Stats Container ── */}
           <div className={`-mt-16 relative z-10 transition-all duration-1000 ease-out transform ${showStats ? 'translate-y-0 opacity-100' : 'translate-y-24 opacity-0'}`}>
-            <div className="bg-white/95 backdrop-blur-xl border border-[#c5d0ff] rounded-[2rem] p-6 shadow-xl shadow-[#091540]/5 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6 divide-y md:divide-y-0 lg:divide-x divide-[#e8edff]">
-              {statItems.map((s, idx) => (
-                <div key={s.label} className={`flex flex-col sm:flex-row items-start sm:items-center gap-4 ${idx !== 0 && idx % 3 !== 0 ? 'lg:pl-6' : ''} ${idx !== 0 && idx % 2 !== 0 ? 'md:pl-6' : ''} pt-4 md:pt-0 first:pt-0`}>
-                  <div className="w-12 h-12 rounded-2xl bg-[#e8edff] text-[#182cc1] flex items-center justify-center flex-shrink-0">
-                    <s.icon size={22} />
+            <div className="bg-white/95 backdrop-blur-xl border border-[#c5d0ff] rounded-2xl sm:rounded-[2rem] p-3.5 sm:p-6 shadow-xl shadow-[#091540]/5 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5 sm:gap-6 w-full mx-auto">
+              {statItems.map((s) => (
+                <div key={s.label} className="flex flex-col sm:flex-row items-center sm:items-center text-center sm:text-left gap-2 sm:gap-4 p-3 sm:p-0 rounded-xl bg-[#f8faff] sm:bg-transparent border border-[#e8edff] sm:border-0 w-full justify-center sm:justify-start">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-[#e8edff] text-[#182cc1] flex items-center justify-center flex-shrink-0">
+                    <s.icon className="w-5 h-5 sm:w-6 sm:h-6" />
                   </div>
-                  <div>
-                    <div className="font-black text-[#091540] text-lg leading-tight mb-0.5" style={{ fontFamily: "Poppins, sans-serif" }}>{s.value}</div>
-                    <div className="text-[#3d518c] text-xs font-medium" style={{ fontFamily: "Inter, sans-serif" }}>{s.label}</div>
+                  <div className="min-w-0 w-full">
+                    <div className="font-black text-[#091540] text-sm sm:text-lg leading-tight mb-0.5 truncate" style={{ fontFamily: "Poppins, sans-serif" }}>{s.value}</div>
+                    <div className="text-[#3d518c] text-[10px] sm:text-xs font-medium leading-tight truncate" style={{ fontFamily: "Inter, sans-serif" }}>{s.label}</div>
                   </div>
                 </div>
               ))}

@@ -1,33 +1,32 @@
 import { useState, useEffect } from "react";
-import { MessageSquare } from "lucide-react";
+import { MessageSquare, Loader2 } from "lucide-react";
 import { getUmkmProducts } from "../../services/umkm.service";
+import { resolveImageUrl } from "../../utils/image";
 import type { UmkmProduct } from "../../types";
 
 const CATS = ["Semua", "Makanan", "Kerajinan", "Pertanian", "Oleh-Oleh"];
 
-const FALLBACK_PRODUCTS: UmkmProduct[] = [
-  { id: 1, nama: "Tempe Besem Bu Kartini", kategori: "Makanan", harga: 5000, deskripsi: "Tempe besem tradisional khas Getas", gambar: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400&h=300&fit=crop&auto=format", no_wa_penjual: "62812345001", is_active: true },
-  { id: 2, nama: "Keripik Singkong Aneka Rasa", kategori: "Makanan", harga: 15000, deskripsi: "Keripik singkong renyah gurih", gambar: "https://images.unsplash.com/photo-1528735602780-2552fd46c7af?w=400&h=300&fit=crop&auto=format", no_wa_penjual: "62812345002", is_active: true },
-  { id: 3, nama: "Anyaman Bambu Pak Rejo", kategori: "Kerajinan", harga: 45000, deskripsi: "Kerajinan bambu berkualitas tinggi", gambar: "https://images.unsplash.com/photo-1586717799252-bd134ad00e26?w=400&h=300&fit=crop&auto=format", no_wa_penjual: "62812345003", is_active: true },
-  { id: 4, nama: "Beras Organik Pak Triyono", kategori: "Pertanian", harga: 18000, deskripsi: "Beras organik sehat tanpa pestisida", gambar: "https://images.unsplash.com/photo-1536304929831-ee1ca9d44906?w=400&h=300&fit=crop&auto=format", no_wa_penjual: "62812345005", is_active: true },
-  { id: 5, nama: "Kopi Arabika Getas", kategori: "Oleh-Oleh", harga: 65000, deskripsi: "Kopi asli buatan petani lokal Getas (200g)", gambar: "https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=400&h=300&fit=crop&auto=format", no_wa_penjual: "62812345007", is_active: true },
-  { id: 6, nama: "Sirup Jahe Madu Bu Endang", kategori: "Oleh-Oleh", harga: 30000, deskripsi: "Minuman herbal hangat penambah imunitas", gambar: "https://images.unsplash.com/photo-1601493700631-2b16ec4b4716?w=400&h=300&fit=crop&auto=format", no_wa_penjual: "62812345008", is_active: true },
-];
-
 export default function UMKMSection() {
   const [cat, setCat] = useState("Semua");
-  const [products, setProducts] = useState<UmkmProduct[]>(FALLBACK_PRODUCTS);
+  const [products, setProducts] = useState<UmkmProduct[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [hasError, setHasError] = useState(false);
 
   useEffect(() => {
+    let cancelled = false;
     getUmkmProducts()
       .then(res => {
-        if (res?.data && res.data.length > 0) {
-          setProducts(res.data);
-        }
+        if (cancelled) return;
+        setProducts(res?.data ?? []);
+        setHasError(false);
       })
       .catch(() => {
-        // Gunakan data fallback
+        if (!cancelled) setHasError(true);
+      })
+      .finally(() => {
+        if (!cancelled) setIsLoading(false);
       });
+    return () => { cancelled = true; };
   }, []);
 
   const filtered = products.filter(p => cat === "Semua" || p.kategori === cat);
@@ -40,11 +39,19 @@ export default function UMKMSection() {
             <span className="text-xs font-bold uppercase tracking-widest text-[#182cc1]" style={{ fontFamily: "Inter, sans-serif" }}>Marketplace Desa</span>
             <h2 className="text-2xl sm:text-3xl font-bold text-[#091540] mt-1" style={{ fontFamily: "Poppins, sans-serif" }}>UMKM Desa Getas</h2>
           </div>
-          <div className="flex gap-1.5 flex-wrap bg-white p-1.5 rounded-2xl shadow-sm border border-[#c5d0ff]">
+          {/* Filter Pills — Symmetrical & Responsive */}
+          <div className="flex flex-wrap items-center gap-2">
             {CATS.map(c => (
-              <button key={c} onClick={() => setCat(c)}
-                className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-300 ${cat === c ? "bg-[#182cc1] text-white shadow-md shadow-[#182cc1]/20" : "text-[#3d518c] hover:bg-[#e8edff] hover:text-[#182cc1]"}`}
-                style={{ fontFamily: "Inter, sans-serif" }}>
+              <button
+                key={c}
+                onClick={() => setCat(c)}
+                className={`px-4 py-2 sm:px-5 sm:py-2 rounded-full text-xs sm:text-sm font-bold transition-all duration-200 border ${
+                  cat === c
+                    ? "bg-[#182cc1] text-white border-[#182cc1] shadow-md shadow-[#182cc1]/20"
+                    : "bg-white text-[#3d518c] border-[#c5d0ff] hover:border-[#182cc1] hover:bg-[#e8edff]"
+                }`}
+                style={{ fontFamily: "Inter, sans-serif" }}
+              >
                 {c}
               </button>
             ))}
@@ -52,7 +59,25 @@ export default function UMKMSection() {
         </div>
 
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-          {filtered.map(p => (
+          {isLoading ? (
+            <div className="col-span-full flex flex-col items-center justify-center py-16 gap-3 text-[#3d518c]" style={{ fontFamily: "Inter, sans-serif" }}>
+              <Loader2 className="w-8 h-8 animate-spin text-[#182cc1]" />
+              <span className="text-sm font-medium">Memuat produk UMKM...</span>
+            </div>
+          ) : hasError ? (
+            <div className="col-span-full flex flex-col items-center justify-center py-16 gap-3 text-center">
+              <p className="text-[#3d518c] text-sm" style={{ fontFamily: "Inter, sans-serif" }}>Gagal memuat produk UMKM.</p>
+              <button onClick={() => window.location.reload()}
+                className="px-5 py-2.5 bg-[#182cc1] hover:bg-[#1524a3] text-white text-sm font-bold rounded-full transition"
+                style={{ fontFamily: "Poppins, sans-serif" }}>
+                Coba Lagi
+              </button>
+            </div>
+          ) : filtered.length === 0 ? (
+            <div className="col-span-full text-center py-16">
+              <p className="text-[#3d518c] text-sm" style={{ fontFamily: "Inter, sans-serif" }}>Belum ada produk UMKM tersedia.</p>
+            </div>
+          ) : filtered.map(p => (
             <a 
               key={p.id} 
               href={`https://wa.me/${p.no_wa_penjual}?text=Halo, saya tertarik dengan produk ${encodeURIComponent(p.nama)}`}
@@ -60,7 +85,7 @@ export default function UMKMSection() {
               className="bg-white rounded-2xl overflow-hidden border border-[#c5d0ff] shadow-sm hover:shadow-lg hover:border-[#25D366] transition-all group cursor-pointer flex flex-col relative"
             >
               <div className="h-44 overflow-hidden bg-[#c5d0ff] relative">
-                <img src={p.gambar} alt={p.nama} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                <img src={resolveImageUrl(p.gambar)} alt={p.nama} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
               </div>
               <div className="p-4 flex flex-col flex-1">

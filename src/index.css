@@ -60,4 +60,32 @@ body {
   background-color: #ffffff;
   color: #091540;
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  /* Prevent horizontal overflow on mobile */
+  overflow-x: hidden;
+}
+
+/* Hide scrollbar utility */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* Custom scrollbar for modals */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: #f8faff;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #c5d0ff;
+  border-radius: 4px;
+}
+
+/* Smooth tap highlight removal on mobile */
+* {
+  -webkit-tap-highlight-color: transparent;
 }

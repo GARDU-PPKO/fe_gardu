@@ -1,110 +1,37 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowRight, ArrowLeft, CheckCircle2, Clock, Users, Leaf } from "lucide-react";
+import { ArrowRight, ArrowLeft, CheckCircle2, Clock, Users, Leaf, Loader2 } from "lucide-react";
 import { getTourPackages } from "../../services/tour-package.service";
 import { useBooking } from "../../hooks/useBooking";
+import { resolveImageUrl } from "../../utils/image";
 import Footer from "../../components/layout/Footer";
 import type { TourPackage } from "../../types";
-
-const FALLBACK_PACKAGES: TourPackage[] = [
-  {
-    id: 1,
-    nama: "GENTA Explorer",
-    durasi: "±2 jam",
-    harga: 125000,
-    satuan: "orang",
-    tag: "Terpopuler",
-    min_participants: 5,
-    max_participants: 10,
-    gambar: "https://images.unsplash.com/photo-1546058914-5000137323f0?w=500&h=320&fit=crop&auto=format",
-    deskripsi: "Menyusuri Sungai Blukar dengan arus alami. Harga per orang turun untuk rombongan lebih banyak.",
-    is_active: true,
-    created_by: 1,
-    created_at: "",
-    updated_at: ""
-  },
-  {
-    id: 2,
-    nama: "GEMPI Adventure",
-    durasi: "±3 jam",
-    harga: 110000,
-    satuan: "orang",
-    tag: null,
-    min_participants: 5,
-    max_participants: 10,
-    gambar: "https://images.unsplash.com/photo-1561774711-b0fa364863b7?w=500&h=320&fit=crop&auto=format",
-    deskripsi: "Adventure tubing dengan rute lebih panjang dan safety gear lengkap.",
-    is_active: true,
-    created_by: 1,
-    created_at: "",
-    updated_at: ""
-  },
-  {
-    id: 3,
-    nama: "Genta Gempi Solo",
-    durasi: "1 malam",
-    harga: 80000,
-    satuan: "paket",
-    tag: null,
-    min_participants: 1,
-    max_participants: 1,
-    gambar: "https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?w=500&h=320&fit=crop&auto=format",
-    deskripsi: "Camping solo — 1 tenda, 1 peserta.",
-    is_active: true,
-    created_by: 1,
-    created_at: "",
-    updated_at: ""
-  },
-  {
-    id: 4,
-    nama: "Genta Gempi Buddy",
-    durasi: "1 malam",
-    harga: 130000,
-    satuan: "paket",
-    tag: null,
-    min_participants: 1,
-    max_participants: 2,
-    gambar: "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=500&h=320&fit=crop&auto=format",
-    deskripsi: "Camping berdua — 1 tenda untuk 2 peserta.",
-    is_active: true,
-    created_by: 1,
-    created_at: "",
-    updated_at: ""
-  },
-  {
-    id: 5,
-    nama: "Genta Gempi Family",
-    durasi: "1 malam",
-    harga: 180000,
-    satuan: "paket",
-    tag: "Terbaru",
-    min_participants: 1,
-    max_participants: 2,
-    gambar: "https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?w=500&h=320&fit=crop&auto=format",
-    deskripsi: "Camping keluarga — 1 tenda per 2 peserta (bisa multi-tenda), termasuk makan malam & api unggun.",
-    is_active: true,
-    created_by: 1,
-    created_at: "",
-    updated_at: ""
-  },
-];
 
 export default function PackagesPage() {
   const navigate = useNavigate();
   const { updatePackage } = useBooking();
-  const [packages, setPackages] = useState<TourPackage[]>(FALLBACK_PACKAGES);
+  const [packages, setPackages] = useState<TourPackage[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [hasError, setHasError] = useState(false);
   const [filter, setFilter] = useState("Semua");
   const categories = ["Semua", "Adventure", "Education", "Family", "Camping"];
 
   useEffect(() => {
     window.scrollTo(0, 0);
+    let cancelled = false;
     getTourPackages()
       .then(res => {
-        if (res?.data && res.data.length > 0) {
-          setPackages(res.data);
-        }
+        if (cancelled) return;
+        setPackages(res?.data ?? []);
+        setHasError(false);
       })
-      .catch(() => {});
+      .catch(() => {
+        if (!cancelled) setHasError(true);
+      })
+      .finally(() => {
+        if (!cancelled) setIsLoading(false);
+      });
+    return () => { cancelled = true; };
   }, []);
 
   const filteredPackages = packages.filter(p => {
@@ -140,47 +67,34 @@ export default function PackagesPage() {
 
       <div className="flex-1 flex flex-col z-10">
         {/* Sleek Top Header */}
-        <header className="flex-shrink-0 flex items-center justify-between px-6 sm:px-10 py-6">
+        <header className="flex-shrink-0 flex items-center justify-between px-4 sm:px-10 py-6">
           <button onClick={() => navigate('/')} 
             className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-white hover:bg-[#e8edff] shadow-md hover:shadow-lg border border-[#e8edff] transition-all text-sm font-semibold text-[#3d518c]">
             <ArrowLeft size={16} /> Kembali ke Beranda
           </button>
-          <div className="hidden sm:flex bg-white shadow-md border border-[#e8edff] rounded-full p-1.5">
+        </header>
+
+        {/* Main Content */}
+        <main className="flex-1 flex flex-col px-4 sm:px-6 lg:px-10 pb-20 pt-2">
+          {/* Filter Pills — Symmetrical & Responsive */}
+          <div className="flex flex-wrap items-center gap-2 mb-8">
             {categories.map(cat => (
               <button
                 key={cat}
                 onClick={() => setFilter(cat)}
-                className={`px-6 py-2 rounded-full text-xs font-bold transition-all ${
-                  filter === cat 
-                    ? "bg-[#182cc1] text-white shadow-md transform scale-105" 
-                    : "text-[#3d518c] hover:text-[#091540] hover:bg-[#f8faff]"
+                className={`px-5 py-2 rounded-full text-xs sm:text-sm font-bold transition-all duration-200 border ${
+                  filter === cat
+                    ? "bg-[#182cc1] text-white border-[#182cc1] shadow-md shadow-[#182cc1]/20 scale-105"
+                    : "bg-white text-[#3d518c] border-[#c5d0ff] hover:border-[#182cc1] hover:bg-[#e8edff]"
                 }`}
+                style={{ fontFamily: "Inter, sans-serif" }}
               >
                 {cat}
               </button>
             ))}
           </div>
-        </header>
 
-        {/* Mobile Filters */}
-        <div className="sm:hidden px-6 overflow-x-auto pb-2 flex gap-2">
-          {categories.map(cat => (
-            <button
-              key={cat}
-              onClick={() => setFilter(cat)}
-              className={`px-5 py-2 rounded-full text-xs font-bold whitespace-nowrap transition-all shadow-sm ${
-                filter === cat 
-                  ? "bg-[#182cc1] text-white" 
-                  : "bg-white text-[#3d518c] border border-[#e8edff]"
-              }`}
-            >
-              {cat}
-            </button>
-          ))}
-        </div>
 
-        {/* Main Content */}
-        <main className="flex-1 flex flex-col px-6 sm:px-10 pb-20 pt-4">
           <div className="mb-10 max-w-2xl">
             <span className="text-[#182cc1] text-sm font-bold tracking-widest uppercase mb-2 block flex items-center gap-2">
               <span className="w-8 h-0.5 bg-[#182cc1] rounded-full"></span>
@@ -195,6 +109,25 @@ export default function PackagesPage() {
           </div>
 
           {/* Grid Layout - Flows naturally, handles unlimited data */}
+          {isLoading ? (
+            <div className="flex flex-col items-center justify-center py-24 gap-4">
+              <Loader2 className="w-9 h-9 animate-spin text-[#182cc1]" />
+              <p className="text-[#3d518c] text-sm font-medium" style={{ fontFamily: "Inter, sans-serif" }}>Memuat paket wisata...</p>
+            </div>
+          ) : hasError ? (
+            <div className="flex flex-col items-center justify-center py-24 gap-4 text-center">
+              <p className="text-[#3d518c] text-sm" style={{ fontFamily: "Inter, sans-serif" }}>Gagal memuat paket wisata.</p>
+              <button onClick={() => window.location.reload()}
+                className="px-6 py-3 bg-[#182cc1] hover:bg-[#1524a3] text-white text-sm font-bold rounded-full transition"
+                style={{ fontFamily: "Poppins, sans-serif" }}>
+                Coba Lagi
+              </button>
+            </div>
+          ) : filteredPackages.length === 0 ? (
+            <div className="text-center py-24">
+              <p className="text-[#3d518c] text-sm" style={{ fontFamily: "Inter, sans-serif" }}>Belum ada paket wisata tersedia.</p>
+            </div>
+          ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 sm:gap-8">
             {filteredPackages.map(p => (
               <div 
@@ -205,7 +138,7 @@ export default function PackagesPage() {
                 {/* Image Section */}
                 <div className="relative h-48 sm:h-56 overflow-hidden flex-shrink-0 p-2">
                   <div className="w-full h-full rounded-[1.5rem] overflow-hidden relative shadow-inner">
-                    <img src={p.gambar} alt={p.nama} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                    <img src={resolveImageUrl(p.gambar)} alt={p.nama} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
                     <div className="absolute inset-0 bg-gradient-to-t from-[#091540]/60 via-transparent to-transparent opacity-90" />
                     
                     {p.tag && (
@@ -256,6 +189,7 @@ export default function PackagesPage() {
               </div>
             ))}
           </div>
+          )}
         </main>
       </div>
       
