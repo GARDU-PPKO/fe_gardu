@@ -55,8 +55,8 @@ export default function HomePage() {
 
       <main>
         <Hero onSelectDusun={d => setSelectedDusun(d)} />
-        {/* Video Profile Section (disiapkan, default isHidden={true}) */}
-        <VideoProfileSection isHidden={true} />
+        {/* Video Profile Section */}
+        <VideoProfileSection />
         <ARSection />
         <TourPackages />
         <UMKMSection />

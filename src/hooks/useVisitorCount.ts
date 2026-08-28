@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react';
+import { getVisitorStats, trackVisitor } from '../services/visitor.service';
 
-const BASE_VISITOR_COUNT = 1847;
 const STORAGE_KEY = 'pesonagetas_total_visitors';
 const SESSION_KEY = 'pesonagetas_session_recorded';
+const SESSION_ID_KEY = 'pesonagetas_session_id';
 
 /**
- * Service & hook to track real website visitors with persistent session counter.
- * Automatically increments for new visits and syncs with global analytics.
+ * Hook to track real website visitors via Laravel backend API.
+ * Automatically records new visitor sessions into the database.
  */
 export function useVisitorCount() {
   const [visitorCount, setVisitorCount] = useState<number>(() => {
@@ -14,47 +15,70 @@ export function useVisitorCount() {
       const saved = localStorage.getItem(STORAGE_KEY);
       if (saved) {
         const parsed = parseInt(saved, 10);
-        if (!isNaN(parsed) && parsed >= BASE_VISITOR_COUNT) {
+        if (!isNaN(parsed) && parsed > 0) {
           return parsed;
         }
       }
     } catch {
       // ignore
     }
-    return BASE_VISITOR_COUNT;
+    return 0;
   });
 
   useEffect(() => {
-    let currentTotal = BASE_VISITOR_COUNT;
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) {
-        const parsed = parseInt(saved, 10);
-        if (!isNaN(parsed) && parsed >= BASE_VISITOR_COUNT) {
-          currentTotal = parsed;
-        }
-      }
+    let cancelled = false;
 
-      // Check if this session is already recorded
-      const hasRecordedSession = sessionStorage.getItem(SESSION_KEY);
-      if (!hasRecordedSession) {
-        currentTotal += 1;
-        sessionStorage.setItem(SESSION_KEY, 'true');
-        localStorage.setItem(STORAGE_KEY, currentTotal.toString());
-      }
-    } catch {
-      // ignore
+    // Helper untuk session id unik di browser tab/session
+    let sessionId = sessionStorage.getItem(SESSION_ID_KEY);
+    if (!sessionId) {
+      sessionId = 'sess_' + Math.random().toString(36).substring(2, 15) + Date.now().toString(36);
+      sessionStorage.setItem(SESSION_ID_KEY, sessionId);
     }
 
-    setVisitorCount(currentTotal);
+    const hasRecorded = sessionStorage.getItem(SESSION_KEY);
 
-    // Ping tracking endpoint in background (via Image pixel to avoid CORS restrictions)
-    try {
-      const trackerImg = new Image();
-      trackerImg.src = `https://visitor-badge.laobi.icu/badge?page_id=pesonagetas.com&t=${Date.now()}`;
-    } catch {
-      // ignore
+    if (!hasRecorded) {
+      // Catat kunjungan baru ke backend
+      trackVisitor(sessionId)
+        .then((res) => {
+          if (cancelled) return;
+          const total = res?.data?.total_visitors;
+          if (typeof total === 'number' && total > 0) {
+            setVisitorCount(total);
+            sessionStorage.setItem(SESSION_KEY, 'true');
+            localStorage.setItem(STORAGE_KEY, total.toString());
+          }
+        })
+        .catch(() => {
+          // Jika backend offline, gunakan data cache local
+          if (cancelled) return;
+          const saved = localStorage.getItem(STORAGE_KEY);
+          if (saved) {
+            const count = parseInt(saved, 10) + 1;
+            setVisitorCount(count);
+            sessionStorage.setItem(SESSION_KEY, 'true');
+            localStorage.setItem(STORAGE_KEY, count.toString());
+          }
+        });
+    } else {
+      // Jika sesi sudah tercatat, ambil total terbaru
+      getVisitorStats()
+        .then((res) => {
+          if (cancelled) return;
+          const total = res?.data?.total_visitors;
+          if (typeof total === 'number' && total > 0) {
+            setVisitorCount(total);
+            localStorage.setItem(STORAGE_KEY, total.toString());
+          }
+        })
+        .catch(() => {
+          // ignore error and keep existing state
+        });
     }
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   return { visitorCount };
