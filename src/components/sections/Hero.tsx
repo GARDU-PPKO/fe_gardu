@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
-import { Users, Briefcase, Mountain, TreePine, Waves, Building2, Hash, Home, Award } from "lucide-react";
+import { Users, Briefcase, Mountain, TreePine, Waves, Building2, Hash, Home, Award, Eye } from "lucide-react";
 import { getSettings, getVillageStats } from "../../services/village.service";
+import { useVisitorCount } from "../../hooks/useVisitorCount";
 import DusunSlider from "./DusunSlider";
 import defaultHeroImg from "../../assets/image-6.png";
 import type { Dusun, Setting, VillageStat } from "../../types";
@@ -25,8 +26,8 @@ const DEFAULT_STATS = [
 export default function Hero({ onSelectDusun }: { onSelectDusun: (d: Dusun) => void }) {
   const [settings, setSettings] = useState<Record<string, string>>({});
   const [stats, setStats] = useState<VillageStat[]>([]);
-
   const [showStats, setShowStats] = useState(false);
+  const { visitorCount } = useVisitorCount();
 
   useEffect(() => {
     const handleScroll = () => setShowStats(window.scrollY > 150);
@@ -71,7 +72,7 @@ export default function Hero({ onSelectDusun }: { onSelectDusun: (d: Dusun) => v
       <section id="hero" className="relative w-full min-h-screen bg-[#091540]">
         <img
           src={heroImage}
-          alt="Tubing Sungai Desa Getas"
+          alt="Wisata Tubing Genting Desa Getas"
           className="absolute inset-0 w-full h-full object-cover opacity-80"
           onError={(e) => {
             e.currentTarget.src = defaultHeroImg;
@@ -88,13 +89,21 @@ export default function Hero({ onSelectDusun }: { onSelectDusun: (d: Dusun) => v
               <span className="px-3.5 py-1.5 rounded-full bg-white/10 text-white text-xs font-semibold backdrop-blur-md border border-white/20 flex items-center gap-2">
                 <TreePine size={14} className="text-[#a5f3fc]" /> Desa Wisata Alam
               </span>
+              {/* Real-time Visitor Counter Tracking */}
+              <span className="px-3.5 py-1.5 rounded-full bg-white/10 text-white text-xs font-semibold backdrop-blur-md border border-white/20 flex items-center gap-2">
+                <Eye size={14} className="text-[#a5f3fc]" />
+                <span className="flex items-center gap-1.5">
+                  <strong className="font-bold text-white tracking-wide">{Number(visitorCount || 0).toLocaleString('id-ID')}</strong>
+                  <span>Kunjungan Web</span>
+                </span>
+              </span>
             </div>
 
             <p className="text-white/80 text-sm font-medium mb-2 tracking-widest uppercase" style={{ fontFamily: "Inter, sans-serif" }}>
               Kecamatan Singorojo · Kabupaten Kendal
             </p>
             <h1
-              className="font-black text-white leading-none mb-6"
+              className="font-black text-white leading-none mb-3"
               style={{
                 fontFamily: "Poppins, sans-serif",
                 fontSize: "clamp(2.5rem, 7vw, 6rem)",
@@ -103,6 +112,9 @@ export default function Hero({ onSelectDusun }: { onSelectDusun: (d: Dusun) => v
               }}>
               {displayTitle}
             </h1>
+            <p className="text-white/90 text-sm sm:text-base font-semibold mb-6 tracking-wide drop-shadow" style={{ fontFamily: "Poppins, sans-serif" }}>
+              🌊 Wisata Tubing Genting Desa Getas
+            </p>
             <div className="flex flex-wrap items-center gap-3">
               <button onClick={() => scrollTo("#paket")}
                 className="flex items-center gap-2 px-6 py-3 bg-white text-[#091540] text-sm font-bold rounded-full hover:bg-[#e8edff] transition shadow-xl"

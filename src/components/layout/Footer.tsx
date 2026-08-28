@@ -86,10 +86,10 @@ export default function Footer() {
 
         <div className="border-t border-white/10 pt-6 flex flex-col sm:flex-row items-center justify-between gap-3">
           <p className="text-white/30 text-xs text-center sm:text-left" style={{ fontFamily: "Inter, sans-serif" }}>
-            © 2026 Pemerintah Desa Getas, Kab. Kendal. Seluruh hak dilindungi.
+            © 2026 TIM PPK Ormawa BEM FIK 2026 Udinus. Seluruh hak dilindungi.
           </p>
           <div className="flex items-center gap-2 text-white/30 text-xs" style={{ fontFamily: "Inter, sans-serif" }}>
-            <Zap size={11} className="text-[#7692ff]" />Desa Digital Kendal 2026
+            <Zap size={11} className="text-[#7692ff]" />Desa wisata Getas 2026
           </div>
         </div>
       </div>

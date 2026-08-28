@@ -9,6 +9,7 @@ import TourPackages from "../../components/sections/TourPackages";
 import UMKMSection from "../../components/sections/UMKMSection";
 import KebudayaanSection from "../../components/sections/KebudayaanSection";
 import ARSection from "../../components/sections/ARSection";
+import VideoProfileSection from "../../components/sections/VideoProfileSection";
 import KontakSection from "../../components/sections/KontakSection";
 import { getSettings } from "../../services/village.service";
 import type { Dusun, Setting } from "../../types";
@@ -54,6 +55,8 @@ export default function HomePage() {
 
       <main>
         <Hero onSelectDusun={d => setSelectedDusun(d)} />
+        {/* Video Profile Section */}
+        <VideoProfileSection />
         <ARSection />
         <TourPackages />
         <UMKMSection />
