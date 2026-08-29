@@ -286,6 +286,7 @@ const CheckBooking: React.FC = () => {
                         type="tel"
                         value={editForm.wa}
                         onChange={(e) => setEditForm({ ...editForm, wa: e.target.value })}
+                        placeholder="Contoh: 081234567890"
                         className="w-full px-3 py-2.5 border border-gray-300 focus:border-[#182cc1] focus:ring-1 focus:ring-[#182cc1] rounded-lg text-sm outline-none"
                       />
                     </div>
