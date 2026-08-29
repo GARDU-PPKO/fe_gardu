@@ -67,7 +67,19 @@ const BookingFormPage: React.FC = () => {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    const newFormData = { ...formData, [name]: value };
+    let cleanVal = value;
+
+    if (name === 'whatsapp') {
+      cleanVal = value.replace(/\D/g, '').slice(0, 15);
+    } else if (name === 'fullName') {
+      cleanVal = value.slice(0, 100);
+    } else if (name === 'email') {
+      cleanVal = value.slice(0, 50);
+    } else if (name === 'city') {
+      cleanVal = value.slice(0, 50);
+    }
+
+    const newFormData = { ...formData, [name]: cleanVal };
     setFormData(newFormData);
     updateUserDetails(newFormData);
     if (touched[name]) {
@@ -141,10 +153,10 @@ const BookingFormPage: React.FC = () => {
   };
 
   const fields = [
-    { key: "fullName", label: "Nama Lengkap", placeholder: "Sesuai identitas", type: "text", val: formData.fullName, req: true, span: true },
-    { key: "whatsapp", label: "No. WhatsApp", placeholder: "Contoh: 081234567890", type: "tel", val: formData.whatsapp, req: true, span: false },
-    { key: "email", label: "Kontak Darurat", placeholder: "No WA / Nama Keluarga", type: "text", val: formData.email, req: true, span: false },
-    { key: "city", label: "Kota Asal", placeholder: "Semarang, Kendal, dll.", type: "text", val: formData.city, req: false, span: false },
+    { key: "fullName", label: "Nama Lengkap", placeholder: "Sesuai identitas", type: "text", val: formData.fullName, req: true, span: true, maxLength: 100 },
+    { key: "whatsapp", label: "No. WhatsApp", placeholder: "Contoh: 081234567890", type: "tel", val: formData.whatsapp, req: true, span: false, maxLength: 15, inputMode: "numeric" as const },
+    { key: "email", label: "Kontak Darurat", placeholder: "No WA / Nama Keluarga", type: "text", val: formData.email, req: true, span: false, maxLength: 50 },
+    { key: "city", label: "Kota Asal", placeholder: "Semarang, Kendal, dll.", type: "text", val: formData.city, req: false, span: false, maxLength: 50 },
   ];
 
   return (
@@ -165,6 +177,8 @@ const BookingFormPage: React.FC = () => {
                   placeholder={f.placeholder}
                   value={f.val}
                   name={f.key}
+                  maxLength={f.maxLength}
+                  inputMode={f.inputMode}
                   onChange={handleChange}
                   onBlur={() => handleBlur(f.key)}
                   className={`w-full px-4 py-3 rounded-xl border text-[#091540] placeholder-[#3d518c]/50 text-sm focus:outline-none focus:ring-2 transition ${
