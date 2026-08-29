@@ -97,7 +97,16 @@ const CheckBooking: React.FC = () => {
   };
 
   const handleEditChange = (field: keyof typeof editForm, val: string) => {
-    const updated = { ...editForm, [field]: val };
+    let cleanVal = val;
+    if (field === 'wa') {
+      cleanVal = val.replace(/\D/g, '').slice(0, 15);
+    } else if (field === 'nama') {
+      cleanVal = val.slice(0, 100);
+    } else if (field === 'darurat') {
+      cleanVal = val.slice(0, 50);
+    }
+
+    const updated = { ...editForm, [field]: cleanVal };
     setEditForm(updated);
     if (editTouched[field]) {
       const errs = validateEditForm(updated);
@@ -354,6 +363,7 @@ const CheckBooking: React.FC = () => {
                       <input
                         type="text"
                         value={editForm.nama}
+                        maxLength={100}
                         onChange={(e) => handleEditChange('nama', e.target.value)}
                         onBlur={() => handleEditBlur('nama')}
                         placeholder="Nama sesuai identitas"
@@ -380,6 +390,8 @@ const CheckBooking: React.FC = () => {
                       <input
                         type="tel"
                         value={editForm.wa}
+                        maxLength={15}
+                        inputMode="numeric"
                         onChange={(e) => handleEditChange('wa', e.target.value)}
                         onBlur={() => handleEditBlur('wa')}
                         placeholder="Contoh: 081234567890"
@@ -407,6 +419,7 @@ const CheckBooking: React.FC = () => {
                       <input
                         type="text"
                         value={editForm.darurat}
+                        maxLength={50}
                         onChange={(e) => handleEditChange('darurat', e.target.value)}
                         onBlur={() => handleEditBlur('darurat')}
                         placeholder="Contoh: 081234567890 atau Ibu Siti"

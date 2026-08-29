@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Star, ChevronLeft, ChevronRight, MapPin, Navigation, X, CheckCircle2 } from "lucide-react";
+import { Star, ChevronLeft, ChevronRight, X, CheckCircle2 } from "lucide-react";
 import { getDusunDetail } from "../../services/dusun.service";
 import { resolveImageUrl } from "../../utils/image";
 import type { Dusun } from "../../types";
@@ -78,9 +78,6 @@ export default function DusunPage({ dusun, onClose }: { dusun: Dusun; onClose: (
 
           {/* Title on Image */}
           <div className="absolute bottom-6 left-6 right-6">
-            <div className="text-white/80 text-[10px] font-bold tracking-widest uppercase mb-1 flex items-center gap-1.5" style={{ fontFamily: "Inter, sans-serif" }}>
-              <Navigation size={12} className="text-[#7692ff]" /> Dusun Getas
-            </div>
             <h1 className="font-black text-white text-4xl lg:text-5xl leading-none drop-shadow-md" style={{ fontFamily: "Poppins, sans-serif" }}>
               {detail.nama}
             </h1>
@@ -99,49 +96,24 @@ export default function DusunPage({ dusun, onClose }: { dusun: Dusun; onClose: (
             </p>
           </div>
 
-          <div className="grid grid-cols-2 gap-4 mb-6">
-            {/* Info Box */}
-            <div className="col-span-2 sm:col-span-1 bg-white p-4 rounded-2xl border border-[#e8edff] shadow-sm">
+          {/* Keunggulan / Daya Tarik */}
+          {keunggulanList.length > 0 && (
+            <div className="bg-white p-4 sm:p-5 rounded-2xl border border-[#e8edff] shadow-sm mb-6">
               <h3 className="text-xs font-bold text-[#182cc1] uppercase tracking-widest mb-3 flex items-center gap-1.5">
-                <MapPin size={14} /> Demografi
+                <Star size={14} /> Daya Tarik & Keunggulan
               </h3>
-              <div className="grid grid-cols-2 gap-2 text-sm">
-                <div>
-                  <div className="text-[10px] text-[#3d518c]">Jumlah RT</div>
-                  <div className="font-bold text-[#091540]">{detail.jumlah_rt} RT</div>
-                </div>
-                <div>
-                  <div className="text-[10px] text-[#3d518c]">Penduduk</div>
-                  <div className="font-bold text-[#091540]">{(detail.jumlah_penduduk ? detail.jumlah_penduduk.toLocaleString("id-ID") : "400")}</div>
-                </div>
-                <div>
-                  <div className="text-[10px] text-[#3d518c]">Wilayah RW</div>
-                  <div className="font-bold text-[#091540]">{detail.rw}</div>
-                </div>
-                <div>
-                  <div className="text-[10px] text-[#3d518c]">Luas</div>
-                  <div className="font-bold text-[#091540]">{detail.luas_wilayah || "1,2 km²"}</div>
-                </div>
-              </div>
-            </div>
-
-            {/* Keunggulan */}
-            <div className="col-span-2 sm:col-span-1 bg-white p-4 rounded-2xl border border-[#e8edff] shadow-sm">
-              <h3 className="text-xs font-bold text-[#182cc1] uppercase tracking-widest mb-3 flex items-center gap-1.5">
-                <Star size={14} /> Daya Tarik
-              </h3>
-              <div className="space-y-2">
-                {keunggulanList.slice(0,3).map((k, idx) => (
+              <div className="grid sm:grid-cols-2 gap-2.5">
+                {keunggulanList.map((k, idx) => (
                   <div key={idx} className="flex items-start gap-2">
                     <div className="w-4 h-4 mt-0.5 rounded-full bg-[#e8edff] flex items-center justify-center flex-shrink-0 text-[#182cc1]">
                       <CheckCircle2 size={10} />
                     </div>
-                    <p className="text-[#091540] text-xs font-medium leading-tight">{k}</p>
+                    <p className="text-[#091540] text-xs font-medium leading-snug">{k}</p>
                   </div>
                 ))}
               </div>
             </div>
-          </div>
+          )}
 
           {/* Map (Compact) */}
           <div className="flex-1 bg-white rounded-2xl border border-[#e8edff] shadow-sm overflow-hidden min-h-[150px] relative">
