@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Users, Briefcase, Mountain, TreePine, Waves, Building2, Hash, Home, Award, Eye } from "lucide-react";
+import { Users, Store, Mountain, TreePine, Waves, HousePlus, Hash, Home, Award, Eye } from "lucide-react";
 import { getSettings, getVillageStats } from "../../services/village.service";
 import { useVisitorCount } from "../../hooks/useVisitorCount";
 import DusunSlider from "./DusunSlider";
@@ -11,15 +11,28 @@ const scrollTo = (href: string) => {
 };
 
 const ICON_MAP: Record<string, typeof Users> = {
-  users: Users, home: Home, briefcase: Briefcase, mountain: Mountain, treepine: TreePine, award: Award, building: Building2, hash: Hash
+  users: Users,
+  home: Home,
+  briefcase: Store,
+  store: Store,
+  mountain: Mountain,
+  treepine: TreePine,
+  award: Award,
+  building: HousePlus,
+  "house plus": HousePlus,
+  houseplus: HousePlus,
+  "house-plus": HousePlus,
+  hash: Hash,
+  waves: Waves,
+  eye: Eye,
 };
 
 const DEFAULT_STATS = [
   { label: "Wisatawan / Tahun", value: "8.500+", icon: Mountain },
-  { label: "UMKM Aktif", value: "62 unit", icon: Briefcase },
+  { label: "UMKM Aktif", value: "62 unit", icon: Store },
   { label: "Total Penduduk", value: "4.287", icon: Users },
   { label: "Luas Wilayah", value: "12,4 km²", icon: TreePine },
-  { label: "Jumlah Dusun", value: "10 Dusun", icon: Building2 },
+  { label: "Jumlah Dusun", value: "10 Dusun", icon: HousePlus },
   { label: "Kode Pos", value: "51382", icon: Hash },
 ];
 
@@ -39,8 +52,8 @@ export default function Hero({ onSelectDusun }: { onSelectDusun: (d: Dusun) => v
       }
     });
     getVillageStats().then(res => {
-      if (res.data && res.data.length >= 6) {
-        setStats(res.data.slice(0, 6));
+      if (res.data && res.data.length > 0) {
+        setStats(res.data);
       } else {
         setStats([]);
       }
@@ -58,7 +71,7 @@ export default function Hero({ onSelectDusun }: { onSelectDusun: (d: Dusun) => v
     ? "DESA WISATA GETAS"
     : villageName.toUpperCase();
 
-  const statItems = stats.length >= 6 ? stats.map(s => {
+  const statItems = stats.length > 0 ? stats.map(s => {
     const IconComponent = (s.icon && ICON_MAP[s.icon.toLowerCase()]) || Users;
     return {
       label: s.label,
@@ -112,9 +125,7 @@ export default function Hero({ onSelectDusun }: { onSelectDusun: (d: Dusun) => v
               }}>
               {displayTitle}
             </h1>
-            <p className="text-white/90 text-sm sm:text-base font-semibold mb-6 tracking-wide drop-shadow" style={{ fontFamily: "Poppins, sans-serif" }}>
-              🌊 Wisata Tubing Genting Desa Getas
-            </p>
+
             <div className="flex flex-wrap items-center gap-3">
               <button onClick={() => scrollTo("#paket")}
                 className="flex items-center gap-2 px-6 py-3 bg-white text-[#091540] text-sm font-bold rounded-full hover:bg-[#e8edff] transition shadow-xl"

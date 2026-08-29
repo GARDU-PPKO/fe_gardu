@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from "react";
-import { Users, Home, ChevronLeft, ChevronRight, Leaf, Eye, Loader2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, Eye, Loader2 } from "lucide-react";
 import { getDusun } from "../../services/dusun.service";
 import { getSettings } from "../../services/village.service";
 import { resolveImageUrl } from "../../utils/image";
@@ -169,18 +169,7 @@ export default function DusunSlider({ onSelect }: { onSelect: (d: Dusun) => void
                   {d.nama}
                 </span>
 
-                {/* stats */}
-                <div className="flex items-center gap-3 mb-2 text-white/90">
-                  <div className="flex items-center gap-1.5 text-[11px]" style={{ fontFamily: "Inter, sans-serif" }}>
-                    <Users size={12} className="text-[#a5b4fc]" /> {d.jumlah_penduduk ? d.jumlah_penduduk.toLocaleString('id-ID') : "-"}
-                  </div>
-                  <div className="flex items-center gap-1.5 text-[11px]" style={{ fontFamily: "Inter, sans-serif" }}>
-                    <Home size={12} className="text-[#a5b4fc]" /> {d.jumlah_rt ?? 0} RT
-                  </div>
-                  <div className="flex items-center gap-1.5 text-[11px] ml-auto">
-                    <Leaf size={12} className="text-[#a5b4fc]" /> {d.luas_wilayah || "-"}
-                  </div>
-                </div>
+                {/* stats — hidden */}
 
                 {/* deskripsi (hidden until hover) */}
                 <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-500 delay-100 h-[64px]">

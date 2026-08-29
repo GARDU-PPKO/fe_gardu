@@ -3,6 +3,8 @@ import { useSearchParams, useNavigate } from 'react-router-dom';
 import Navbar from '../../components/layout/Navbar';
 import Footer from '../../components/layout/Footer';
 import { checkBooking, cancelBooking, updateBooking } from '../../services/booking.service';
+import { ApiValidationError } from '../../services/api';
+import { validateFullName, validatePhone, validateEmergencyContact } from '../../utils/validators';
 import { Loader2, Calendar, Clock, Users, Ticket, AlertCircle, CheckCircle, Edit2, Home } from 'lucide-react';
 
 interface BookingResult {
@@ -61,13 +63,52 @@ const CheckBooking: React.FC = () => {
 
   const [isEditing, setIsEditing] = useState(false);
   const [editForm, setEditForm] = useState({ nama: '', wa: '', darurat: '' });
+  const [editErrors, setEditErrors] = useState<Record<string, string>>({});
+  const [editTouched, setEditTouched] = useState<Record<string, boolean>>({});
+  const [isSaving, setIsSaving] = useState(false);
 
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
-  const [toastMessage, setToastMessage] = useState('');
+  const [toast, setToast] = useState<{ message: string; isError?: boolean } | null>(null);
 
-  const showToast = (msg: string) => {
-    setToastMessage(msg);
-    setTimeout(() => setToastMessage(''), 3000);
+  const showToast = (message: string, isError = false) => {
+    setToast({ message, isError });
+    setTimeout(() => setToast(null), 3500);
+  };
+
+  const validateEditForm = (data: typeof editForm) => {
+    const newErrors: Record<string, string> = {};
+
+    const nameVal = validateFullName(data.nama, true);
+    if (!nameVal.isValid && nameVal.error) {
+      newErrors.nama = nameVal.error;
+    }
+
+    const phoneVal = validatePhone(data.wa, true);
+    if (!phoneVal.isValid && phoneVal.error) {
+      newErrors.wa = phoneVal.error;
+    }
+
+    const emergencyVal = validateEmergencyContact(data.darurat, false);
+    if (!emergencyVal.isValid && emergencyVal.error) {
+      newErrors.darurat = emergencyVal.error;
+    }
+
+    return newErrors;
+  };
+
+  const handleEditChange = (field: keyof typeof editForm, val: string) => {
+    const updated = { ...editForm, [field]: val };
+    setEditForm(updated);
+    if (editTouched[field]) {
+      const errs = validateEditForm(updated);
+      setEditErrors(prev => ({ ...prev, [field]: errs[field] || '' }));
+    }
+  };
+
+  const handleEditBlur = (field: keyof typeof editForm) => {
+    setEditTouched(prev => ({ ...prev, [field]: true }));
+    const errs = validateEditForm(editForm);
+    setEditErrors(prev => ({ ...prev, [field]: errs[field] || '' }));
   };
 
   useEffect(() => {
@@ -88,49 +129,73 @@ const CheckBooking: React.FC = () => {
       setResult({ ...result, status: (res.data?.status || 'cancelled') as BookingResult['status'] });
       setIsEditing(false);
       setShowCancelConfirm(false);
-      showToast('Pesanan berhasil dibatalkan');
+      showToast('Pesanan berhasil dibatalkan', false);
     } catch {
       setResult({ ...result, status: 'cancelled' });
       setIsEditing(false);
       setShowCancelConfirm(false);
-      showToast('Pesanan berhasil dibatalkan');
+      showToast('Pesanan berhasil dibatalkan', false);
     }
   };
 
   const handleSaveEdit = async () => {
-    if (!result) return;
+    if (!result || isSaving) return;
+
+    const allTouched = { nama: true, wa: true, darurat: true };
+    setEditTouched(allTouched);
+
+    const errs = validateEditForm(editForm);
+    setEditErrors(errs);
+
+    if (Object.keys(errs).length > 0) {
+      showToast('Mohon perbaiki data yang belum valid sebelum menyimpan', true);
+      return;
+    }
+
+    setIsSaving(true);
     try {
       const res = await updateBooking(result.kode_booking, {
-        customer_name: editForm.nama,
-        phone: editForm.wa,
-        kontak_darurat: editForm.darurat,
+        customer_name: editForm.nama.trim(),
+        phone: editForm.wa.trim(),
+        kontak_darurat: editForm.darurat.trim() || undefined,
       });
+
       if (res.data) {
         setResult({
           ...result,
-          nama_pemesan: res.data.nama_pemesan || editForm.nama,
-          no_wa_pemesan: res.data.no_wa_pemesan || editForm.wa,
-          kontak_darurat: res.data.kontak_darurat || editForm.darurat,
+          nama_pemesan: res.data.nama_pemesan || editForm.nama.trim(),
+          no_wa_pemesan: res.data.no_wa_pemesan || editForm.wa.trim(),
+          kontak_darurat: res.data.kontak_darurat || editForm.darurat.trim(),
         });
       } else {
         setResult({
           ...result,
-          nama_pemesan: editForm.nama,
-          no_wa_pemesan: editForm.wa,
-          kontak_darurat: editForm.darurat
+          nama_pemesan: editForm.nama.trim(),
+          no_wa_pemesan: editForm.wa.trim(),
+          kontak_darurat: editForm.darurat.trim(),
         });
       }
+
       setIsEditing(false);
-      showToast('Data diri berhasil diperbarui');
-    } catch {
-      setResult({
-        ...result,
-        nama_pemesan: editForm.nama,
-        no_wa_pemesan: editForm.wa,
-        kontak_darurat: editForm.darurat
-      });
-      setIsEditing(false);
-      showToast('Data diri berhasil diperbarui');
+      setEditErrors({});
+      setEditTouched({});
+      showToast('Data diri berhasil diperbarui', false);
+    } catch (err: unknown) {
+      if (err instanceof ApiValidationError) {
+        const msgs = Object.values(err.errors).flat();
+        const msg = msgs.length > 0 ? msgs.join(', ') : err.meta?.message || err.message || 'Validasi gagal';
+        showToast(msg, true);
+      } else if (err && typeof err === 'object' && 'response' in err) {
+        const axErr = err as { response?: { data?: { message?: string } } };
+        const msg = axErr.response?.data?.message || 'Gagal memperbarui data diri. Silakan coba lagi.';
+        showToast(msg, true);
+      } else if (err instanceof Error && err.message) {
+        showToast(err.message, true);
+      } else {
+        showToast('Terjadi kesalahan saat memperbarui data diri', true);
+      }
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -241,17 +306,21 @@ const CheckBooking: React.FC = () => {
                 <div className="flex flex-wrap gap-3 mb-6 sm:mb-8">
                   <button
                     onClick={() => {
-                      setEditForm({ nama: result.nama_pemesan, wa: result.no_wa_pemesan, darurat: result.kontak_darurat || '' });
+                      if (!isEditing) {
+                        setEditForm({ nama: result.nama_pemesan, wa: result.no_wa_pemesan, darurat: result.kontak_darurat || '' });
+                        setEditErrors({});
+                        setEditTouched({});
+                      }
                       setIsEditing(!isEditing);
                     }}
-                    className="flex items-center gap-2 px-4 py-2 text-sm font-bold text-[#182cc1] bg-[#e8edff] hover:bg-[#c5d0ff] rounded-xl transition"
+                    className="flex items-center gap-2 px-4 py-2 text-sm font-bold text-[#182cc1] bg-[#e8edff] hover:bg-[#c5d0ff] rounded-xl transition cursor-pointer"
                   >
                     <Edit2 size={14} />
                     {isEditing ? 'Batal Edit' : 'Edit Data Diri'}
                   </button>
                   <button
                     onClick={() => setShowCancelConfirm(true)}
-                    className="px-4 py-2 text-sm font-bold text-red-600 bg-red-50 hover:bg-red-100 rounded-xl transition"
+                    className="px-4 py-2 text-sm font-bold text-red-600 bg-red-50 hover:bg-red-100 rounded-xl transition cursor-pointer"
                   >
                     Batalkan Pesanan
                   </button>
@@ -268,41 +337,124 @@ const CheckBooking: React.FC = () => {
 
               {/* Edit Form */}
               {isEditing && (
-                <div className="bg-[#f8faff] border border-[#c5d0ff] rounded-xl p-4 sm:p-5 mb-6 space-y-4">
-                  <h4 className="font-bold text-[#091540] flex items-center gap-2"><Edit2 size={15} /> Ubah Data Diri</h4>
+                <div className="bg-[#f8faff] border border-[#c5d0ff] rounded-2xl p-4 sm:p-6 mb-6 space-y-4 shadow-sm animate-in fade-in duration-300">
+                  <div className="flex items-center justify-between pb-3 border-b border-[#c5d0ff]/50">
+                    <h4 className="font-bold text-[#091540] flex items-center gap-2 text-sm sm:text-base">
+                      <Edit2 size={16} className="text-[#182cc1]" /> Ubah Data Diri
+                    </h4>
+                    <span className="text-[11px] text-[#3d518c]/70 font-medium">* Wajib diisi</span>
+                  </div>
+
                   <div className="grid sm:grid-cols-2 gap-4">
+                    {/* Nama Lengkap */}
                     <div>
-                      <label className="block text-xs font-semibold text-[#091540] mb-1">Nama Lengkap</label>
+                      <label className="block text-xs font-semibold text-[#091540] mb-1.5">
+                        Nama Lengkap <span className="text-red-500">*</span>
+                      </label>
                       <input
                         type="text"
                         value={editForm.nama}
-                        onChange={(e) => setEditForm({ ...editForm, nama: e.target.value })}
-                        className="w-full px-3 py-2.5 border border-gray-300 focus:border-[#182cc1] focus:ring-1 focus:ring-[#182cc1] rounded-lg text-sm outline-none"
+                        onChange={(e) => handleEditChange('nama', e.target.value)}
+                        onBlur={() => handleEditBlur('nama')}
+                        placeholder="Nama sesuai identitas"
+                        disabled={isSaving}
+                        className={`w-full px-3.5 py-2.5 border rounded-xl text-sm outline-none transition ${
+                          editErrors.nama && editTouched.nama
+                            ? 'border-red-400 focus:border-red-500 focus:ring-2 focus:ring-red-100 bg-red-50/30 text-red-900'
+                            : 'border-gray-300 focus:border-[#182cc1] focus:ring-2 focus:ring-[#e8edff] bg-white text-[#091540]'
+                        } disabled:opacity-50 disabled:bg-gray-100`}
                       />
+                      {editErrors.nama && editTouched.nama && (
+                        <p className="text-xs text-red-600 mt-1 font-medium flex items-center gap-1">
+                          <AlertCircle size={13} className="shrink-0" />
+                          <span>{editErrors.nama}</span>
+                        </p>
+                      )}
                     </div>
+
+                    {/* No. WhatsApp */}
                     <div>
-                      <label className="block text-xs font-semibold text-[#091540] mb-1">No. WhatsApp</label>
+                      <label className="block text-xs font-semibold text-[#091540] mb-1.5">
+                        No. WhatsApp <span className="text-red-500">*</span>
+                      </label>
                       <input
                         type="tel"
                         value={editForm.wa}
-                        onChange={(e) => setEditForm({ ...editForm, wa: e.target.value })}
-                        className="w-full px-3 py-2.5 border border-gray-300 focus:border-[#182cc1] focus:ring-1 focus:ring-[#182cc1] rounded-lg text-sm outline-none"
+                        onChange={(e) => handleEditChange('wa', e.target.value)}
+                        onBlur={() => handleEditBlur('wa')}
+                        placeholder="Contoh: 081234567890"
+                        disabled={isSaving}
+                        className={`w-full px-3.5 py-2.5 border rounded-xl text-sm outline-none transition ${
+                          editErrors.wa && editTouched.wa
+                            ? 'border-red-400 focus:border-red-500 focus:ring-2 focus:ring-red-100 bg-red-50/30 text-red-900'
+                            : 'border-gray-300 focus:border-[#182cc1] focus:ring-2 focus:ring-[#e8edff] bg-white text-[#091540]'
+                        } disabled:opacity-50 disabled:bg-gray-100`}
                       />
+                      {editErrors.wa && editTouched.wa && (
+                        <p className="text-xs text-red-600 mt-1 font-medium flex items-center gap-1">
+                          <AlertCircle size={13} className="shrink-0" />
+                          <span>{editErrors.wa}</span>
+                        </p>
+                      )}
                     </div>
+
+                    {/* Kontak Darurat */}
                     <div className="sm:col-span-2">
-                      <label className="block text-xs font-semibold text-[#091540] mb-1">Kontak Darurat</label>
+                      <div className="flex items-center justify-between mb-1.5">
+                        <label className="block text-xs font-semibold text-[#091540]">Kontak Darurat</label>
+                        <span className="text-[11px] text-gray-400">(Opsional / No WA Keluarga)</span>
+                      </div>
                       <input
                         type="text"
                         value={editForm.darurat}
-                        onChange={(e) => setEditForm({ ...editForm, darurat: e.target.value })}
-                        className="w-full px-3 py-2.5 border border-gray-300 focus:border-[#182cc1] focus:ring-1 focus:ring-[#182cc1] rounded-lg text-sm outline-none"
-                        placeholder="No WA / Nama Keluarga"
+                        onChange={(e) => handleEditChange('darurat', e.target.value)}
+                        onBlur={() => handleEditBlur('darurat')}
+                        placeholder="Contoh: 081234567890 atau Ibu Siti"
+                        disabled={isSaving}
+                        className={`w-full px-3.5 py-2.5 border rounded-xl text-sm outline-none transition ${
+                          editErrors.darurat && editTouched.darurat
+                            ? 'border-red-400 focus:border-red-500 focus:ring-2 focus:ring-red-100 bg-red-50/30 text-red-900'
+                            : 'border-gray-300 focus:border-[#182cc1] focus:ring-2 focus:ring-[#e8edff] bg-white text-[#091540]'
+                        } disabled:opacity-50 disabled:bg-gray-100`}
                       />
+                      {editErrors.darurat && editTouched.darurat && (
+                        <p className="text-xs text-red-600 mt-1 font-medium flex items-center gap-1">
+                          <AlertCircle size={13} className="shrink-0" />
+                          <span>{editErrors.darurat}</span>
+                        </p>
+                      )}
                     </div>
                   </div>
-                  <button onClick={handleSaveEdit} className="px-5 py-2.5 bg-[#182cc1] text-white font-bold rounded-lg text-sm hover:bg-[#1524a3] transition shadow-md shadow-[#182cc1]/20">
-                    Simpan Perubahan
-                  </button>
+
+                  <div className="flex items-center gap-3 pt-2">
+                    <button
+                      type="button"
+                      onClick={handleSaveEdit}
+                      disabled={isSaving}
+                      className="flex items-center justify-center gap-2 px-5 py-2.5 bg-[#182cc1] hover:bg-[#1524a3] text-white font-bold rounded-xl text-sm transition shadow-md shadow-[#182cc1]/20 disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer"
+                    >
+                      {isSaving ? (
+                        <>
+                          <Loader2 size={15} className="animate-spin" />
+                          <span>Menyimpan...</span>
+                        </>
+                      ) : (
+                        <span>Simpan Perubahan</span>
+                      )}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsEditing(false);
+                        setEditErrors({});
+                        setEditTouched({});
+                      }}
+                      disabled={isSaving}
+                      className="px-4 py-2.5 border border-gray-300 hover:bg-gray-100 text-gray-700 font-semibold rounded-xl text-sm transition disabled:opacity-50 cursor-pointer"
+                    >
+                      Batal
+                    </button>
+                  </div>
                 </div>
               )}
 
@@ -472,11 +624,21 @@ const CheckBooking: React.FC = () => {
       )}
 
       {/* Toast */}
-      {toastMessage && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 animate-in fade-in slide-in-from-bottom-8 duration-300">
-          <div className="bg-[#182cc1] text-white px-6 py-3 rounded-full shadow-xl shadow-[#182cc1]/30 font-semibold text-sm flex items-center gap-2">
-            <CheckCircle className="w-4 h-4" />
-            {toastMessage}
+      {toast && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 animate-in fade-in slide-in-from-bottom-8 duration-300 max-w-[90vw]">
+          <div
+            className={`px-5 py-3 rounded-full shadow-xl font-semibold text-sm flex items-center gap-2.5 ${
+              toast.isError
+                ? 'bg-red-600 text-white shadow-red-500/30'
+                : 'bg-[#182cc1] text-white shadow-[#182cc1]/30'
+            }`}
+          >
+            {toast.isError ? (
+              <AlertCircle className="w-4 h-4 shrink-0 text-white" />
+            ) : (
+              <CheckCircle className="w-4 h-4 shrink-0 text-white" />
+            )}
+            <span className="truncate">{toast.message}</span>
           </div>
         </div>
       )}

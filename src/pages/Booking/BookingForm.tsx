@@ -6,15 +6,7 @@ import { useBooking } from '../../hooks/useBooking';
 import { createBooking } from '../../services/booking.service';
 import { ApiValidationError } from '../../services/api';
 import { CheckCircle, AlertCircle, X } from "lucide-react";
-
-const validatePhone = (val: string) => {
-  const cleaned = val.replace(/\s|-/g, '');
-  return /^(\+62|62|0)8[0-9]{7,13}$/.test(cleaned);
-};
-
-const validateEmail = (val: string) => {
-  return val.trim().length >= 3;
-};
+import { validateFullName, validatePhone, validateEmergencyContact } from '../../utils/validators';
 
 const BookingFormPage: React.FC = () => {
   const navigate = useNavigate();
@@ -55,19 +47,21 @@ const BookingFormPage: React.FC = () => {
 
   const validate = (data: typeof formData) => {
     const newErrors: Record<string, string> = {};
-    if (!data.fullName.trim()) {
-      newErrors.fullName = 'Nama lengkap tidak boleh kosong';
+    const nameVal = validateFullName(data.fullName, true);
+    if (!nameVal.isValid && nameVal.error) {
+      newErrors.fullName = nameVal.error;
     }
-    if (!data.whatsapp.trim()) {
-      newErrors.whatsapp = 'Nomor WhatsApp tidak boleh kosong';
-    } else if (!validatePhone(data.whatsapp)) {
-      newErrors.whatsapp = 'Format nomor tidak valid (contoh: 081234567890 atau +6281234567890)';
+
+    const phoneVal = validatePhone(data.whatsapp, true);
+    if (!phoneVal.isValid && phoneVal.error) {
+      newErrors.whatsapp = phoneVal.error;
     }
-    if (!data.email.trim()) {
-      newErrors.email = 'Kontak darurat tidak boleh kosong';
-    } else if (!validateEmail(data.email)) {
-      newErrors.email = 'Kontak darurat minimal 3 karakter (no WA atau nama keluarga)';
+
+    const emergencyVal = validateEmergencyContact(data.email, true);
+    if (!emergencyVal.isValid && emergencyVal.error) {
+      newErrors.email = emergencyVal.error;
     }
+
     return newErrors;
   };
 
