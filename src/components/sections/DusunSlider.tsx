@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from "react";
-import { Users, Home, ChevronLeft, ChevronRight, Leaf, Eye, Loader2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, Eye, Loader2 } from "lucide-react";
 import { getDusun } from "../../services/dusun.service";
 import { getSettings } from "../../services/village.service";
 import { resolveImageUrl } from "../../utils/image";
