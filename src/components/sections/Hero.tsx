@@ -63,7 +63,7 @@ export default function Hero({ onSelectDusun }: { onSelectDusun: (d: Dusun) => v
   }, []);
 
   const heroImage = settings.hero_image
-    ? (settings.hero_image.startsWith('http') ? settings.hero_image : `${(import.meta.env.VITE_API_URL || 'https://rentrack.site/api').replace(/\/api\/?$/, '')}${settings.hero_image}`)
+    ? (settings.hero_image.startsWith('http') ? settings.hero_image : `${(import.meta.env.VITE_API_URL || 'https://admin.pesonagetas.com/api').replace(/\/api\/?$/, '')}${settings.hero_image}`)
     : defaultHeroImg;
 
   const villageName = settings.nama_desa ?? "DESA WISATA GETAS";
