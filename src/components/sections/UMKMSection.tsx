@@ -77,10 +77,12 @@ export default function UMKMSection() {
             <div className="col-span-full text-center py-16">
               <p className="text-[#3d518c] text-sm" style={{ fontFamily: "Inter, sans-serif" }}>Belum ada produk UMKM tersedia.</p>
             </div>
-          ) : filtered.map(p => (
+          ) : filtered.map(p => {
+            const cleanWa = (p.no_wa_penjual || '').replace(/\D/g, '').replace(/^0/, '62');
+            return (
             <a 
               key={p.id} 
-              href={`https://wa.me/${p.no_wa_penjual}?text=Halo, saya tertarik dengan produk ${encodeURIComponent(p.nama)}`}
+              href={`https://wa.me/${cleanWa}?text=Halo, saya tertarik dengan produk ${encodeURIComponent(p.nama)}`}
               target="_blank" rel="noopener noreferrer"
               className="bg-white rounded-2xl overflow-hidden border border-[#c5d0ff] shadow-sm hover:shadow-lg hover:border-[#25D366] transition-all group cursor-pointer flex flex-col relative"
             >
@@ -105,7 +107,8 @@ export default function UMKMSection() {
                 </div>
               </div>
             </a>
-          ))}
+          );
+        })}
         </div>
       </div>
     </section>
