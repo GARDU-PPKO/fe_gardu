@@ -48,6 +48,9 @@ export default function PackagesPage() {
       name: p.nama,
       description: p.deskripsi,
       price: Number(p.harga),
+      tipe_harga: p.tipe_harga,
+      kapasitas_per_unit: p.kapasitas_per_unit,
+      tiers: p.tiers,
       unit: p.satuan === 'orang' ? 'orang' : 'grup',
       tag: p.tag ?? undefined,
       minParticipants: p.min_participants ?? undefined,
@@ -94,29 +97,28 @@ export default function PackagesPage() {
             ))}
           </div>
 
-
           <div className="mb-10 max-w-2xl">
             <span className="text-[#182cc1] text-sm font-bold tracking-widest uppercase mb-2 block flex items-center gap-2">
               <span className="w-8 h-0.5 bg-[#182cc1] rounded-full"></span>
-              Daftar Paket Getas
+              Pilihan Paket Wisata
             </span>
-            <h1 className="text-4xl sm:text-5xl font-black text-[#091540] leading-tight drop-shadow-sm" style={{ fontFamily: "Poppins, sans-serif" }}>
-              Eksplorasi Petualangan
+            <h1 className="text-3xl sm:text-4xl font-extrabold text-[#091540] tracking-tight mb-4" style={{ fontFamily: "Poppins, sans-serif" }}>
+              Jelajahi Pesona Alam Desa Getas
             </h1>
-            <p className="text-[#3d518c] mt-4 text-sm sm:text-base leading-relaxed max-w-xl">
-              Temukan paket wisata alam eksklusif, edukasi, hingga rekreasi keluarga yang telah kami susun khusus untuk pengalaman tak terlupakan di Desa Getas.
+            <p className="text-[#3d518c] text-sm sm:text-base leading-relaxed" style={{ fontFamily: "Inter, sans-serif" }}>
+              Pilih paket petualangan air, edukasi, atau liburan keluarga yang paling cocok untuk rombongan Anda.
             </p>
           </div>
 
           {/* Grid Layout - Flows naturally, handles unlimited data */}
           {isLoading ? (
-            <div className="flex flex-col items-center justify-center py-24 gap-4">
-              <Loader2 className="w-9 h-9 animate-spin text-[#182cc1]" />
-              <p className="text-[#3d518c] text-sm font-medium" style={{ fontFamily: "Inter, sans-serif" }}>Memuat paket wisata...</p>
+            <div className="flex flex-col items-center justify-center py-24 gap-3 text-[#3d518c]" style={{ fontFamily: "Inter, sans-serif" }}>
+              <Loader2 className="w-8 h-8 animate-spin text-[#182cc1]" />
+              <span className="text-sm font-medium">Memuat paket wisata...</span>
             </div>
           ) : hasError ? (
             <div className="flex flex-col items-center justify-center py-24 gap-4 text-center">
-              <p className="text-[#3d518c] text-sm" style={{ fontFamily: "Inter, sans-serif" }}>Gagal memuat paket wisata.</p>
+              <p className="text-[#3d518c] text-sm" style={{ fontFamily: "Inter, sans-serif" }}>Gagal memuat paket wisata. Silakan periksa koneksi Anda.</p>
               <button onClick={() => window.location.reload()}
                 className="px-6 py-3 bg-[#182cc1] hover:bg-[#1524a3] text-white text-sm font-bold rounded-full transition"
                 style={{ fontFamily: "Poppins, sans-serif" }}>
@@ -129,7 +131,12 @@ export default function PackagesPage() {
             </div>
           ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 sm:gap-8">
-            {filteredPackages.map(p => (
+            {filteredPackages.map(p => {
+              const minTierPrice = p.tiers && p.tiers.length > 0
+                ? Math.min(...p.tiers.map(t => Number(t.harga_per_orang)))
+                : Number(p.harga);
+
+              return (
               <div 
                 key={p.id} 
                 onClick={() => handleSelectPackage(p)}
@@ -174,10 +181,17 @@ export default function PackagesPage() {
                   <div className="flex items-end justify-between pt-5 mt-4 border-t border-dashed border-[#c5d0ff]">
                     <div>
                       <div className="text-[10px] text-[#3d518c] uppercase tracking-widest mb-1 font-bold flex items-center gap-1">
-                        Harga Tiket
+                        {p.tiers && p.tiers.length > 0 ? "Tier Rombongan" : "Harga Tiket"}
                       </div>
                       <div className="text-[#091540] font-black text-2xl leading-none" style={{ fontFamily: "Poppins, sans-serif" }}>
-                        Rp {Number(p.harga).toLocaleString('id-ID')}
+                        {p.tiers && p.tiers.length > 0 ? (
+                          <>
+                            <span className="text-xs font-normal text-[#3d518c] mr-1">Mulai</span>
+                            Rp {minTierPrice.toLocaleString('id-ID')}
+                          </>
+                        ) : (
+                          `Rp ${Number(p.harga).toLocaleString('id-ID')}`
+                        )}
                         <span className="text-[11px] text-[#3d518c] font-semibold ml-1">/{p.satuan}</span>
                       </div>
                     </div>
@@ -187,7 +201,8 @@ export default function PackagesPage() {
                   </div>
                 </div>
               </div>
-            ))}
+            );
+            })}
           </div>
           )}
         </main>

@@ -2,6 +2,7 @@ import React from 'react';
 import { ArrowRight } from 'lucide-react';
 import { useBooking } from '../../hooks/useBooking';
 import { resolveImageUrl } from '../../utils/image';
+import { calculatePackagePrice } from '../../utils/pricing';
 import type { AddOnItem } from '../../types/booking';
 
 interface BookingSummaryProps {
@@ -25,7 +26,8 @@ const BookingSummary: React.FC<BookingSummaryProps> = ({
   const { selectedPackage, date, session, participants, userDetails, selectedAddOns } = bookingData;
   const name = userDetails?.fullName;
 
-  const packageTotal = selectedPackage ? selectedPackage.price * participants : 0;
+  const pricing = calculatePackagePrice(selectedPackage, participants);
+  const packageTotal = pricing.packageTotal;
   const isPerOrang = (addon: AddOnItem) => addon.satuan === 'per orang';
   const addOnsTotal = (selectedAddOns || []).reduce((acc, curr) => {
     const qty = isPerOrang(curr) ? participants : (curr.quantity || 1);

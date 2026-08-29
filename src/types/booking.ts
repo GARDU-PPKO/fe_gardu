@@ -8,11 +8,20 @@ export interface AddOnItem {
   quantity: number;
 }
 
+export interface PackageTier {
+  id?: number;
+  min_peserta: number;
+  harga_per_orang: number;
+}
+
 export interface Package {
   id: string;
   name: string;
   description: string;
   price: number;
+  tipe_harga?: 'per_orang_tier' | 'per_paket_fixed';
+  kapasitas_per_unit?: number | null;
+  tiers?: PackageTier[];
   unit: string;
   tag?: string;
   minParticipants?: number;

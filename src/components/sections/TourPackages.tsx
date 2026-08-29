@@ -134,7 +134,16 @@ export default function TourPackages() {
                     </div>
                     <div className="flex items-end justify-between mt-auto">
                       <div>
-                        <div className="text-[#182cc1] font-bold text-sm">{`Rp ${Number(p.harga).toLocaleString('id-ID')}`}</div>
+                        <div className="text-[#182cc1] font-bold text-sm">
+                          {p.tiers && p.tiers.length > 0 ? (
+                            <>
+                              <span className="text-[11px] font-normal text-[#3d518c] mr-1">Mulai</span>
+                              Rp {Math.min(...p.tiers.map(t => Number(t.harga_per_orang))).toLocaleString('id-ID')}
+                            </>
+                          ) : (
+                            `Rp ${Number(p.harga).toLocaleString('id-ID')}`
+                          )}
+                        </div>
                         <div className="text-[#3d518c] text-[10px] mt-0.5" style={{ fontFamily: "Inter, sans-serif" }}>
                           {p.satuan === 'orang' ? "/orang" : "/grup"} · {p.durasi}
                         </div>

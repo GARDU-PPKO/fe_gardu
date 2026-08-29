@@ -7,6 +7,7 @@ import { useBooking } from '../../hooks/useBooking';
 import { getBookingSessions, getAddOns } from '../../services/booking.service';
 import { getTourPackageDetail } from '../../services/tour-package.service';
 import { resolveImageUrl } from '../../utils/image';
+import { calculatePackagePrice } from '../../utils/pricing';
 import type { AddOnOption } from '../../services/booking.service';
 import type { BookingSession } from '../../types';
 
@@ -29,7 +30,7 @@ const BookingPackage: React.FC = () => {
   const [localAddOns, setLocalAddOns] = useState<typeof bookingData.selectedAddOns>(bookingData.selectedAddOns || []);
   const [addOnOptions, setAddOnOptions] = useState<AddOnOption[]>([]);
   const [isAddonModalOpen, setIsAddonModalOpen] = useState(false);
-  const [packageDetail, setPackageDetail] = useState<{ min_participants: number; max_participants: number } | null>(null);
+  const [packageDetail, setPackageDetail] = useState<{ min_participants: number; max_participants: number | null } | null>(null);
 
   useEffect(() => {
     setLocalDate(bookingData.date || '');
@@ -48,9 +49,11 @@ const BookingPackage: React.FC = () => {
     getTourPackageDetail(Number(currentPackage.id))
       .then(res => {
         const detail = res.data;
+        const minP = detail?.min_participants ?? currentPackage.minParticipants ?? 1;
+        const maxP = detail?.max_participants ?? currentPackage.maxParticipants ?? null;
         setPackageDetail({
-          min_participants: detail?.min_participants ?? currentPackage.minParticipants ?? 1,
-          max_participants: detail?.max_participants ?? currentPackage.maxParticipants ?? 10,
+          min_participants: minP,
+          max_participants: maxP,
         });
         if (detail) {
           updatePackage({
@@ -58,10 +61,13 @@ const BookingPackage: React.FC = () => {
             name: detail.nama,
             description: detail.deskripsi,
             price: Number(detail.harga),
+            tipe_harga: detail.tipe_harga,
+            kapasitas_per_unit: detail.kapasitas_per_unit,
+            tiers: detail.tiers,
             unit: detail.satuan === 'orang' ? 'orang' : 'grup',
             tag: detail.tag ?? undefined,
-            minParticipants: detail.min_participants ?? undefined,
-            maxParticipants: detail.max_participants ?? undefined,
+            minParticipants: minP,
+            maxParticipants: maxP ?? undefined,
             image: detail.gambar,
             duration: detail.durasi,
             includes: detail.includes?.map(i => i.item) ?? [],
@@ -84,10 +90,11 @@ const BookingPackage: React.FC = () => {
   }, [isAddonModalOpen]);
 
   const minParticipants = packageDetail?.min_participants ?? currentPackage?.minParticipants ?? 1;
-  const maxParticipants = packageDetail?.max_participants ?? currentPackage?.maxParticipants ?? 10;
-  const participants = packageDetail
-    ? Math.max(minParticipants, Math.min(localParticipants, maxParticipants))
-    : localParticipants;
+  const rawMax = packageDetail?.max_participants ?? currentPackage?.maxParticipants;
+  const maxParticipants = rawMax && rawMax > minParticipants ? rawMax : 50;
+  const participants = Math.max(minParticipants, Math.min(localParticipants, maxParticipants));
+
+  const pricing = calculatePackagePrice(currentPackage, participants);
 
   useEffect(() => {
     if (!currentPackage || !localDate) {
@@ -133,15 +140,27 @@ const BookingPackage: React.FC = () => {
             </button>
           </div>
           
-          <div className="bg-white rounded-2xl p-4 border border-[#c5d0ff] flex flex-col sm:flex-row gap-4 items-start sm:items-center mb-8 shadow-sm">
+          <div className="bg-white rounded-2xl p-4 sm:p-5 border border-[#c5d0ff] flex flex-col sm:flex-row gap-4 items-start sm:items-center mb-8 shadow-sm">
             <div className="w-full sm:w-24 h-40 sm:h-24 rounded-xl overflow-hidden flex-shrink-0 bg-[#e8edff]">
               <img src={resolveImageUrl(currentPackage.image)} alt={currentPackage.name} className="w-full h-full object-cover" />
             </div>
-            <div>
-              <h4 className="font-bold text-[#091540] text-lg mb-1" style={{ fontFamily: "Poppins, sans-serif" }}>{currentPackage.name}</h4>
-              <p className="text-[#3d518c] text-sm mb-2" style={{ fontFamily: "Inter, sans-serif" }}>{currentPackage.duration} · {currentPackage.unit === 'orang' ? 'Per Orang' : 'Per Grup'}</p>
-              <div className="text-[#182cc1] font-bold">
-                {`Rp ${Number(currentPackage.price).toLocaleString('id-ID')}`}
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 flex-wrap mb-1">
+                <h4 className="font-bold text-[#091540] text-lg" style={{ fontFamily: "Poppins, sans-serif" }}>
+                  {currentPackage.name}
+                </h4>
+                {currentPackage.tag && (
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#182cc1]/10 text-[#182cc1]">
+                    {currentPackage.tag}
+                  </span>
+                )}
+              </div>
+              <p className="text-[#3d518c] text-xs mb-2" style={{ fontFamily: "Inter, sans-serif" }}>
+                {currentPackage.duration} · {currentPackage.unit === 'orang' ? 'Per Orang' : 'Per Grup'}
+              </p>
+              <div className="flex items-baseline gap-1.5 text-[#182cc1] font-bold text-lg">
+                <span>Rp {pricing.unitPrice.toLocaleString('id-ID')}</span>
+                <span className="text-xs font-normal text-[#3d518c]">/{pricing.unitLabel === 'orang' ? 'orang' : 'paket'}</span>
               </div>
             </div>
           </div>
@@ -200,9 +219,16 @@ const BookingPackage: React.FC = () => {
             </div>
             {/* Persons */}
             <div className="sm:col-span-2">
-              <label className="block text-sm font-semibold text-[#091540] mb-2" style={{ fontFamily: "Inter, sans-serif" }}>
-                Jumlah Peserta <span className="text-[#3d518c] font-normal">(min. {minParticipants}, maks. {maxParticipants})</span>
-              </label>
+              <div className="flex items-center justify-between mb-2">
+                <label className="text-sm font-semibold text-[#091540]" style={{ fontFamily: "Inter, sans-serif" }}>
+                  Jumlah Peserta <span className="text-[#3d518c] font-normal">(min. {minParticipants}{rawMax && rawMax > minParticipants ? `, maks. ${rawMax}` : ''})</span>
+                </label>
+                {pricing.isTierPricing && (
+                  <span className="text-xs text-[#182cc1] font-medium hidden sm:inline">
+                    Diskon rombongan otomatis diterapkan
+                  </span>
+                )}
+              </div>
               <div className="flex items-center justify-between bg-[#f8faff] border border-[#c5d0ff] rounded-2xl p-2 shadow-inner">
                 <button
                   type="button"
@@ -231,6 +257,45 @@ const BookingPackage: React.FC = () => {
                   <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
                 </button>
               </div>
+
+              {/* Clean Tier Pricing Grid below the counter */}
+              {pricing.isTierPricing && pricing.tiers.length > 0 && (
+                <div className="mt-3 grid grid-cols-2 gap-2.5 sm:gap-3">
+                  {pricing.tiers.map((t, idx, arr) => {
+                    const isActive = pricing.activeTier?.min_peserta === t.min_peserta;
+                    const nextTier = arr[idx + 1];
+                    const rangeLabel = nextTier
+                      ? `${t.min_peserta} – ${nextTier.min_peserta - 1} orang`
+                      : `≥ ${t.min_peserta} orang`;
+
+                    return (
+                      <div
+                        key={t.min_peserta}
+                        className={`p-3 rounded-2xl border transition-all duration-200 flex flex-col justify-between ${
+                          isActive
+                            ? 'bg-[#eef2ff] border-[#182cc1] ring-2 ring-[#182cc1]/20 shadow-sm'
+                            : 'bg-white border-[#c5d0ff]/70 hover:border-[#c5d0ff]'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between gap-1 mb-1">
+                          <span className={`text-xs font-semibold ${isActive ? 'text-[#182cc1]' : 'text-[#3d518c]'}`}>
+                            {rangeLabel}
+                          </span>
+                          {isActive && (
+                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#182cc1] text-white">
+                              Aktif
+                            </span>
+                          )}
+                        </div>
+                        <div className={`text-sm sm:text-base font-bold ${isActive ? 'text-[#091540]' : 'text-[#3d518c]'}`} style={{ fontFamily: "Poppins, sans-serif" }}>
+                          Rp {t.harga_per_orang.toLocaleString('id-ID')}
+                          <span className="text-[11px] font-normal text-[#3d518c]"> /org</span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           </div>
 

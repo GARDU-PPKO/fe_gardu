@@ -35,12 +35,20 @@ export interface DusunKeunggulan {
 
 // ── Tour Packages ──
 
+export interface TourPackageTier {
+  id?: number;
+  min_peserta: number;
+  harga_per_orang: number;
+}
+
 export interface TourPackage {
   id: number;
   nama: string;
   deskripsi: string;
+  tipe_harga?: 'per_orang_tier' | 'per_paket_fixed';
   harga: number;
   satuan: 'orang' | 'grup' | 'tenda' | 'paket';
+  kapasitas_per_unit?: number | null;
   tag: string | null;
   durasi: string;
   min_participants: number | null;
@@ -51,6 +59,7 @@ export interface TourPackage {
   created_at?: string;
   updated_at?: string;
   includes?: TourPackageInclude[];
+  tiers?: TourPackageTier[];
 }
 
 export interface TourPackageInclude {
