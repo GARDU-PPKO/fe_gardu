@@ -216,7 +216,7 @@ export default function ARSection() {
               </div>
               <div>
                 <div className="text-white font-bold text-sm" style={{ fontFamily: "Poppins, sans-serif" }}>AR Wisata Getas</div>
-                <div className="text-white/50 text-[10px]" style={{ fontFamily: "Inter, sans-serif" }}>Powered by WebXR · feby-akliji23</div>
+                <div className="text-white/50 text-[10px]" style={{ fontFamily: "Inter, sans-serif" }}>Powered by Tim IT PPK Ormawa BEM FIK 2026</div>
               </div>
             </div>
             <div className="flex items-center gap-2">
