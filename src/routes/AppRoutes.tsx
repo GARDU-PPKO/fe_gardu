@@ -1,13 +1,23 @@
-import React, { Suspense, lazy } from 'react';
+import { useEffect, Suspense, lazy } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Loader2 } from 'lucide-react';
 import { BookingProvider } from '../hooks/useBooking';
 import { HomeDataProvider } from '../hooks/useHomeData';
 
+const ScrollToTop = () => {
+  const { pathname } = useLocation();
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
+  return null;
+};
+
 const HomePage = lazy(() => import('../pages/Home/HomePage'));
 const PackagesPage = lazy(() => import('../pages/Packages/PackagesPage'));
 const PackageDetailRedirect = lazy(() => import('../pages/Packages/PackageDetailRedirect'));
+const BudayaListPage = lazy(() => import('../pages/Budaya/BudayaListPage'));
+const BudayaDetailPage = lazy(() => import('../pages/Budaya/BudayaDetailPage'));
 const BookingPackage = lazy(() => import('../pages/Booking/BookingPackage'));
 const BookingFormPage = lazy(() => import('../pages/Booking/BookingForm'));
 const PaymentPage = lazy(() => import('../pages/Booking/PaymentPage'));
@@ -35,9 +45,14 @@ const AnimatedRoutes: React.FC = () => {
 
         <Route path="/packages/:id" element={<PageWrapper><PackageDetailRedirect /></PageWrapper>} />
 
+        <Route path="/budaya" element={<PageWrapper><BudayaListPage /></PageWrapper>} />
+
+        <Route path="/budaya/:id" element={<PageWrapper><BudayaDetailPage /></PageWrapper>} />
+
         <Route path="/payment/:kode" element={<PageWrapper><PaymentPage /></PageWrapper>} />
 
         <Route path="/cek-pesanan" element={<PageWrapper><CheckBooking /></PageWrapper>} />
+
 
         <Route path="/booking/*" element={
           <PageWrapper>
@@ -64,6 +79,7 @@ const PageLoader = () => (
 const AppRoutes: React.FC = () => {
   return (
     <BrowserRouter>
+      <ScrollToTop />
       <BookingProvider>
         <HomeDataProvider>
           <Suspense fallback={<PageLoader />}>

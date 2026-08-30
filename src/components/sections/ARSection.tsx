@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Camera, ExternalLink, Box, Scan, Smartphone, RotateCcw, X } from "lucide-react";
 
 const AR_URL = "https://getas-gardu.vercel.app/";
@@ -8,8 +8,35 @@ export default function ARSection() {
   const [modal, setModal] = useState(false);
   const [iframeError, setIframeError] = useState(false);
   const [loaded, setLoaded] = useState(false);
+  const iframeLoadCountRef = useRef(0);
+
+  // Lock body scroll saat modal AR terbuka
+  useEffect(() => {
+    if (modal) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [modal]);
+
+  // Ketika halaman kembali visible (misal user balik dari tab lain), tutup modal
+  useEffect(() => {
+    const handleVisibility = () => {
+      if (!document.hidden && modal) {
+        setModal(false);
+        setLoaded(false);
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+    return () => document.removeEventListener('visibilitychange', handleVisibility);
+  }, [modal]);
+
 
   const openAR = () => {
+    iframeLoadCountRef.current = 0;
     setModal(true);
     setLoaded(false);
     setIframeError(false);
@@ -17,12 +44,27 @@ export default function ARSection() {
 
   const closeAR = () => {
     setModal(false);
+    iframeLoadCountRef.current = 0;
     setLoaded(false);
   };
 
   const handleIframeError = () => {
     setIframeError(true);
   };
+
+  // Deteksi navigasi dalam iframe:
+  // Load ke-1 = normal (AR site muat pertama kali)
+  // Load ke-2+ = user klik "Kunjungi Website" atau navigasi lain di dalam AR site → tutup modal
+  const handleIframeLoad = () => {
+    iframeLoadCountRef.current += 1;
+    if (iframeLoadCountRef.current === 1) {
+      setLoaded(true);
+    } else {
+      // Iframe navigasi ke URL lain → tutup modal agar tidak ada sisa border
+      closeAR();
+    }
+  };
+
 
   return (
     <>
@@ -264,7 +306,7 @@ export default function ARSection() {
                 className="w-full h-full border-0"
                 allow="camera; microphone; accelerometer; gyroscope; xr-spatial-tracking; geolocation"
                 allowFullScreen
-                onLoad={() => setLoaded(true)}
+                onLoad={handleIframeLoad}
                 onError={handleIframeError}
               />
             )}

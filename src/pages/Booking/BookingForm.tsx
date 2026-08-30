@@ -71,10 +71,11 @@ const BookingFormPage: React.FC = () => {
 
     if (name === 'whatsapp') {
       cleanVal = value.replace(/\D/g, '').slice(0, 15);
+    } else if (name === 'email') {
+      // Kontak darurat: nomor HP saja
+      cleanVal = value.replace(/\D/g, '').slice(0, 15);
     } else if (name === 'fullName') {
       cleanVal = value.slice(0, 100);
-    } else if (name === 'email') {
-      cleanVal = value.slice(0, 50);
     } else if (name === 'city') {
       cleanVal = value.slice(0, 50);
     }
@@ -130,7 +131,9 @@ const BookingFormPage: React.FC = () => {
         notes: formData.notes.trim() || undefined,
         addons: (selectedAddOns || []).map(a => ({
           id: a.id,
+          quantity: a.quantity || 1,
         })),
+
       });
 
       if (res.data && res.data.kode_booking) {
@@ -155,7 +158,7 @@ const BookingFormPage: React.FC = () => {
   const fields = [
     { key: "fullName", label: "Nama Lengkap", placeholder: "Sesuai identitas", type: "text", val: formData.fullName, req: true, span: true, maxLength: 100 },
     { key: "whatsapp", label: "No. WhatsApp", placeholder: "Contoh: 081234567890", type: "tel", val: formData.whatsapp, req: true, span: false, maxLength: 15, inputMode: "numeric" as const },
-    { key: "email", label: "Kontak Darurat", placeholder: "No WA / Nama Keluarga", type: "text", val: formData.email, req: true, span: false, maxLength: 50 },
+    { key: "email", label: "Kontak Darurat", placeholder: "Contoh: 081234567890", type: "tel", val: formData.email, req: true, span: false, maxLength: 15, inputMode: "numeric" as const },
     { key: "city", label: "Kota Asal", placeholder: "Semarang, Kendal, dll.", type: "text", val: formData.city, req: false, span: false, maxLength: 50 },
   ];
 

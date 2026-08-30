@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { MapPin, Phone, Mail, Clock, Globe } from "lucide-react";
-import { FaInstagram, FaFacebook, FaYoutube, FaTiktok } from "react-icons/fa";
+import { MapPin, Phone, Mail, Clock } from "lucide-react";
+import { FaInstagram, FaFacebook, FaYoutube, FaTiktok, FaGlobe } from "react-icons/fa";
 import { getSettings } from "../../services/village.service";
 import type { Setting } from "../../types";
 
@@ -31,7 +31,7 @@ export default function KontakSection() {
     return trimmed.length > 0 && trimmed !== "#" && trimmed !== "-" && trimmed !== "–";
   };
 
-  // Social media dynamic from API — hanya muncul jika data ada / tidak kosong
+  // Social media dynamic from API
   const socialLinks = [
     isValidSosmed(settings.sosmed_ig) && {
       href: settings.sosmed_ig.startsWith("http") ? settings.sosmed_ig : `https://instagram.com/${settings.sosmed_ig.replace(/^@/, '')}`,
@@ -40,13 +40,13 @@ export default function KontakSection() {
       hoverColor: "hover:border-[#E1306C] hover:text-[#E1306C]",
     },
     isValidSosmed(settings.sosmed_fb) && {
-      href: settings.sosmed_fb.startsWith("http") ? settings.sosmed_fb : `https://${settings.sosmed_fb}`,
+      href: settings.sosmed_fb.startsWith("http") ? settings.sosmed_fb : `https://facebook.com/${settings.sosmed_fb}`,
       label: "Facebook",
       icon: <FaFacebook size={16} className="group-hover:scale-110 transition-transform" />,
       hoverColor: "hover:border-[#1877F2] hover:text-[#1877F2]",
     },
     isValidSosmed(settings.sosmed_yt) && {
-      href: settings.sosmed_yt.startsWith("http") ? settings.sosmed_yt : `https://${settings.sosmed_yt}`,
+      href: settings.sosmed_yt.startsWith("http") ? settings.sosmed_yt : `https://youtube.com/${settings.sosmed_yt}`,
       label: "YouTube",
       icon: <FaYoutube size={16} className="group-hover:scale-110 transition-transform" />,
       hoverColor: "hover:border-[#FF0000] hover:text-[#FF0000]",
@@ -55,15 +55,17 @@ export default function KontakSection() {
       href: settings.sosmed_tiktok.startsWith("http") ? settings.sosmed_tiktok : `https://tiktok.com/@${settings.sosmed_tiktok.replace(/^@/, '')}`,
       label: "TikTok",
       icon: <FaTiktok size={16} className="group-hover:scale-110 transition-transform" />,
-      hoverColor: "hover:border-[#010101] hover:text-[#010101]",
+      hoverColor: "hover:border-black hover:text-black",
     },
     isValidSosmed(settings.sosmed_web) && {
       href: settings.sosmed_web.startsWith("http") ? settings.sosmed_web : `https://${settings.sosmed_web}`,
       label: "Website",
-      icon: <Globe size={16} className="group-hover:scale-110 transition-transform" />,
+      icon: <FaGlobe size={16} className="group-hover:scale-110 transition-transform" />,
       hoverColor: "hover:border-[#182cc1] hover:text-[#182cc1]",
     },
   ].filter(Boolean) as { href: string; label: string; icon: React.ReactNode; hoverColor: string }[];
+
+
 
   // Fallback: jika belum ada data sama sekali dari API, tampilkan Instagram default Gardu Tourism
   const displaySocials = socialLinks.length > 0 ? socialLinks : [

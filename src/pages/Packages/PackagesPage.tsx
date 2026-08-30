@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowRight, ArrowLeft, CheckCircle2, Clock, Users, Leaf, Loader2 } from "lucide-react";
+import { ArrowRight, ArrowLeft, CheckCircle2, Clock, Users, Leaf, Loader2, X, CheckCircle } from "lucide-react";
 import { getTourPackages } from "../../services/tour-package.service";
 import { useBooking } from "../../hooks/useBooking";
 import { resolveImageUrl } from "../../utils/image";
@@ -14,11 +14,24 @@ export default function PackagesPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
   const [filter, setFilter] = useState("Semua");
-  const categories = ["Semua", "Adventure", "Education", "Family", "Camping"];
+  const [selectedPreview, setSelectedPreview] = useState<TourPackage | null>(null);
+
+  // Lock body scroll when modal is open
+  useEffect(() => {
+    if (selectedPreview) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [selectedPreview]);
 
   useEffect(() => {
     window.scrollTo(0, 0);
     let cancelled = false;
+
     getTourPackages()
       .then(res => {
         if (cancelled) return;
@@ -34,13 +47,13 @@ export default function PackagesPage() {
     return () => { cancelled = true; };
   }, []);
 
+  const categories = ["Semua", ...Array.from(new Set(packages.map(p => p.tag).filter(Boolean))) as string[]];
+
   const filteredPackages = packages.filter(p => {
     if (filter === "Semua") return true;
-    if (p.tag) {
-       return p.tag.toLowerCase() === filter.toLowerCase();
-    }
-    return true;
+    return p.tag?.toLowerCase() === filter.toLowerCase();
   });
+
 
   const handleSelectPackage = (p: TourPackage) => {
     updatePackage({
@@ -139,7 +152,7 @@ export default function PackagesPage() {
               return (
               <div 
                 key={p.id} 
-                onClick={() => handleSelectPackage(p)}
+                onClick={() => setSelectedPreview(p)}
                 className="bg-white rounded-[2rem] overflow-hidden group hover:-translate-y-2 hover:shadow-[0_20px_40px_-15px_rgba(24,44,193,0.15)] shadow-md border border-[#e8edff] transition-all duration-300 cursor-pointer flex flex-col h-full relative"
               >
                 {/* Image Section */}
@@ -210,6 +223,124 @@ export default function PackagesPage() {
       
       {/* Footer */}
       <Footer />
+
+      {/* Package Detail Preview Modal */}
+      {selectedPreview && (
+        <div
+          className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4"
+          onClick={() => setSelectedPreview(null)}
+        >
+          <div
+            className="bg-white rounded-3xl overflow-hidden max-w-lg w-full shadow-2xl flex flex-col max-h-[90vh]"
+            onClick={e => e.stopPropagation()}
+          >
+            {/* Hero Image */}
+            <div className="relative h-52 flex-shrink-0">
+              <img
+                src={resolveImageUrl(selectedPreview.gambar)}
+                alt={selectedPreview.nama}
+                className="w-full h-full object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#091540]/70 via-transparent to-transparent" />
+              {selectedPreview.tag && (
+                <div className={`absolute top-3 left-3 flex items-center gap-1.5 px-3 py-1.5 rounded-full backdrop-blur-md shadow-lg ${
+                  selectedPreview.tag.toLowerCase() === 'education' ? 'bg-emerald-500/95'
+                  : selectedPreview.tag.toLowerCase() === 'family' ? 'bg-amber-500/95'
+                  : 'bg-[#182cc1]/95'
+                }`}>
+                  {selectedPreview.tag.toLowerCase() === 'education'
+                    ? <Leaf size={12} className="text-white" />
+                    : selectedPreview.tag.toLowerCase() === 'family'
+                      ? <Users size={12} className="text-white" />
+                      : <CheckCircle2 size={12} className="text-white" />
+                  }
+                  <span className="text-[10px] font-bold text-white uppercase tracking-wider">{selectedPreview.tag}</span>
+                </div>
+              )}
+              <div className="absolute bottom-3 left-4">
+                <h2 className="text-white font-black text-xl drop-shadow" style={{ fontFamily: "Poppins, sans-serif" }}>
+                  {selectedPreview.nama}
+                </h2>
+              </div>
+              <button
+                onClick={() => setSelectedPreview(null)}
+                className="absolute top-3 right-3 w-9 h-9 rounded-full bg-white/90 flex items-center justify-center text-[#091540] hover:bg-white transition shadow"
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            {/* Scrollable body */}
+            <div className="flex-1 overflow-y-auto p-5 space-y-4">
+              {/* Info chips */}
+              <div className="flex gap-3 flex-wrap">
+                <div className="flex items-center gap-2 bg-[#f8faff] rounded-xl px-3 py-2 border border-[#e8edff]">
+                  <Clock size={14} className="text-[#182cc1]" />
+                  <span className="text-xs font-bold text-[#3d518c]">{selectedPreview.durasi}</span>
+                </div>
+                <div className="flex items-center gap-2 bg-[#f8faff] rounded-xl px-3 py-2 border border-[#e8edff]">
+                  <Users size={14} className="text-[#182cc1]" />
+                  <span className="text-xs font-bold text-[#3d518c]">Min {selectedPreview.min_participants} orang</span>
+                </div>
+              </div>
+
+              {/* Deskripsi */}
+              <div>
+                <p className="text-[#3d518c] text-sm leading-relaxed" style={{ fontFamily: "Inter, sans-serif" }}>
+                  {selectedPreview.deskripsi}
+                </p>
+              </div>
+
+              {/* Fasilitas */}
+              {selectedPreview.includes && selectedPreview.includes.length > 0 && (
+                <div>
+                  <div className="text-xs font-bold uppercase tracking-widest text-[#182cc1] mb-2" style={{ fontFamily: "Inter, sans-serif" }}>
+                    Fasilitas
+                  </div>
+                  <div className="space-y-1.5">
+                    {selectedPreview.includes.map(inc => (
+                      <div key={inc.id} className="flex items-center gap-2 text-sm text-[#091540]" style={{ fontFamily: "Inter, sans-serif" }}>
+                        <CheckCircle size={14} className="text-[#182cc1] flex-shrink-0" />
+                        {inc.item}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Harga */}
+              <div className="pt-1">
+                <div className="text-[10px] text-[#3d518c] uppercase tracking-widest font-bold mb-1">
+                  {selectedPreview.tiers && selectedPreview.tiers.length > 0 ? "Tier Rombongan" : "Harga Tiket"}
+                </div>
+                <div className="text-[#091540] font-black text-2xl" style={{ fontFamily: "Poppins, sans-serif" }}>
+                  {selectedPreview.tiers && selectedPreview.tiers.length > 0 ? (
+                    <>
+                      <span className="text-sm font-normal text-[#3d518c] mr-1">Mulai</span>
+                      Rp {Math.min(...selectedPreview.tiers.map(t => Number(t.harga_per_orang))).toLocaleString('id-ID')}
+                    </>
+                  ) : (
+                    `Rp ${Number(selectedPreview.harga).toLocaleString('id-ID')}`
+                  )}
+                  <span className="text-sm text-[#3d518c] font-semibold ml-1">/{selectedPreview.satuan}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Footer — tombol Pesan */}
+            <div className="flex-shrink-0 p-4 border-t border-[#e8edff] bg-white flex justify-end">
+              <button
+                onClick={() => { setSelectedPreview(null); handleSelectPackage(selectedPreview); }}
+                className="flex items-center gap-2.5 px-7 py-3 bg-[#182cc1] hover:bg-[#1524a3] text-white font-bold rounded-2xl transition shadow-lg shadow-[#182cc1]/20 text-sm"
+                style={{ fontFamily: "Poppins, sans-serif" }}
+              >
+                Pesan Sekarang
+                <ArrowRight size={16} />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

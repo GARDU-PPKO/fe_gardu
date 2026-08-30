@@ -12,6 +12,16 @@ export interface PriceCalculationResult {
   tiers: PackageTier[];
 }
 
+type PackageLike = Partial<Package> & Partial<TourPackage> & {
+  tiers?: Array<Partial<PackageTier>>;
+  tipe_harga?: string;
+  kapasitas_per_unit?: number;
+  unit?: string;
+  satuan?: string;
+  price?: number;
+  harga?: number;
+};
+
 /**
  * Hitung harga paket wisata berdasarkan jumlah peserta dan tier/tipe harga yang berlaku.
  */
@@ -31,15 +41,17 @@ export function calculatePackagePrice(
     };
   }
 
+  const p = pkg as PackageLike;
   const count = Math.max(1, participants || 1);
-  const tiers: PackageTier[] = ((pkg as any).tiers || []).map((t: any) => ({
-    id: t.id,
-    min_peserta: Number(t.min_peserta),
-    harga_per_orang: Number(t.harga_per_orang),
+  const rawTiers = p.tiers || [];
+  const tiers: PackageTier[] = rawTiers.map((t, idx) => ({
+    id: t.id ?? idx + 1,
+    min_peserta: Number(t.min_peserta || 1),
+    harga_per_orang: Number(t.harga_per_orang || 0),
   }));
 
   const tipeHarga =
-    (pkg as any).tipe_harga ||
+    p.tipe_harga ||
     (tiers.length > 0 ? 'per_orang_tier' : 'per_paket_fixed');
 
   // Case 1: Per Orang dengan Tier
@@ -64,14 +76,14 @@ export function calculatePackagePrice(
   // Case 2: Per Paket Fixed (e.g. tenda camping berkapasitas tertentu)
   const isPaketFixed =
     tipeHarga === 'per_paket_fixed' ||
-    (pkg as any).unit === 'paket' ||
-    (pkg as any).satuan === 'paket';
+    p.unit === 'paket' ||
+    p.satuan === 'paket';
 
   if (isPaketFixed) {
-    const rawCap = Number((pkg as any).kapasitas_per_unit);
+    const rawCap = Number(p.kapasitas_per_unit);
     const cap = !isNaN(rawCap) && rawCap > 0 ? rawCap : 1;
     const units = Math.ceil(count / cap);
-    const basePrice = Number((pkg as any).price ?? (pkg as any).harga ?? 0);
+    const basePrice = Number(p.price ?? p.harga ?? 0);
 
     return {
       unitPrice: basePrice,
@@ -86,7 +98,7 @@ export function calculatePackagePrice(
   }
 
   // Case 3: Default per orang standar
-  const basePrice = Number((pkg as any).price ?? (pkg as any).harga ?? 0);
+  const basePrice = Number(p.price ?? p.harga ?? 0);
   return {
     unitPrice: basePrice,
     unitCount: count,
@@ -111,7 +123,14 @@ export function getPackagePriceDisplay(pkg: Package | TourPackage | null | undef
     return { displayText: 'Rp 0', minPrice: 0, maxPrice: 0, hasTiers: false };
   }
 
-  const tiers: PackageTier[] = (pkg as any).tiers || [];
+  const p = pkg as PackageLike;
+  const rawTiers = p.tiers || [];
+  const tiers: PackageTier[] = rawTiers.map((t, idx) => ({
+    id: t.id ?? idx + 1,
+    min_peserta: Number(t.min_peserta || 1),
+    harga_per_orang: Number(t.harga_per_orang || 0),
+  }));
+
   if (tiers.length > 0) {
     const prices = tiers.map(t => Number(t.harga_per_orang));
     const minPrice = Math.min(...prices);
@@ -124,7 +143,7 @@ export function getPackagePriceDisplay(pkg: Package | TourPackage | null | undef
     };
   }
 
-  const basePrice = Number((pkg as any).price ?? (pkg as any).harga ?? 0);
+  const basePrice = Number(p.price ?? p.harga ?? 0);
   return {
     displayText: `Rp ${basePrice.toLocaleString('id-ID')}`,
     minPrice: basePrice,

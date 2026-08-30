@@ -55,11 +55,10 @@ const CheckBooking: React.FC = () => {
   const [searchParams] = useSearchParams();
   const urlKode = searchParams.get('kode');
 
-  const [kode] = useState(urlKode || '');
-  const [phone] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(Boolean(urlKode));
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<BookingResult | null>(null);
+
 
   const [isEditing, setIsEditing] = useState(false);
   const [editForm, setEditForm] = useState({ nama: '', wa: '', darurat: '' });
@@ -98,12 +97,10 @@ const CheckBooking: React.FC = () => {
 
   const handleEditChange = (field: keyof typeof editForm, val: string) => {
     let cleanVal = val;
-    if (field === 'wa') {
+    if (field === 'wa' || field === 'darurat') {
       cleanVal = val.replace(/\D/g, '').slice(0, 15);
     } else if (field === 'nama') {
       cleanVal = val.slice(0, 100);
-    } else if (field === 'darurat') {
-      cleanVal = val.slice(0, 50);
     }
 
     const updated = { ...editForm, [field]: cleanVal };
@@ -208,44 +205,35 @@ const CheckBooking: React.FC = () => {
     }
   };
 
-  const handleSearch = async (searchKode?: string) => {
-    const currentKode = searchKode !== undefined ? searchKode : kode;
-    if (!currentKode && !phone) return;
-
-    setIsLoading(true);
-    setResult(null);
-    setError(null);
-
-    try {
-      const res = await checkBooking({
-        kode: currentKode || undefined,
-        phone: phone || undefined,
-      });
-      if (res.data) {
-        setResult(res.data as unknown as BookingResult);
-        setEditForm({
-          nama: res.data.nama_pemesan,
-          wa: res.data.no_wa_pemesan,
-          darurat: res.data.kontak_darurat || '',
-        });
-      }
-    } catch {
-      setError('Pesanan tidak ditemukan atau sedang terjadi gangguan. Silakan coba lagi.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-
-
   useEffect(() => {
+    let isMounted = true;
     if (urlKode) {
-      handleSearch(urlKode);
-    } else {
-      setIsLoading(false);
+      checkBooking({ kode: urlKode.trim() })
+        .then(res => {
+          if (isMounted && res.data) {
+            setResult(res.data as unknown as BookingResult);
+            setEditForm({
+              nama: res.data.nama_pemesan,
+              wa: res.data.no_wa_pemesan,
+              darurat: res.data.kontak_darurat || '',
+            });
+          }
+        })
+        .catch(() => {
+          if (isMounted) {
+            setError('Pesanan tidak ditemukan atau sedang terjadi gangguan. Silakan coba lagi.');
+          }
+        })
+        .finally(() => {
+          if (isMounted) setIsLoading(false);
+        });
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    return () => {
+      isMounted = false;
+    };
+  }, [urlKode]);
+
+
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -414,15 +402,16 @@ const CheckBooking: React.FC = () => {
                     <div className="sm:col-span-2">
                       <div className="flex items-center justify-between mb-1.5">
                         <label className="block text-xs font-semibold text-[#091540]">Kontak Darurat</label>
-                        <span className="text-[11px] text-gray-400">(Opsional / No WA Keluarga)</span>
+                        <span className="text-[11px] text-gray-400">(Opsional / Nomor HP)</span>
                       </div>
                       <input
-                        type="text"
+                        type="tel"
+                        inputMode="numeric"
                         value={editForm.darurat}
-                        maxLength={50}
+                        maxLength={15}
                         onChange={(e) => handleEditChange('darurat', e.target.value)}
                         onBlur={() => handleEditBlur('darurat')}
-                        placeholder="Contoh: 081234567890 atau Ibu Siti"
+                        placeholder="Contoh: 081234567890"
                         disabled={isSaving}
                         className={`w-full px-3.5 py-2.5 border rounded-xl text-sm outline-none transition ${
                           editErrors.darurat && editTouched.darurat

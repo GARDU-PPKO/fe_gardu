@@ -4,8 +4,6 @@ import { getUmkmProducts } from "../../services/umkm.service";
 import { resolveImageUrl } from "../../utils/image";
 import type { UmkmProduct } from "../../types";
 
-const CATS = ["Semua", "Makanan", "Kerajinan", "Pertanian", "Oleh-Oleh"];
-
 export default function UMKMSection() {
   const [cat, setCat] = useState("Semua");
   const [products, setProducts] = useState<UmkmProduct[]>([]);
@@ -29,7 +27,8 @@ export default function UMKMSection() {
     return () => { cancelled = true; };
   }, []);
 
-  const filtered = products.filter(p => cat === "Semua" || p.kategori === cat);
+  const categories = ["Semua", ...Array.from(new Set(products.map(p => p.kategori).filter(Boolean))) as string[]];
+  const filtered = products.filter(p => cat === "Semua" || p.kategori?.toLowerCase() === cat.toLowerCase());
 
   return (
     <section id="umkm" className="py-16 px-4 sm:px-8 bg-[#eef2ff]">
@@ -41,7 +40,7 @@ export default function UMKMSection() {
           </div>
           {/* Filter Pills — Symmetrical & Responsive */}
           <div className="flex flex-wrap items-center gap-2">
-            {CATS.map(c => (
+            {categories.map(c => (
               <button
                 key={c}
                 onClick={() => setCat(c)}
@@ -57,6 +56,7 @@ export default function UMKMSection() {
             ))}
           </div>
         </div>
+
 
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
           {isLoading ? (

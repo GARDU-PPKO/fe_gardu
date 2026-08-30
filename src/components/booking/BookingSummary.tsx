@@ -30,7 +30,7 @@ const BookingSummary: React.FC<BookingSummaryProps> = ({
   const packageTotal = pricing.packageTotal;
   const isPerOrang = (addon: AddOnItem) => addon.satuan === 'per orang';
   const addOnsTotal = (selectedAddOns || []).reduce((acc, curr) => {
-    const qty = isPerOrang(curr) ? participants : (curr.quantity || 1);
+    const qty = curr.quantity || 1;
     return acc + (curr.price * qty);
   }, 0);
   const total = packageTotal + addOnsTotal;
@@ -53,20 +53,26 @@ const BookingSummary: React.FC<BookingSummaryProps> = ({
   const formattedSession = session ? session.split(" ")[0] : "—";
 
   const addOnsRows = (selectedAddOns || []).map(addon => {
-    const qty = isPerOrang(addon) ? participants : (addon.quantity || 1);
-    const label = isPerOrang(addon) ? `+ ${addon.name} × ${participants} orang` : `+ ${addon.name}`;
+    const qty = addon.quantity || 1;
+    const unitLabel = isPerOrang(addon) ? 'orang' : 'unit';
+    const label = `+ ${addon.name} (${qty} ${unitLabel})`;
     const value = addon.price === 0 ? "Gratis" : `Rp ${(addon.price * qty).toLocaleString('id-ID')}`;
-    return { label, value };
+    // Detail: Harga asli -> dikali berapa org/unit yang ingin add on -> hasil
+    const breakdown = addon.price === 0
+      ? null
+      : `Rp ${addon.price.toLocaleString('id-ID')} × ${qty} ${unitLabel} = Rp ${(addon.price * qty).toLocaleString('id-ID')}`;
+    return { label, value, breakdown };
   });
 
-  const rows = [
+
+
+  const baseRows = [
     { label: "Paket", value: selectedPackage ? selectedPackage.name : "-" },
     ...(name?.trim() ? [{ label: "Nama Pemesan", value: name.trim() }] : []),
     { label: "Tanggal", value: formattedDate },
     { label: "Sesi", value: formattedSession },
     { label: "Peserta", value: `${participants} orang` },
     ...(selectedPackage ? [{ label: "Durasi", value: selectedPackage.duration || "±2 jam" }] : []),
-    ...addOnsRows,
   ];
 
   return (
@@ -88,18 +94,53 @@ const BookingSummary: React.FC<BookingSummaryProps> = ({
           </div>
           <div className="p-4 space-y-2.5">
             <div className="text-xs font-bold uppercase tracking-widest text-[#3d518c] mb-2">Ringkasan Pesanan</div>
-            {rows.map(r => (
+            {baseRows.map(r => (
               <div key={r.label} className="flex justify-between text-xs gap-2">
                 <span className="text-[#3d518c] flex-shrink-0" style={{ fontFamily: "Inter, sans-serif" }}>{r.label}</span>
                 <span className="text-[#091540] font-medium text-right" style={{ fontFamily: "Poppins, sans-serif" }}>{r.value}</span>
               </div>
             ))}
+
+            {/* Rincian Perhitungan Biaya */}
+            <div className="border-t border-dashed border-[#c5d0ff] pt-2.5 my-2 space-y-2">
+              {/* Biaya Paket Pokok */}
+              <div className="flex flex-col gap-0.5">
+                <div className="flex justify-between text-xs gap-2">
+                  <span className="text-[#091540] font-semibold flex-shrink-0" style={{ fontFamily: "Inter, sans-serif" }}>
+                    Biaya Paket ({pricing.unitCount} {pricing.unitLabel})
+                  </span>
+                  <span className="text-[#091540] font-bold text-right" style={{ fontFamily: "Poppins, sans-serif" }}>
+                    Rp {pricing.packageTotal.toLocaleString('id-ID')}
+                  </span>
+                </div>
+                <div className="text-[10px] text-[#3d518c]/80 text-right" style={{ fontFamily: "Inter, sans-serif" }}>
+                  Rp {pricing.unitPrice.toLocaleString('id-ID')} × {pricing.unitCount} {pricing.unitLabel} = Rp {pricing.packageTotal.toLocaleString('id-ID')}
+                </div>
+              </div>
+
+              {/* Layanan Tambahan (Add-ons) */}
+              {addOnsRows.map(r => (
+                <div key={r.label} className="flex flex-col gap-0.5">
+                  <div className="flex justify-between text-xs gap-2">
+                    <span className="text-[#3d518c] flex-shrink-0" style={{ fontFamily: "Inter, sans-serif" }}>{r.label}</span>
+                    <span className="text-[#091540] font-medium text-right" style={{ fontFamily: "Poppins, sans-serif" }}>{r.value}</span>
+                  </div>
+                  {r.breakdown && (
+                    <div className="text-[10px] text-[#3d518c]/80 text-right" style={{ fontFamily: "Inter, sans-serif" }}>
+                      {r.breakdown}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+
             <div className="border-t border-[#c5d0ff] pt-3 flex justify-between items-center">
               <span className="text-[#091540] font-bold text-sm">Total</span>
               <span className="text-[#182cc1] font-black text-base" style={{ fontFamily: "Poppins, sans-serif" }}>
                 Rp {total.toLocaleString('id-ID')}
               </span>
             </div>
+
           </div>
         </div>
       )}

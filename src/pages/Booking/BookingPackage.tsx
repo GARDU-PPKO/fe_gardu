@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import BookingLayout from '../../components/layout/BookingLayout';
@@ -32,11 +32,16 @@ const BookingPackage: React.FC = () => {
   const [isAddonModalOpen, setIsAddonModalOpen] = useState(false);
   const [packageDetail, setPackageDetail] = useState<{ min_participants: number; max_participants: number | null } | null>(null);
 
+  const prevPkgIdRef = useRef(bookingData.selectedPackage?.id);
   useEffect(() => {
-    setLocalDate(bookingData.date || '');
-    setLocalSession(bookingData.session || '');
-    setLocalAddOns(bookingData.selectedAddOns || []);
+    if (prevPkgIdRef.current !== bookingData.selectedPackage?.id) {
+      prevPkgIdRef.current = bookingData.selectedPackage?.id;
+      setLocalDate(bookingData.date || '');
+      setLocalSession(bookingData.session || '');
+      setLocalAddOns(bookingData.selectedAddOns || []);
+    }
   }, [bookingData.selectedPackage?.id, bookingData.date, bookingData.session, bookingData.selectedAddOns]);
+
 
   useEffect(() => {
     getAddOns().then(res => {
@@ -348,9 +353,14 @@ const BookingPackage: React.FC = () => {
                     </div>
                   ) : addOnOptions.map(addon => {
                     const isSelected = localAddOns.some(a => a.id === String(addon.id));
+                    const currentQty = localAddOns.find(a => a.id === String(addon.id))?.quantity ?? 1;
+                    const isPerOrang = addon.satuan === 'per orang';
+                    const unitLabel = isPerOrang ? 'orang' : 'unit';
                     const priceLabel = addon.is_free || addon.harga === 0
                       ? 'Gratis'
-                      : `+ Rp ${addon.harga.toLocaleString('id-ID')}${addon.satuan === 'per orang' ? ' / orang' : ''}`;
+                      : isSelected && currentQty > 1
+                        ? `+ Rp ${(addon.harga * currentQty).toLocaleString('id-ID')} (${currentQty} ${unitLabel})`
+                        : `+ Rp ${addon.harga.toLocaleString('id-ID')} / ${unitLabel}`;
 
                     const toggleAddon = () => {
                       if (isSelected) {
@@ -368,44 +378,95 @@ const BookingPackage: React.FC = () => {
                       }
                     };
 
+                    const updateQty = (delta: number) => {
+                      setLocalAddOns(localAddOns.map(a =>
+                        a.id === String(addon.id)
+                          ? { ...a, quantity: Math.max(1, (a.quantity ?? 1) + delta) }
+                          : a
+                      ));
+                    };
+
                     return (
                       <div
                         key={addon.id}
-                        onClick={toggleAddon}
-                        className={`p-3.5 sm:p-4 rounded-2xl border cursor-pointer transition-all flex items-center justify-between gap-3 ${
+                        className={`p-3.5 sm:p-4 rounded-2xl border transition-all flex flex-col gap-3 ${
                           isSelected
                             ? 'border-[#182cc1] bg-[#f8faff] shadow-md shadow-[#182cc1]/10'
                             : 'border-[#c5d0ff] bg-white hover:border-[#182cc1] hover:shadow-sm'
                         }`}
                       >
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-1">
-                            <span className="font-bold text-[#091540] text-sm sm:text-base">{addon.nama}</span>
-                            {addon.is_free && (
-                              <span className="bg-green-100 text-green-700 text-[10px] font-bold px-2 py-0.5 rounded-full">FREE</span>
-                            )}
+                        <div className="flex items-center justify-between gap-3 cursor-pointer" onClick={toggleAddon}>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-1">
+                              <span className="font-bold text-[#091540] text-sm sm:text-base">{addon.nama}</span>
+                              {addon.is_free && (
+                                <span className="bg-green-100 text-green-700 text-[10px] font-bold px-2 py-0.5 rounded-full">FREE</span>
+                              )}
+                            </div>
+                            <p className="text-xs sm:text-sm text-[#3d518c] leading-snug line-clamp-2 pr-2" style={{ fontFamily: "Inter, sans-serif" }}>
+                              {addon.deskripsi}
+                            </p>
+                            <div className="mt-1.5 font-bold text-[#182cc1] text-xs sm:text-sm">
+                              {priceLabel}
+                            </div>
                           </div>
-                          <p className="text-xs sm:text-sm text-[#3d518c] leading-snug line-clamp-2 pr-2" style={{ fontFamily: "Inter, sans-serif" }}>
-                            {addon.deskripsi}
-                          </p>
-                          <div className="mt-1.5 font-bold text-[#182cc1] text-xs sm:text-sm">
-                            {priceLabel}
+
+                          {/* Checkbox box indicator */}
+                          <div className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center flex-shrink-0 transition-colors ${
+                            isSelected ? 'bg-[#182cc1] border-[#182cc1]' : 'border-[#c5d0ff] bg-white'
+                          }`}>
+                            {isSelected && (
+                              <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
+                              </svg>
+                            )}
                           </div>
                         </div>
 
-                        {/* Checkbox box indicator */}
-                        <div className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center flex-shrink-0 transition-colors ${
-                          isSelected ? 'bg-[#182cc1] border-[#182cc1]' : 'border-[#c5d0ff] bg-white'
-                        }`}>
-                          {isSelected && (
-                            <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
-                            </svg>
-                          )}
-                        </div>
+                        {/* Qty counter — muncul untuk SEMUA add-on yang dipilih */}
+                        {isSelected && !addon.is_free && addon.harga > 0 && (
+                          <div className="flex items-center justify-between bg-[#f0f3ff] rounded-xl px-3.5 py-2 border border-[#c5d0ff]/50">
+                            <span className="text-xs font-semibold text-[#091540]" style={{ fontFamily: "Inter, sans-serif" }}>
+                              {isPerOrang ? "Jumlah orang yang pesan:" : "Jumlah unit / item:"}
+                            </span>
+                            <div className="flex items-center gap-1.5">
+                              <button
+                                type="button"
+                                onClick={(e) => { e.stopPropagation(); updateQty(-1); }}
+                                disabled={currentQty <= 1}
+                                className="w-8 h-8 rounded-lg bg-white border border-[#c5d0ff] text-[#182cc1] flex items-center justify-center hover:border-[#182cc1] hover:bg-[#e8edff] transition disabled:opacity-40 flex-shrink-0"
+                              >
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                              </button>
+                              <input
+                                type="number"
+                                min={1}
+                                value={currentQty}
+                                onChange={(e) => {
+                                  const val = Math.max(1, parseInt(e.target.value) || 1);
+                                  setLocalAddOns(localAddOns.map(a =>
+                                    a.id === String(addon.id) ? { ...a, quantity: val } : a
+                                  ));
+                                }}
+                                onClick={(e) => e.stopPropagation()}
+                                className="w-12 h-8 text-center font-bold text-[#091540] text-sm bg-white border border-[#c5d0ff] rounded-lg p-0 focus:outline-none focus:border-[#182cc1] [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                style={{ fontFamily: "Poppins, sans-serif" }}
+                              />
+                              <button
+                                type="button"
+                                onClick={(e) => { e.stopPropagation(); updateQty(1); }}
+                                className="w-8 h-8 rounded-lg bg-[#182cc1] text-white flex items-center justify-center hover:bg-[#1524a3] transition shadow-sm flex-shrink-0"
+                              >
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                              </button>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     );
                   })}
+
+
                 </div>
                 <div className="px-6 py-4 border-t bg-white flex justify-end">
                   <button 
