@@ -396,7 +396,6 @@ export default function PackagesPage() {
                 </div>
               ) : (
                 <div className="bg-[#f8faff] rounded-2xl p-4 border border-dashed border-[#c5d0ff] text-center space-y-1">
-                  <div className="text-lg">💬</div>
                   <p className="text-xs font-semibold text-[#091540]">Belum ada ulasan untuk paket ini</p>
                   <p className="text-[11px] text-[#3d518c]">Jadilah pengunjung pertama yang memesan dan membagikan pengalaman serumu!</p>
                 </div>

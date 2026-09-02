@@ -325,16 +325,16 @@ const PaymentPage: React.FC = () => {
                     <div className="text-sm font-semibold text-[#091540] mb-4">Transfer ke rekening berikut:</div>
                     <div className="bg-white border border-[#c5d0ff] rounded-xl p-4 shadow-sm">
                       <div className="text-xs text-[#3d518c] mb-1 font-medium">
-                        {paymentInfo?.bank || 'Bank BRI'}
+                        {paymentInfo?.bank || 'Transfer Bank'}
                       </div>
                       <div
                         className="font-bold text-lg text-[#091540] tracking-wider"
                         style={{ fontFamily: 'Poppins, sans-serif' }}
                       >
-                        {paymentInfo?.nomor_rekening || '0012 3456 7890'}
+                        {paymentInfo?.nomor_rekening || '-'}
                       </div>
                       <div className="text-xs text-[#3d518c] mt-1">
-                        a.n. <strong>{paymentInfo?.atas_nama || 'Desa Wisata Getas'}</strong>
+                        a.n. <strong>{paymentInfo?.atas_nama || '-'}</strong>
                       </div>
                     </div>
                     {paymentInfo?.qris_image && (

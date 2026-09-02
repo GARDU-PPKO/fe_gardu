@@ -100,8 +100,13 @@ export default function UMKMSection() {
                 </div>
                 
                 <div className="flex items-end justify-between mt-auto pt-2">
-                  <div className="text-[#182cc1] font-black text-sm">{`Rp ${Number(p.harga).toLocaleString('id-ID')}`}</div>
-                  <div className="w-8 h-8 rounded-full bg-[#e8edff] flex items-center justify-center text-[#182cc1] group-hover:bg-[#25D366] group-hover:text-white transition-colors shadow-sm">
+                  <div>
+                    <span className="block text-[10px] font-semibold text-[#3d518c]/80 uppercase tracking-wider">Mulai dari</span>
+                    <div className="text-[#182cc1] font-black text-sm sm:text-base leading-tight">
+                      {`Rp ${Number(p.harga).toLocaleString('id-ID')}`}
+                    </div>
+                  </div>
+                  <div className="w-8 h-8 rounded-full bg-[#e8edff] flex items-center justify-center text-[#182cc1] group-hover:bg-[#25D366] group-hover:text-white transition-colors shadow-sm shrink-0">
                     <MessageSquare size={14} className="group-hover:scale-110 transition-transform" />
                   </div>
                 </div>

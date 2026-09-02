@@ -24,7 +24,8 @@ export interface CheckReviewTokenResponse {
 }
 
 export interface SubmitReviewPayload {
-  token: string;
+  token?: string;
+  booking_code?: string;
   rating: number;
   komentar: string;
   nama_pengulas?: string;

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { MapPin, Phone, Mail, Clock } from "lucide-react";
-import { FaInstagram, FaFacebook, FaYoutube, FaTiktok, FaGlobe } from "react-icons/fa";
+import { FaInstagram, FaFacebook, FaYoutube, FaTiktok } from "react-icons/fa";
 import { getSettings } from "../../services/village.service";
 import type { Setting } from "../../types";
 
@@ -8,7 +8,7 @@ export default function KontakSection() {
   const [settings, setSettings] = useState<Record<string, string>>({});
 
   useEffect(() => {
-    getSettings('alamat_desa,wa_admin,email_desa,jam_pelayanan,sosmed_ig,sosmed_fb,sosmed_yt,sosmed_tiktok,sosmed_web').then(res => {
+    getSettings('alamat_desa,wa_admin,email_desa,jam_pelayanan,sosmed_ig,sosmed_fb,sosmed_yt,sosmed_tiktok').then(res => {
       setSettings(Object.fromEntries(res.data.map((item: Setting) => [item.key, item.value])));
     });
   }, []);
@@ -56,12 +56,6 @@ export default function KontakSection() {
       label: "TikTok",
       icon: <FaTiktok size={16} className="group-hover:scale-110 transition-transform" />,
       hoverColor: "hover:border-black hover:text-black",
-    },
-    isValidSosmed(settings.sosmed_web) && {
-      href: settings.sosmed_web.startsWith("http") ? settings.sosmed_web : `https://${settings.sosmed_web}`,
-      label: "Website",
-      icon: <FaGlobe size={16} className="group-hover:scale-110 transition-transform" />,
-      hoverColor: "hover:border-[#182cc1] hover:text-[#182cc1]",
     },
   ].filter(Boolean) as { href: string; label: string; icon: React.ReactNode; hoverColor: string }[];
 

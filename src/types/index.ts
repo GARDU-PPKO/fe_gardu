@@ -171,7 +171,7 @@ export interface Budaya {
   kategori: string;
   deskripsi: string;
   gambar: string;
-  span_grid: number;
+  span_grid?: number;
   is_active: boolean;
   created_by?: number;
   schedules?: BudayaSchedule[];

@@ -95,15 +95,15 @@ export default function SubmitReviewPage() {
   const activeRating = hoverRating ?? rating;
 
   return (
-    <div className="h-screen max-h-screen bg-[#f8faff] text-[#091540] flex flex-col justify-between p-3 sm:p-5 relative overflow-hidden font-sans select-none">
+    <div className="min-h-screen min-h-[100dvh] bg-[#f8faff] text-[#091540] flex flex-col justify-between p-3 sm:p-5 relative overflow-x-hidden font-sans">
       {/* Ambient background decoration */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-2xl h-64 bg-gradient-to-b from-[#182cc1]/10 via-[#7692ff]/5 to-transparent blur-3xl pointer-events-none" />
 
       {/* Sleek Minimal Header */}
-      <header className="flex items-center justify-between z-10 max-w-md w-full mx-auto flex-shrink-0">
+      <header className="flex items-center justify-between z-10 max-w-md w-full mx-auto flex-shrink-0 pt-1 pb-2">
         <button
           onClick={() => navigate('/')}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white text-[#3d518c] text-xs font-semibold hover:bg-[#e8edff] shadow-xs border border-[#e8edff] transition"
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white text-[#3d518c] text-xs font-semibold hover:bg-[#e8edff] shadow-xs border border-[#e8edff] transition cursor-pointer"
         >
           <ArrowLeft size={13} /> Beranda
         </button>
@@ -113,9 +113,9 @@ export default function SubmitReviewPage() {
         </div>
       </header>
 
-      {/* Main Content Area — Fits 100% in viewport without scroll */}
-      <main className="flex-1 flex items-center justify-center py-2 z-10 overflow-hidden">
-        <div className="max-w-md w-full">
+      {/* Main Content Area */}
+      <main className="flex-1 flex items-center justify-center py-2 z-10 w-full">
+        <div className="max-w-md w-full my-auto">
           {isLoading ? (
             <div className="bg-white rounded-3xl p-8 shadow-xl border border-[#e8edff] text-center space-y-3">
               <Loader2 className="w-8 h-8 animate-spin text-[#182cc1] mx-auto" />

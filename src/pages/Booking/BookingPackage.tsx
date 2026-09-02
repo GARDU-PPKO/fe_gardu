@@ -6,6 +6,7 @@ import BookingSummary from '../../components/booking/BookingSummary';
 import { useBooking } from '../../hooks/useBooking';
 import { getBookingSessions, getAddOns } from '../../services/booking.service';
 import { getTourPackageDetail } from '../../services/tour-package.service';
+import { getSettings } from '../../services/village.service';
 import { resolveImageUrl } from '../../utils/image';
 import { calculatePackagePrice } from '../../utils/pricing';
 import type { AddOnOption } from '../../services/booking.service';
@@ -31,6 +32,26 @@ const BookingPackage: React.FC = () => {
   const [addOnOptions, setAddOnOptions] = useState<AddOnOption[]>([]);
   const [isAddonModalOpen, setIsAddonModalOpen] = useState(false);
   const [packageDetail, setPackageDetail] = useState<{ min_participants: number; max_participants: number | null } | null>(null);
+  const [policies, setPolicies] = useState({
+    check_in_time: '',
+    check_out_time: '',
+    cancel_policy: '',
+    night_curfew: ''
+  });
+
+  useEffect(() => {
+    getSettings('check_in_time,check_out_time,cancel_policy,night_curfew').then(res => {
+      if (res?.data) {
+        const map = Object.fromEntries(res.data.map(item => [item.key, item.value]));
+        setPolicies({
+          check_in_time: map.check_in_time || '',
+          check_out_time: map.check_out_time || '',
+          cancel_policy: map.cancel_policy || '',
+          night_curfew: map.night_curfew || '',
+        });
+      }
+    }).catch(() => {});
+  }, []);
 
   const prevPkgIdRef = useRef(bookingData.selectedPackage?.id);
   useEffect(() => {
@@ -200,13 +221,16 @@ const BookingPackage: React.FC = () => {
                 style={{ fontFamily: "Inter, sans-serif" }}
               >
                 <option value="" disabled>-- Pilih Sesi Waktu --</option>
-                {sessions.length > 0 ? (
+                {!localDate ? (
+                  <option value="" disabled>Pilih tanggal kunjungan terlebih dahulu</option>
+                ) : sessions.length > 0 ? (
                   sessions.map((session) => {
-                    const jamMulai = session.jam_mulai ? session.jam_mulai.slice(0, 5) : '';
-                    const jamSelesai = session.jam_selesai ? session.jam_selesai.slice(0, 5) : '';
-                    const label = jamMulai && jamSelesai
-                      ? `${session.sesi} (${jamMulai} – ${jamSelesai})`
-                      : session.sesi;
+                    let label = session.sesi;
+                    if (!label.includes('(') && session.jam_mulai && session.jam_selesai) {
+                      const jamMulai = session.jam_mulai.slice(0, 5).replace(':', '.');
+                      const jamSelesai = session.jam_selesai.slice(0, 5).replace(':', '.');
+                      label = `${session.sesi} (${jamMulai} - ${jamSelesai})`;
+                    }
                     return (
                       <option key={session.id} value={label}>
                         {label}
@@ -214,11 +238,7 @@ const BookingPackage: React.FC = () => {
                     );
                   })
                 ) : (
-                  <>
-                    <option value="Pagi (07.00 - 10.00)">Pagi (07.00 - 10.00)</option>
-                    <option value="Siang (10.00 - 13.00)">Siang (10.00 - 13.00)</option>
-                    <option value="Sore (14.00 - 17.00)">Sore (14.00 - 17.00)</option>
-                  </>
+                  <option value="" disabled>Tidak ada sesi waktu tersedia pada tanggal ini</option>
                 )}
               </select>
             </div>
@@ -489,22 +509,22 @@ const BookingPackage: React.FC = () => {
               <svg className="w-5 h-5 text-orange-600 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
               <p className="text-sm text-orange-900 leading-relaxed">
                 <strong>Waktu Check-in & Check-out:</strong><br />
-                Check-in mulai pukul 13.00 WIB.<br />
-                Check-out maksimal pukul 11.00 WIB.
+                Check-in mulai pukul {policies.check_in_time}.<br />
+                Check-out maksimal pukul {policies.check_out_time}.
               </p>
             </div>
             <div className="flex items-start gap-2">
               <svg className="w-5 h-5 text-orange-600 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20.618 5.984A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016zM12 9v2m0 4h.01"></path></svg>
               <p className="text-sm text-orange-900 leading-relaxed">
                 <strong>Kebijakan Pembatalan:</strong><br />
-                Pembatalan atau reschedule maksimal 8 jam sebelum waktu kedatangan.
+                {policies.cancel_policy}
               </p>
             </div>
             <div className="flex items-start gap-2">
               <svg className="w-5 h-5 text-orange-600 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
               <p className="text-sm text-orange-900 leading-relaxed">
                 <strong>Jam Malam:</strong><br />
-                Peraturan jam malam dan ketenangan berlaku mulai pukul 22.00 WIB (10 malam).
+                {policies.night_curfew}
               </p>
             </div>
           </div>

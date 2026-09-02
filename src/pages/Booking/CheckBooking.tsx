@@ -3,9 +3,10 @@ import { useSearchParams, useNavigate } from 'react-router-dom';
 import Navbar from '../../components/layout/Navbar';
 import Footer from '../../components/layout/Footer';
 import { checkBooking, cancelBooking, updateBooking } from '../../services/booking.service';
+import { submitReview } from '../../services/review.service';
 import { ApiValidationError } from '../../services/api';
 import { validateFullName, validatePhone, validateEmergencyContact } from '../../utils/validators';
-import { Loader2, Calendar, Clock, Users, Ticket, AlertCircle, CheckCircle, Edit2, Home } from 'lucide-react';
+import { Loader2, Calendar, Clock, Users, Ticket, AlertCircle, CheckCircle, Edit2, Home, Send, Star } from 'lucide-react';
 
 interface BookingResult {
   id?: number;
@@ -18,14 +19,33 @@ interface BookingResult {
   jumlah_peserta: number;
   total_harga: number;
   status: string;
+  is_visit_completed?: boolean;
+  review_token?: string;
+  has_reviewed?: boolean;
+  review?: {
+    id: number;
+    rating: number;
+    komentar: string;
+    nama_pengulas: string;
+    created_at?: string;
+  };
   package?: {
     id: number;
     nama: string;
     durasi?: string;
+    gambar?: string;
   };
   addons?: { nama: string; harga: number }[];
   rejected_reason?: string;
 }
+
+const RATING_LABELS: Record<number, { text: string; emoji: string; color: string }> = {
+  1: { text: 'Sangat Kecewa', emoji: '😞', color: 'text-rose-500' },
+  2: { text: 'Kurang Puas', emoji: '🙁', color: 'text-amber-600' },
+  3: { text: 'Cukup Baik', emoji: '😐', color: 'text-yellow-600' },
+  4: { text: 'Puas & Seru', emoji: '😊', color: 'text-emerald-600' },
+  5: { text: 'Sangat Puas & Luar Biasa!', emoji: '🤩', color: 'text-emerald-600' },
+};
 
 /** Hitung jam sisa sebelum tanggal kunjungan mulai sesi pertama (asumsi 08:00) */
 const getHoursBefore = (tanggal: string): number => {
@@ -68,6 +88,13 @@ const CheckBooking: React.FC = () => {
 
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
   const [toast, setToast] = useState<{ message: string; isError?: boolean } | null>(null);
+
+  // Review state
+  const [reviewRating, setReviewRating] = useState<number>(5);
+  const [reviewHoverRating, setReviewHoverRating] = useState<number | null>(null);
+  const [reviewerName, setReviewerName] = useState<string>('');
+  const [reviewComment, setReviewComment] = useState<string>('');
+  const [isSubmittingReview, setIsSubmittingReview] = useState<boolean>(false);
 
   const showToast = (message: string, isError = false) => {
     setToast({ message, isError });
@@ -205,17 +232,66 @@ const CheckBooking: React.FC = () => {
     }
   };
 
+  const handleSubmitReview = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!result || isSubmittingReview) return;
+
+    if (!reviewRating || reviewRating < 1 || reviewRating > 5) {
+      showToast('Silakan pilih rating 1-5 bintang', true);
+      return;
+    }
+
+    if (reviewComment.trim().length < 3) {
+      showToast('Mohon tulis komentar ulasan minimal 3 karakter', true);
+      return;
+    }
+
+    setIsSubmittingReview(true);
+    try {
+      const res = await submitReview({
+        token: result.review_token || undefined,
+        booking_code: result.kode_booking,
+        rating: reviewRating,
+        komentar: reviewComment.trim(),
+        nama_pengulas: reviewerName.trim() || result.nama_pemesan,
+      });
+
+      const newReview = res.data;
+      setResult({
+        ...result,
+        status: 'completed',
+        has_reviewed: true,
+        review: {
+          id: newReview?.id || Date.now(),
+          rating: reviewRating,
+          komentar: reviewComment.trim(),
+          nama_pengulas: reviewerName.trim() || result.nama_pemesan,
+          created_at: new Date().toISOString(),
+        },
+      });
+
+      showToast('Terima kasih! Ulasan Anda berhasil dikirim.', false);
+    } catch (err: any) {
+      const msg = err?.response?.data?.meta?.message || err?.message || 'Gagal mengirim ulasan. Silakan coba lagi.';
+      showToast(msg, true);
+    } finally {
+      setIsSubmittingReview(false);
+    }
+  };
+
   useEffect(() => {
     let isMounted = true;
     if (urlKode) {
       checkBooking({ kode: urlKode.trim() })
         .then(res => {
           if (isMounted && res.data) {
-            setResult(res.data as unknown as BookingResult);
+            const data = res.data as unknown as BookingResult;
+            setResult(data);
+            setReviewerName(data.nama_pemesan || '');
             setEditForm({
-              nama: res.data.nama_pemesan,
-              wa: res.data.no_wa_pemesan,
-              darurat: res.data.kontak_darurat || '',
+              nama: data.nama_pemesan,
+              wa: data.no_wa_pemesan,
+              darurat: data.kontak_darurat || '',
             });
           }
         })
@@ -233,23 +309,51 @@ const CheckBooking: React.FC = () => {
     };
   }, [urlKode]);
 
+  useEffect(() => {
+    if (searchParams.get('review') === 'true' && result) {
+      setTimeout(() => {
+        const el = document.getElementById('review-section');
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth' });
+        }
+      }, 350);
+    }
+  }, [searchParams, result]);
 
+  const isVisitDone = (b: BookingResult): boolean => {
+    if (b.status === 'completed' || b.has_reviewed) return true;
+    if (b.status === 'confirmed' || b.is_visit_completed) {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const visitDate = new Date(b.tanggal);
+      visitDate.setHours(0, 0, 0, 0);
+      return visitDate <= today;
+    }
+    return false;
+  };
 
-  const getStatusBadge = (status: string) => {
+  const getStatusBadge = (status: string, resultObj?: BookingResult) => {
+    if (resultObj && isVisitDone(resultObj)) {
+      return (
+        <span className="bg-emerald-100 text-emerald-800 font-bold px-3 py-1 rounded-full text-xs inline-flex items-center gap-1">
+          ✓ SELESAI
+        </span>
+      );
+    }
     switch (status) {
+      case 'completed':
+        return <span className="bg-emerald-100 text-emerald-800 font-bold px-3 py-1 rounded-full text-xs">SELESAI</span>;
       case 'confirmed':
         return <span className="bg-green-100 text-green-700 font-bold px-3 py-1 rounded-full text-xs">BERHASIL</span>;
       case 'cancelled':
         return <span className="bg-red-100 text-red-700 font-bold px-3 py-1 rounded-full text-xs">DIBATALKAN</span>;
       case 'rejected':
-        return <span className="bg-red-100 text-red-700 font-bold px-3 py-1 rounded-full text-xs">DITOLAK</span>;
-      case 'expired':
-        return <span className="bg-gray-200 text-gray-600 font-bold px-3 py-1 rounded-full text-xs">KEDALUWARSA</span>;
-      case 'pending':
+        return <span className="bg-rose-100 text-rose-700 font-bold px-3 py-1 rounded-full text-xs">DITOLAK</span>;
       case 'pending_verify':
         return <span className="bg-blue-100 text-blue-700 font-bold px-3 py-1 rounded-full text-xs">MENUNGGU VERIFIKASI</span>;
+      case 'pending_payment':
       default:
-        return <span className="bg-yellow-100 text-yellow-700 font-bold px-3 py-1 rounded-full text-xs">MENUNGGU PEMBAYARAN</span>;
+        return <span className="bg-yellow-100 text-yellow-800 font-bold px-3 py-1 rounded-full text-xs">MENUNGGU PEMBAYARAN</span>;
     }
   };
 
@@ -257,8 +361,8 @@ const CheckBooking: React.FC = () => {
     <div className="min-h-screen flex flex-col bg-[#f8faff]">
       <Navbar />
 
-      <main className="flex-1 pt-20 sm:pt-24 pb-16">
-        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+      <main className="flex-1 pt-16 sm:pt-20 pb-8">
+        <div className="max-w-3xl mx-auto px-3 sm:px-6 lg:px-8">
 
           {!result && !isLoading && (
             <div className="text-center py-20 text-[#3d518c]" style={{ fontFamily: "Inter, sans-serif" }}>
@@ -274,33 +378,149 @@ const CheckBooking: React.FC = () => {
           )}
 
           {result && (
-            <div className="bg-white rounded-3xl p-5 sm:p-8 shadow-xl shadow-[#182cc1]/5 border border-[#c5d0ff] animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <div className="bg-white rounded-3xl p-4 sm:p-6 shadow-xl shadow-[#182cc1]/5 border border-[#c5d0ff] animate-in fade-in slide-in-from-bottom-4 duration-300">
 
               {/* Header: Status + Kode */}
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 pb-6 border-b border-gray-100 gap-3">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 pb-4 border-b border-gray-100 gap-2">
                 <div>
-                  <div className="text-sm text-gray-500 mb-1" style={{ fontFamily: "Inter, sans-serif" }}>Status Pemesanan</div>
-                  {getStatusBadge(result.status)}
+                  <div className="text-xs text-gray-500 mb-0.5" style={{ fontFamily: "Inter, sans-serif" }}>Status Pemesanan</div>
+                  {getStatusBadge(result.status, result)}
                 </div>
                 <div className="sm:text-right">
-                  <div className="text-sm text-gray-500 mb-1" style={{ fontFamily: "Inter, sans-serif" }}>Kode Booking</div>
-                  <div className="text-xl sm:text-2xl font-black text-[#182cc1] break-all" style={{ fontFamily: "Poppins, sans-serif" }}>{result.kode_booking}</div>
+                  <div className="text-xs text-gray-500 mb-0.5" style={{ fontFamily: "Inter, sans-serif" }}>Kode Booking</div>
+                  <div className="text-lg sm:text-xl font-black text-[#182cc1] break-all" style={{ fontFamily: "Poppins, sans-serif" }}>{result.kode_booking}</div>
                 </div>
               </div>
 
-              {/* Action Buttons */}
+              {/* Review Section (Only shows when visit is completed or already reviewed) */}
+              {isVisitDone(result) ? (
+                <div id="review-section" className="mb-4 sm:mb-5 animate-in fade-in duration-200">
+                  {result.has_reviewed && result.review ? (
+                    <div className="bg-emerald-50/60 rounded-xl p-3 border border-emerald-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-[10px] font-bold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded-full">
+                          ✓ Ulasan Terverifikasi
+                        </span>
+                        <div className="flex items-center gap-0.5 text-amber-500 font-bold">
+                          {'★'.repeat(result.review.rating)}{'☆'.repeat(5 - result.review.rating)}
+                          <span className="text-gray-700 ml-1">({result.review.rating}/5)</span>
+                        </div>
+                        <span className="text-gray-600 italic">"{result.review.komentar}"</span>
+                      </div>
+                      <span className="text-[10px] text-emerald-700 font-medium whitespace-nowrap">
+                        Terima kasih atas ulasanmu! 🙏
+                      </span>
+                    </div>
+                  ) : (
+                    <form
+                      onSubmit={handleSubmitReview}
+                      className="bg-gradient-to-br from-[#f8faff] to-[#f0f4ff] rounded-2xl p-4 sm:p-5 border border-[#c5d0ff] space-y-3.5 shadow-xs"
+                    >
+                      {/* Top Bar: Title */}
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-700 bg-emerald-100 px-2.5 py-0.5 rounded-full">
+                          Kunjungan Selesai
+                        </span>
+                        <h4 className="text-xs sm:text-sm font-bold text-[#091540]">
+                          Bagikan Pengalaman Wisatamu
+                        </h4>
+                      </div>
+
+                      {/* Interactive Stars Row - Dedicated, large touch targets */}
+                      <div className="bg-white rounded-2xl p-3 sm:p-4 border border-[#c5d0ff]/80 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="text-xs font-bold text-[#091540]">Rating:</span>
+                          {RATING_LABELS[reviewHoverRating ?? reviewRating] && (
+                            <span className="text-xs font-bold text-amber-800 bg-amber-50 px-2.5 py-0.5 rounded-full border border-amber-200">
+                              {RATING_LABELS[reviewHoverRating ?? reviewRating].emoji} {RATING_LABELS[reviewHoverRating ?? reviewRating].text} ({reviewHoverRating ?? reviewRating}/5)
+                            </span>
+                          )}
+                        </div>
+
+                        {/* 5 Big Tappable Star Buttons */}
+                        <div className="flex items-center gap-1.5 sm:gap-2">
+                          {[1, 2, 3, 4, 5].map(star => {
+                            const isFilled = star <= (reviewHoverRating ?? reviewRating);
+                            const isCurrentSelected = star === reviewRating;
+                            return (
+                              <button
+                                type="button"
+                                key={star}
+                                onClick={() => {
+                                  setReviewRating(star);
+                                  setReviewHoverRating(null);
+                                }}
+                                onMouseEnter={() => setReviewHoverRating(star)}
+                                onMouseLeave={() => setReviewHoverRating(null)}
+                                className={`w-10 h-10 sm:w-11 sm:h-11 rounded-xl flex items-center justify-center transition-all cursor-pointer select-none active:scale-90 ${
+                                  isFilled
+                                    ? 'bg-amber-50 border border-amber-300 text-amber-500 shadow-2xs'
+                                    : 'bg-gray-50 border border-gray-200 text-gray-300 hover:bg-gray-100'
+                                } ${isCurrentSelected ? 'ring-2 ring-amber-400/60 scale-105' : ''}`}
+                                aria-label={`Beri bintang ${star}`}
+                              >
+                                <Star
+                                  className={`w-6 h-6 sm:w-6.5 sm:h-6.5 transition-colors ${
+                                    isFilled ? 'fill-amber-400 text-amber-400' : 'fill-none text-gray-300'
+                                  }`}
+                                />
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+
+                      {/* Comment Textarea */}
+                      <div className="space-y-1">
+                        <textarea
+                          required
+                          rows={2}
+                          value={reviewComment}
+                          onChange={e => setReviewComment(e.target.value)}
+                          placeholder="Ceritakan pengalaman serumu (misal: sungainya jernih, pemandu ramah, makanan enak...)"
+                          className="w-full p-3 bg-white border border-gray-300 focus:border-[#182cc1] focus:ring-2 focus:ring-[#e8edff] rounded-xl text-xs sm:text-sm text-[#091540] outline-none transition resize-none leading-relaxed"
+                        />
+                      </div>
+
+                      {/* Submit Button */}
+                      <div className="flex justify-end">
+                        <button
+                          type="submit"
+                          disabled={isSubmittingReview}
+                          className="w-full sm:w-auto px-6 py-2.5 bg-[#182cc1] hover:bg-[#1524a3] active:scale-95 text-white text-xs sm:text-sm font-bold rounded-xl transition shadow-sm flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer"
+                          style={{ fontFamily: "Poppins, sans-serif" }}
+                        >
+                          {isSubmittingReview ? (
+                            <>
+                              <Loader2 size={14} className="animate-spin" />
+                              <span>Mengirim Ulasan...</span>
+                            </>
+                          ) : (
+                            <>
+                              <Send size={13} />
+                              <span>Kirim Ulasan Sekarang</span>
+                            </>
+                          )}
+                        </button>
+                      </div>
+                    </form>
+                  )}
+                </div>
+              ) : null}
+
+              {/* Action Buttons Row */}
               {result.status === 'cancelled' ? (
-                <div className="mb-6 sm:mb-8">
+                <div className="mb-4 sm:mb-5">
                   <button
                     onClick={() => navigate('/')}
-                    className="flex items-center gap-2 px-5 py-2.5 text-sm font-bold text-white bg-[#182cc1] hover:bg-[#1524a3] rounded-xl transition shadow-md shadow-[#182cc1]/20"
+                    className="flex items-center gap-2 px-4 py-2 text-xs sm:text-sm font-bold text-white bg-[#182cc1] hover:bg-[#1524a3] rounded-xl transition shadow-md"
                   >
-                    <Home size={16} />
+                    <Home size={14} />
                     Kembali ke Halaman Utama
                   </button>
                 </div>
-              ) : (
-                <div className="flex flex-wrap gap-3 mb-6 sm:mb-8">
+              ) : !isVisitDone(result) ? (
+                <div className="flex flex-wrap gap-2.5 mb-4 sm:mb-5">
                   <button
                     onClick={() => {
                       if (!isEditing) {
@@ -310,42 +530,44 @@ const CheckBooking: React.FC = () => {
                       }
                       setIsEditing(!isEditing);
                     }}
-                    className="flex items-center gap-2 px-4 py-2 text-sm font-bold text-[#182cc1] bg-[#e8edff] hover:bg-[#c5d0ff] rounded-xl transition cursor-pointer"
+                    className="flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-bold text-[#182cc1] bg-[#e8edff] hover:bg-[#c5d0ff] rounded-xl transition cursor-pointer"
                   >
-                    <Edit2 size={14} />
+                    <Edit2 size={13} />
                     {isEditing ? 'Batal Edit' : 'Edit Data Diri'}
                   </button>
+
                   <button
                     onClick={() => setShowCancelConfirm(true)}
-                    className="px-4 py-2 text-sm font-bold text-red-600 bg-red-50 hover:bg-red-100 rounded-xl transition cursor-pointer"
+                    className="px-3.5 py-1.5 text-xs font-bold text-red-600 bg-red-50 hover:bg-red-100 rounded-xl transition cursor-pointer"
                   >
                     Batalkan Pesanan
                   </button>
+
                   {result.status === 'pending_payment' && (
                     <button
                       onClick={() => window.location.assign(`/payment/${result.kode_booking}`)}
-                      className="px-4 py-2 text-sm font-bold text-white bg-[#182cc1] hover:bg-[#1524a3] rounded-xl transition"
+                      className="px-3.5 py-1.5 text-xs font-bold text-white bg-[#182cc1] hover:bg-[#1524a3] rounded-xl transition"
                     >
                       Lanjut ke Pembayaran
                     </button>
                   )}
                 </div>
-              )}
+              ) : null}
 
               {/* Edit Form */}
               {isEditing && (
-                <div className="bg-[#f8faff] border border-[#c5d0ff] rounded-2xl p-4 sm:p-6 mb-6 space-y-4 shadow-sm animate-in fade-in duration-300">
-                  <div className="flex items-center justify-between pb-3 border-b border-[#c5d0ff]/50">
-                    <h4 className="font-bold text-[#091540] flex items-center gap-2 text-sm sm:text-base">
-                      <Edit2 size={16} className="text-[#182cc1]" /> Ubah Data Diri
+                <div className="bg-[#f8faff] border border-[#c5d0ff] rounded-2xl p-4 sm:p-5 mb-4 space-y-3 shadow-sm animate-in fade-in duration-200">
+                  <div className="flex items-center justify-between pb-2 border-b border-[#c5d0ff]/50">
+                    <h4 className="font-bold text-[#091540] flex items-center gap-1.5 text-xs sm:text-sm">
+                      <Edit2 size={14} className="text-[#182cc1]" /> Ubah Data Diri
                     </h4>
-                    <span className="text-[11px] text-[#3d518c]/70 font-medium">* Wajib diisi</span>
+                    <span className="text-[10px] text-[#3d518c]/70 font-medium">* Wajib diisi</span>
                   </div>
 
-                  <div className="grid sm:grid-cols-2 gap-4">
+                  <div className="grid sm:grid-cols-2 gap-3">
                     {/* Nama Lengkap */}
                     <div>
-                      <label className="block text-xs font-semibold text-[#091540] mb-1.5">
+                      <label className="block text-[11px] font-semibold text-[#091540] mb-1">
                         Nama Lengkap <span className="text-red-500">*</span>
                       </label>
                       <input
@@ -356,15 +578,15 @@ const CheckBooking: React.FC = () => {
                         onBlur={() => handleEditBlur('nama')}
                         placeholder="Nama sesuai identitas"
                         disabled={isSaving}
-                        className={`w-full px-3.5 py-2.5 border rounded-xl text-sm outline-none transition ${
+                        className={`w-full px-3 py-1.5 sm:py-2 border rounded-xl text-xs outline-none transition ${
                           editErrors.nama && editTouched.nama
-                            ? 'border-red-400 focus:border-red-500 focus:ring-2 focus:ring-red-100 bg-red-50/30 text-red-900'
-                            : 'border-gray-300 focus:border-[#182cc1] focus:ring-2 focus:ring-[#e8edff] bg-white text-[#091540]'
+                            ? 'border-red-400 focus:border-red-500 focus:ring-1 focus:ring-red-100 bg-red-50/30 text-red-900'
+                            : 'border-gray-300 focus:border-[#182cc1] focus:ring-1 focus:ring-[#e8edff] bg-white text-[#091540]'
                         } disabled:opacity-50 disabled:bg-gray-100`}
                       />
                       {editErrors.nama && editTouched.nama && (
-                        <p className="text-xs text-red-600 mt-1 font-medium flex items-center gap-1">
-                          <AlertCircle size={13} className="shrink-0" />
+                        <p className="text-[10px] text-red-600 mt-0.5 font-medium flex items-center gap-1">
+                          <AlertCircle size={11} className="shrink-0" />
                           <span>{editErrors.nama}</span>
                         </p>
                       )}
@@ -372,7 +594,7 @@ const CheckBooking: React.FC = () => {
 
                     {/* No. WhatsApp */}
                     <div>
-                      <label className="block text-xs font-semibold text-[#091540] mb-1.5">
+                      <label className="block text-[11px] font-semibold text-[#091540] mb-1">
                         No. WhatsApp <span className="text-red-500">*</span>
                       </label>
                       <input
@@ -384,15 +606,15 @@ const CheckBooking: React.FC = () => {
                         onBlur={() => handleEditBlur('wa')}
                         placeholder="Contoh: 081234567890"
                         disabled={isSaving}
-                        className={`w-full px-3.5 py-2.5 border rounded-xl text-sm outline-none transition ${
+                        className={`w-full px-3 py-1.5 sm:py-2 border rounded-xl text-xs outline-none transition ${
                           editErrors.wa && editTouched.wa
-                            ? 'border-red-400 focus:border-red-500 focus:ring-2 focus:ring-red-100 bg-red-50/30 text-red-900'
-                            : 'border-gray-300 focus:border-[#182cc1] focus:ring-2 focus:ring-[#e8edff] bg-white text-[#091540]'
+                            ? 'border-red-400 focus:border-red-500 focus:ring-1 focus:ring-red-100 bg-red-50/30 text-red-900'
+                            : 'border-gray-300 focus:border-[#182cc1] focus:ring-1 focus:ring-[#e8edff] bg-white text-[#091540]'
                         } disabled:opacity-50 disabled:bg-gray-100`}
                       />
                       {editErrors.wa && editTouched.wa && (
-                        <p className="text-xs text-red-600 mt-1 font-medium flex items-center gap-1">
-                          <AlertCircle size={13} className="shrink-0" />
+                        <p className="text-[10px] text-red-600 mt-0.5 font-medium flex items-center gap-1">
+                          <AlertCircle size={11} className="shrink-0" />
                           <span>{editErrors.wa}</span>
                         </p>
                       )}
@@ -400,9 +622,9 @@ const CheckBooking: React.FC = () => {
 
                     {/* Kontak Darurat */}
                     <div className="sm:col-span-2">
-                      <div className="flex items-center justify-between mb-1.5">
-                        <label className="block text-xs font-semibold text-[#091540]">Kontak Darurat</label>
-                        <span className="text-[11px] text-gray-400">(Opsional / Nomor HP)</span>
+                      <div className="flex items-center justify-between mb-1">
+                        <label className="block text-[11px] font-semibold text-[#091540]">Kontak Darurat</label>
+                        <span className="text-[10px] text-gray-400">(Opsional / Nomor HP)</span>
                       </div>
                       <input
                         type="tel"
@@ -413,31 +635,31 @@ const CheckBooking: React.FC = () => {
                         onBlur={() => handleEditBlur('darurat')}
                         placeholder="Contoh: 081234567890"
                         disabled={isSaving}
-                        className={`w-full px-3.5 py-2.5 border rounded-xl text-sm outline-none transition ${
+                        className={`w-full px-3 py-1.5 sm:py-2 border rounded-xl text-xs outline-none transition ${
                           editErrors.darurat && editTouched.darurat
-                            ? 'border-red-400 focus:border-red-500 focus:ring-2 focus:ring-red-100 bg-red-50/30 text-red-900'
-                            : 'border-gray-300 focus:border-[#182cc1] focus:ring-2 focus:ring-[#e8edff] bg-white text-[#091540]'
+                            ? 'border-red-400 focus:border-red-500 focus:ring-1 focus:ring-red-100 bg-red-50/30 text-red-900'
+                            : 'border-gray-300 focus:border-[#182cc1] focus:ring-1 focus:ring-[#e8edff] bg-white text-[#091540]'
                         } disabled:opacity-50 disabled:bg-gray-100`}
                       />
                       {editErrors.darurat && editTouched.darurat && (
-                        <p className="text-xs text-red-600 mt-1 font-medium flex items-center gap-1">
-                          <AlertCircle size={13} className="shrink-0" />
+                        <p className="text-[10px] text-red-600 mt-0.5 font-medium flex items-center gap-1">
+                          <AlertCircle size={11} className="shrink-0" />
                           <span>{editErrors.darurat}</span>
                         </p>
                       )}
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-3 pt-2">
+                  <div className="flex items-center gap-2 pt-1">
                     <button
                       type="button"
                       onClick={handleSaveEdit}
                       disabled={isSaving}
-                      className="flex items-center justify-center gap-2 px-5 py-2.5 bg-[#182cc1] hover:bg-[#1524a3] text-white font-bold rounded-xl text-sm transition shadow-md shadow-[#182cc1]/20 disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer"
+                      className="flex items-center justify-center gap-1.5 px-4 py-1.5 bg-[#182cc1] hover:bg-[#1524a3] text-white font-bold rounded-xl text-xs transition shadow-xs disabled:opacity-60 cursor-pointer"
                     >
                       {isSaving ? (
                         <>
-                          <Loader2 size={15} className="animate-spin" />
+                          <Loader2 size={13} className="animate-spin" />
                           <span>Menyimpan...</span>
                         </>
                       ) : (
@@ -452,7 +674,7 @@ const CheckBooking: React.FC = () => {
                         setEditTouched({});
                       }}
                       disabled={isSaving}
-                      className="px-4 py-2.5 border border-gray-300 hover:bg-gray-100 text-gray-700 font-semibold rounded-xl text-sm transition disabled:opacity-50 cursor-pointer"
+                      className="px-3 py-1.5 border border-gray-300 hover:bg-gray-100 text-gray-700 font-semibold rounded-xl text-xs transition disabled:opacity-50 cursor-pointer"
                     >
                       Batal
                     </button>
@@ -461,9 +683,9 @@ const CheckBooking: React.FC = () => {
               )}
 
               {result.status === 'rejected' && (
-                <div className="mb-6 flex items-start gap-3 bg-red-50 border border-red-200 rounded-xl p-4">
-                  <AlertCircle size={18} className="text-red-600 flex-shrink-0 mt-0.5" />
-                  <p className="text-sm text-red-700 leading-relaxed" style={{ fontFamily: "Inter, sans-serif" }}>
+                <div className="mb-4 flex items-start gap-2.5 bg-red-50 border border-red-200 rounded-xl p-3">
+                  <AlertCircle size={16} className="text-red-600 flex-shrink-0 mt-0.5" />
+                  <p className="text-xs text-red-700 leading-relaxed" style={{ fontFamily: "Inter, sans-serif" }}>
                     <span className="font-bold">Bukti pembayaran ditolak.</span>
                     {result.rejected_reason ? ` Alasan: "${result.rejected_reason}".` : ''}
                     Silakan lakukan pemesanan baru jika ingin berkunjung.
@@ -472,58 +694,58 @@ const CheckBooking: React.FC = () => {
               )}
 
               {/* Info Grid */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4">
                 <div>
-                  <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Informasi Pemesan</h4>
-                  <div className="space-y-3">
+                  <h4 className="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2">Informasi Pemesan</h4>
+                  <div className="space-y-2">
                     <div>
-                      <p className="text-sm text-gray-500">Nama</p>
-                      <p className="font-bold text-[#091540]">{result.nama_pemesan}</p>
+                      <p className="text-xs text-gray-500">Nama</p>
+                      <p className="font-bold text-[#091540] text-sm">{result.nama_pemesan}</p>
                     </div>
                     <div>
-                      <p className="text-sm text-gray-500">WhatsApp</p>
-                      <p className="font-bold text-[#091540]">{result.no_wa_pemesan}</p>
+                      <p className="text-xs text-gray-500">WhatsApp</p>
+                      <p className="font-bold text-[#091540] text-sm">{result.no_wa_pemesan}</p>
                     </div>
                     {result.kontak_darurat && (
                       <div>
-                        <p className="text-sm text-gray-500">Kontak Darurat</p>
-                        <p className="font-bold text-[#091540]">{result.kontak_darurat}</p>
+                        <p className="text-xs text-gray-500">Kontak Darurat</p>
+                        <p className="font-bold text-[#091540] text-sm">{result.kontak_darurat}</p>
                       </div>
                     )}
                   </div>
                 </div>
 
                 <div>
-                  <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Detail Paket</h4>
-                  <div className="space-y-4">
-                    <div className="flex items-start gap-3">
-                      <Ticket className="w-5 h-5 text-[#182cc1] mt-0.5 flex-shrink-0" />
+                  <h4 className="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2">Detail Paket</h4>
+                  <div className="space-y-2.5">
+                    <div className="flex items-start gap-2.5">
+                      <Ticket className="w-4 h-4 text-[#182cc1] mt-0.5 flex-shrink-0" />
                       <div>
-                        <p className="text-sm text-gray-500">Paket Wisata</p>
-                        <p className="font-bold text-[#091540]">{result.package?.nama || 'Paket Wisata'}</p>
+                        <p className="text-xs text-gray-500">Paket Wisata</p>
+                        <p className="font-bold text-[#091540] text-sm">{result.package?.nama || 'Paket Wisata'}</p>
                       </div>
                     </div>
-                    <div className="flex items-start gap-3">
-                      <Calendar className="w-5 h-5 text-[#182cc1] mt-0.5 flex-shrink-0" />
+                    <div className="flex items-start gap-2.5">
+                      <Calendar className="w-4 h-4 text-[#182cc1] mt-0.5 flex-shrink-0" />
                       <div>
-                        <p className="text-sm text-gray-500">Tanggal Kunjungan</p>
-                        <p className="font-bold text-[#091540]">
+                        <p className="text-xs text-gray-500">Tanggal Kunjungan</p>
+                        <p className="font-bold text-[#091540] text-sm">
                           {new Date(result.tanggal).toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
                         </p>
                       </div>
                     </div>
-                    <div className="flex items-start gap-3">
-                      <Clock className="w-5 h-5 text-[#182cc1] mt-0.5 flex-shrink-0" />
+                    <div className="flex items-start gap-2.5">
+                      <Clock className="w-4 h-4 text-[#182cc1] mt-0.5 flex-shrink-0" />
                       <div>
-                        <p className="text-sm text-gray-500">Sesi Kedatangan</p>
-                        <p className="font-bold text-[#091540]">{result.sesi}</p>
+                        <p className="text-xs text-gray-500">Sesi Kedatangan</p>
+                        <p className="font-bold text-[#091540] text-sm">{result.sesi}</p>
                       </div>
                     </div>
-                    <div className="flex items-start gap-3">
-                      <Users className="w-5 h-5 text-[#182cc1] mt-0.5 flex-shrink-0" />
+                    <div className="flex items-start gap-2.5">
+                      <Users className="w-4 h-4 text-[#182cc1] mt-0.5 flex-shrink-0" />
                       <div>
-                        <p className="text-sm text-gray-500">Jumlah Peserta</p>
-                        <p className="font-bold text-[#091540]">{result.jumlah_peserta} Orang</p>
+                        <p className="text-xs text-gray-500">Jumlah Peserta</p>
+                        <p className="font-bold text-[#091540] text-sm">{result.jumlah_peserta} Orang</p>
                       </div>
                     </div>
                   </div>
@@ -532,11 +754,11 @@ const CheckBooking: React.FC = () => {
 
               {/* Add-ons */}
               {result.addons && result.addons.length > 0 && (
-                <div className="mt-6 sm:mt-8 pt-6 border-t border-gray-100">
-                  <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Adds On</h4>
-                  <div className="space-y-2">
+                <div className="mt-4 sm:mt-5 pt-4 border-t border-gray-100">
+                  <h4 className="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2">Adds On</h4>
+                  <div className="space-y-1.5">
                     {result.addons.map((addon, idx) => (
-                      <div key={idx} className="flex justify-between items-center text-sm">
+                      <div key={idx} className="flex justify-between items-center text-xs">
                         <span className="font-semibold text-[#091540]">+ {addon.nama}</span>
                         <span className="text-gray-500">
                           {addon.harga === 0 ? 'Gratis' : `Rp ${addon.harga.toLocaleString('id-ID')}`}
@@ -548,9 +770,9 @@ const CheckBooking: React.FC = () => {
               )}
 
               {/* Total */}
-              <div className="mt-6 sm:mt-8 pt-6 border-t border-gray-100 flex items-center justify-between">
-                <span className="text-gray-500 font-medium">Total Harga</span>
-                <span className="text-xl sm:text-2xl font-black text-[#091540]" style={{ fontFamily: "Poppins, sans-serif" }}>
+              <div className="mt-4 sm:mt-5 pt-4 border-t border-gray-100 flex items-center justify-between">
+                <span className="text-gray-500 font-medium text-xs sm:text-sm">Total Harga</span>
+                <span className="text-lg sm:text-xl font-black text-[#091540]" style={{ fontFamily: "Poppins, sans-serif" }}>
                   Rp {Number(result.total_harga).toLocaleString('id-ID')}
                 </span>
               </div>
