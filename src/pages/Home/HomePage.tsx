@@ -30,7 +30,7 @@ export default function HomePage() {
       }, 200); // Small delay to ensure DOM is ready
     }
   }, [location.hash]);
-  const [waAdmin, setWaAdmin] = useState("6281234567890");
+  const [waAdmin, setWaAdmin] = useState("");
 
   useEffect(() => {
     getSettings('wa_admin')
@@ -40,9 +40,7 @@ export default function HomePage() {
           setWaAdmin(wa.value);
         }
       })
-      .catch(() => {
-        // Tetap menggunakan nomor default agar tombol WA floating selalu tersedia
-      });
+      .catch(() => {});
   }, []);
 
   return (
@@ -65,15 +63,17 @@ export default function HomePage() {
       </main>
 
       {/* Tombol Floating WhatsApp */}
-      <a
-        href={`https://wa.me/${waAdmin || '6281234567890'}?text=${encodeURIComponent('Halo Admin, saya ingin tanya tentang wisata Desa Getas')}`}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="fixed bottom-6 right-6 z-40 w-[52px] h-[52px] rounded-full bg-[#182cc1] hover:bg-[#1524a3] shadow-lg shadow-[#7692ff]/40 text-white transition-all hover:scale-110 flex items-center justify-center"
-        aria-label="Hubungi WhatsApp"
-      >
-        <MessageSquare size={22} />
-      </a>
+      {waAdmin && (
+        <a
+          href={`https://wa.me/${waAdmin.replace(/\D/g, '')}?text=${encodeURIComponent('Halo Admin, saya ingin tanya tentang wisata Desa Getas')}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="fixed bottom-6 right-6 z-40 w-[52px] h-[52px] rounded-full bg-[#182cc1] hover:bg-[#1524a3] shadow-lg shadow-[#7692ff]/40 text-white transition-all hover:scale-110 flex items-center justify-center"
+          aria-label="Hubungi WhatsApp"
+        >
+          <MessageSquare size={22} />
+        </a>
+      )}
 
       <Footer />
     </div>

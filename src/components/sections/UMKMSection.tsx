@@ -4,8 +4,6 @@ import { getUmkmProducts } from "../../services/umkm.service";
 import { resolveImageUrl } from "../../utils/image";
 import type { UmkmProduct } from "../../types";
 
-const CATS = ["Semua", "Makanan", "Kerajinan", "Pertanian", "Oleh-Oleh"];
-
 export default function UMKMSection() {
   const [cat, setCat] = useState("Semua");
   const [products, setProducts] = useState<UmkmProduct[]>([]);
@@ -29,7 +27,8 @@ export default function UMKMSection() {
     return () => { cancelled = true; };
   }, []);
 
-  const filtered = products.filter(p => cat === "Semua" || p.kategori === cat);
+  const categories = ["Semua", ...Array.from(new Set(products.map(p => p.kategori).filter(Boolean))) as string[]];
+  const filtered = products.filter(p => cat === "Semua" || p.kategori?.toLowerCase() === cat.toLowerCase());
 
   return (
     <section id="umkm" className="py-16 px-4 sm:px-8 bg-[#eef2ff]">
@@ -41,7 +40,7 @@ export default function UMKMSection() {
           </div>
           {/* Filter Pills — Symmetrical & Responsive */}
           <div className="flex flex-wrap items-center gap-2">
-            {CATS.map(c => (
+            {categories.map(c => (
               <button
                 key={c}
                 onClick={() => setCat(c)}
@@ -57,6 +56,7 @@ export default function UMKMSection() {
             ))}
           </div>
         </div>
+
 
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
           {isLoading ? (
@@ -77,10 +77,12 @@ export default function UMKMSection() {
             <div className="col-span-full text-center py-16">
               <p className="text-[#3d518c] text-sm" style={{ fontFamily: "Inter, sans-serif" }}>Belum ada produk UMKM tersedia.</p>
             </div>
-          ) : filtered.map(p => (
+          ) : filtered.map(p => {
+            const cleanWa = (p.no_wa_penjual || '').replace(/\D/g, '').replace(/^0/, '62');
+            return (
             <a 
               key={p.id} 
-              href={`https://wa.me/${p.no_wa_penjual}?text=Halo, saya tertarik dengan produk ${encodeURIComponent(p.nama)}`}
+              href={`https://wa.me/${cleanWa}?text=Halo, saya tertarik dengan produk ${encodeURIComponent(p.nama)}`}
               target="_blank" rel="noopener noreferrer"
               className="bg-white rounded-2xl overflow-hidden border border-[#c5d0ff] shadow-sm hover:shadow-lg hover:border-[#25D366] transition-all group cursor-pointer flex flex-col relative"
             >
@@ -98,14 +100,20 @@ export default function UMKMSection() {
                 </div>
                 
                 <div className="flex items-end justify-between mt-auto pt-2">
-                  <div className="text-[#182cc1] font-black text-sm">{`Rp ${Number(p.harga).toLocaleString('id-ID')}`}</div>
-                  <div className="w-8 h-8 rounded-full bg-[#e8edff] flex items-center justify-center text-[#182cc1] group-hover:bg-[#25D366] group-hover:text-white transition-colors shadow-sm">
+                  <div>
+                    <span className="block text-[10px] font-semibold text-[#3d518c]/80 uppercase tracking-wider">Mulai dari</span>
+                    <div className="text-[#182cc1] font-black text-sm sm:text-base leading-tight">
+                      {`Rp ${Number(p.harga).toLocaleString('id-ID')}`}
+                    </div>
+                  </div>
+                  <div className="w-8 h-8 rounded-full bg-[#e8edff] flex items-center justify-center text-[#182cc1] group-hover:bg-[#25D366] group-hover:text-white transition-colors shadow-sm shrink-0">
                     <MessageSquare size={14} className="group-hover:scale-110 transition-transform" />
                   </div>
                 </div>
               </div>
             </a>
-          ))}
+          );
+        })}
         </div>
       </div>
     </section>

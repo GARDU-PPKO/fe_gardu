@@ -16,10 +16,10 @@ interface HomeDataState {
 
 const FALLBACK_SETTINGS: Record<string, string> = {
   nama_desa: 'Desa Wisata Getas',
-  wa_admin: '6281234567890',
-  alamat_desa: 'Jl. Raya Getas No. 1, Kec. Singorojo, Kab. Kendal 51382',
-  email_desa: 'desagetas@kendalkab.go.id',
-  jam_pelayanan: 'Setiap Hari: 08.00–15.00 WIB',
+  wa_admin: '',
+  alamat_desa: '',
+  email_desa: '',
+  jam_pelayanan: '',
 };
 
 const HomeDataContext = createContext<HomeDataState | undefined>(undefined);

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import BookingLayout from '../../components/layout/BookingLayout';
@@ -6,7 +6,9 @@ import BookingSummary from '../../components/booking/BookingSummary';
 import { useBooking } from '../../hooks/useBooking';
 import { getBookingSessions, getAddOns } from '../../services/booking.service';
 import { getTourPackageDetail } from '../../services/tour-package.service';
+import { getSettings } from '../../services/village.service';
 import { resolveImageUrl } from '../../utils/image';
+import { calculatePackagePrice } from '../../utils/pricing';
 import type { AddOnOption } from '../../services/booking.service';
 import type { BookingSession } from '../../types';
 
@@ -29,13 +31,38 @@ const BookingPackage: React.FC = () => {
   const [localAddOns, setLocalAddOns] = useState<typeof bookingData.selectedAddOns>(bookingData.selectedAddOns || []);
   const [addOnOptions, setAddOnOptions] = useState<AddOnOption[]>([]);
   const [isAddonModalOpen, setIsAddonModalOpen] = useState(false);
-  const [packageDetail, setPackageDetail] = useState<{ min_participants: number; max_participants: number } | null>(null);
+  const [packageDetail, setPackageDetail] = useState<{ min_participants: number; max_participants: number | null } | null>(null);
+  const [policies, setPolicies] = useState({
+    check_in_time: '',
+    check_out_time: '',
+    cancel_policy: '',
+    night_curfew: ''
+  });
 
   useEffect(() => {
-    setLocalDate(bookingData.date || '');
-    setLocalSession(bookingData.session || '');
-    setLocalAddOns(bookingData.selectedAddOns || []);
+    getSettings('check_in_time,check_out_time,cancel_policy,night_curfew').then(res => {
+      if (res?.data) {
+        const map = Object.fromEntries(res.data.map(item => [item.key, item.value]));
+        setPolicies({
+          check_in_time: map.check_in_time || '',
+          check_out_time: map.check_out_time || '',
+          cancel_policy: map.cancel_policy || '',
+          night_curfew: map.night_curfew || '',
+        });
+      }
+    }).catch(() => {});
+  }, []);
+
+  const prevPkgIdRef = useRef(bookingData.selectedPackage?.id);
+  useEffect(() => {
+    if (prevPkgIdRef.current !== bookingData.selectedPackage?.id) {
+      prevPkgIdRef.current = bookingData.selectedPackage?.id;
+      setLocalDate(bookingData.date || '');
+      setLocalSession(bookingData.session || '');
+      setLocalAddOns(bookingData.selectedAddOns || []);
+    }
   }, [bookingData.selectedPackage?.id, bookingData.date, bookingData.session, bookingData.selectedAddOns]);
+
 
   useEffect(() => {
     getAddOns().then(res => {
@@ -48,9 +75,11 @@ const BookingPackage: React.FC = () => {
     getTourPackageDetail(Number(currentPackage.id))
       .then(res => {
         const detail = res.data;
+        const minP = detail?.min_participants ?? currentPackage.minParticipants ?? 1;
+        const maxP = detail?.max_participants ?? currentPackage.maxParticipants ?? null;
         setPackageDetail({
-          min_participants: detail?.min_participants ?? currentPackage.minParticipants ?? 1,
-          max_participants: detail?.max_participants ?? currentPackage.maxParticipants ?? 10,
+          min_participants: minP,
+          max_participants: maxP,
         });
         if (detail) {
           updatePackage({
@@ -58,10 +87,13 @@ const BookingPackage: React.FC = () => {
             name: detail.nama,
             description: detail.deskripsi,
             price: Number(detail.harga),
+            tipe_harga: detail.tipe_harga,
+            kapasitas_per_unit: detail.kapasitas_per_unit,
+            tiers: detail.tiers,
             unit: detail.satuan === 'orang' ? 'orang' : 'grup',
             tag: detail.tag ?? undefined,
-            minParticipants: detail.min_participants ?? undefined,
-            maxParticipants: detail.max_participants ?? undefined,
+            minParticipants: minP,
+            maxParticipants: maxP ?? undefined,
             image: detail.gambar,
             duration: detail.durasi,
             includes: detail.includes?.map(i => i.item) ?? [],
@@ -84,10 +116,11 @@ const BookingPackage: React.FC = () => {
   }, [isAddonModalOpen]);
 
   const minParticipants = packageDetail?.min_participants ?? currentPackage?.minParticipants ?? 1;
-  const maxParticipants = packageDetail?.max_participants ?? currentPackage?.maxParticipants ?? 10;
-  const participants = packageDetail
-    ? Math.max(minParticipants, Math.min(localParticipants, maxParticipants))
-    : localParticipants;
+  const rawMax = packageDetail?.max_participants ?? currentPackage?.maxParticipants;
+  const maxParticipants = rawMax && rawMax > minParticipants ? rawMax : 50;
+  const participants = Math.max(minParticipants, Math.min(localParticipants, maxParticipants));
+
+  const pricing = calculatePackagePrice(currentPackage, participants);
 
   useEffect(() => {
     if (!currentPackage || !localDate) {
@@ -133,15 +166,27 @@ const BookingPackage: React.FC = () => {
             </button>
           </div>
           
-          <div className="bg-white rounded-2xl p-4 border border-[#c5d0ff] flex flex-col sm:flex-row gap-4 items-start sm:items-center mb-8 shadow-sm">
+          <div className="bg-white rounded-2xl p-4 sm:p-5 border border-[#c5d0ff] flex flex-col sm:flex-row gap-4 items-start sm:items-center mb-8 shadow-sm">
             <div className="w-full sm:w-24 h-40 sm:h-24 rounded-xl overflow-hidden flex-shrink-0 bg-[#e8edff]">
               <img src={resolveImageUrl(currentPackage.image)} alt={currentPackage.name} className="w-full h-full object-cover" />
             </div>
-            <div>
-              <h4 className="font-bold text-[#091540] text-lg mb-1" style={{ fontFamily: "Poppins, sans-serif" }}>{currentPackage.name}</h4>
-              <p className="text-[#3d518c] text-sm mb-2" style={{ fontFamily: "Inter, sans-serif" }}>{currentPackage.duration} · {currentPackage.unit === 'orang' ? 'Per Orang' : 'Per Grup'}</p>
-              <div className="text-[#182cc1] font-bold">
-                {`Rp ${Number(currentPackage.price).toLocaleString('id-ID')}`}
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 flex-wrap mb-1">
+                <h4 className="font-bold text-[#091540] text-lg" style={{ fontFamily: "Poppins, sans-serif" }}>
+                  {currentPackage.name}
+                </h4>
+                {currentPackage.tag && (
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#182cc1]/10 text-[#182cc1]">
+                    {currentPackage.tag}
+                  </span>
+                )}
+              </div>
+              <p className="text-[#3d518c] text-xs mb-2" style={{ fontFamily: "Inter, sans-serif" }}>
+                {currentPackage.duration} · {currentPackage.unit === 'orang' ? 'Per Orang' : 'Per Grup'}
+              </p>
+              <div className="flex items-baseline gap-1.5 text-[#182cc1] font-bold text-lg">
+                <span>Rp {pricing.unitPrice.toLocaleString('id-ID')}</span>
+                <span className="text-xs font-normal text-[#3d518c]">/{pricing.unitLabel === 'orang' ? 'orang' : 'paket'}</span>
               </div>
             </div>
           </div>
@@ -176,13 +221,16 @@ const BookingPackage: React.FC = () => {
                 style={{ fontFamily: "Inter, sans-serif" }}
               >
                 <option value="" disabled>-- Pilih Sesi Waktu --</option>
-                {sessions.length > 0 ? (
+                {!localDate ? (
+                  <option value="" disabled>Pilih tanggal kunjungan terlebih dahulu</option>
+                ) : sessions.length > 0 ? (
                   sessions.map((session) => {
-                    const jamMulai = session.jam_mulai ? session.jam_mulai.slice(0, 5) : '';
-                    const jamSelesai = session.jam_selesai ? session.jam_selesai.slice(0, 5) : '';
-                    const label = jamMulai && jamSelesai
-                      ? `${session.sesi} (${jamMulai} – ${jamSelesai})`
-                      : session.sesi;
+                    let label = session.sesi;
+                    if (!label.includes('(') && session.jam_mulai && session.jam_selesai) {
+                      const jamMulai = session.jam_mulai.slice(0, 5).replace(':', '.');
+                      const jamSelesai = session.jam_selesai.slice(0, 5).replace(':', '.');
+                      label = `${session.sesi} (${jamMulai} - ${jamSelesai})`;
+                    }
                     return (
                       <option key={session.id} value={label}>
                         {label}
@@ -190,19 +238,22 @@ const BookingPackage: React.FC = () => {
                     );
                   })
                 ) : (
-                  <>
-                    <option value="Pagi (07.00 - 10.00)">Pagi (07.00 - 10.00)</option>
-                    <option value="Siang (10.00 - 13.00)">Siang (10.00 - 13.00)</option>
-                    <option value="Sore (14.00 - 17.00)">Sore (14.00 - 17.00)</option>
-                  </>
+                  <option value="" disabled>Tidak ada sesi waktu tersedia pada tanggal ini</option>
                 )}
               </select>
             </div>
             {/* Persons */}
             <div className="sm:col-span-2">
-              <label className="block text-sm font-semibold text-[#091540] mb-2" style={{ fontFamily: "Inter, sans-serif" }}>
-                Jumlah Peserta <span className="text-[#3d518c] font-normal">(min. {minParticipants}, maks. {maxParticipants})</span>
-              </label>
+              <div className="flex items-center justify-between mb-2">
+                <label className="text-sm font-semibold text-[#091540]" style={{ fontFamily: "Inter, sans-serif" }}>
+                  Jumlah Peserta <span className="text-[#3d518c] font-normal">(min. {minParticipants}{rawMax && rawMax > minParticipants ? `, maks. ${rawMax}` : ''})</span>
+                </label>
+                {pricing.isTierPricing && (
+                  <span className="text-xs text-[#182cc1] font-medium hidden sm:inline">
+                    Diskon rombongan otomatis diterapkan
+                  </span>
+                )}
+              </div>
               <div className="flex items-center justify-between bg-[#f8faff] border border-[#c5d0ff] rounded-2xl p-2 shadow-inner">
                 <button
                   type="button"
@@ -231,6 +282,45 @@ const BookingPackage: React.FC = () => {
                   <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
                 </button>
               </div>
+
+              {/* Clean Tier Pricing Grid below the counter */}
+              {pricing.isTierPricing && pricing.tiers.length > 0 && (
+                <div className="mt-3 grid grid-cols-2 gap-2.5 sm:gap-3">
+                  {pricing.tiers.map((t, idx, arr) => {
+                    const isActive = pricing.activeTier?.min_peserta === t.min_peserta;
+                    const nextTier = arr[idx + 1];
+                    const rangeLabel = nextTier
+                      ? `${t.min_peserta} – ${nextTier.min_peserta - 1} orang`
+                      : `≥ ${t.min_peserta} orang`;
+
+                    return (
+                      <div
+                        key={t.min_peserta}
+                        className={`p-3 rounded-2xl border transition-all duration-200 flex flex-col justify-between ${
+                          isActive
+                            ? 'bg-[#eef2ff] border-[#182cc1] ring-2 ring-[#182cc1]/20 shadow-sm'
+                            : 'bg-white border-[#c5d0ff]/70 hover:border-[#c5d0ff]'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between gap-1 mb-1">
+                          <span className={`text-xs font-semibold ${isActive ? 'text-[#182cc1]' : 'text-[#3d518c]'}`}>
+                            {rangeLabel}
+                          </span>
+                          {isActive && (
+                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#182cc1] text-white">
+                              Aktif
+                            </span>
+                          )}
+                        </div>
+                        <div className={`text-sm sm:text-base font-bold ${isActive ? 'text-[#091540]' : 'text-[#3d518c]'}`} style={{ fontFamily: "Poppins, sans-serif" }}>
+                          Rp {t.harga_per_orang.toLocaleString('id-ID')}
+                          <span className="text-[11px] font-normal text-[#3d518c]"> /org</span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           </div>
 
@@ -283,9 +373,14 @@ const BookingPackage: React.FC = () => {
                     </div>
                   ) : addOnOptions.map(addon => {
                     const isSelected = localAddOns.some(a => a.id === String(addon.id));
+                    const currentQty = localAddOns.find(a => a.id === String(addon.id))?.quantity ?? 1;
+                    const isPerOrang = addon.satuan === 'per orang';
+                    const unitLabel = isPerOrang ? 'orang' : 'unit';
                     const priceLabel = addon.is_free || addon.harga === 0
                       ? 'Gratis'
-                      : `+ Rp ${addon.harga.toLocaleString('id-ID')}${addon.satuan === 'per orang' ? ' / orang' : ''}`;
+                      : isSelected && currentQty > 1
+                        ? `+ Rp ${(addon.harga * currentQty).toLocaleString('id-ID')} (${currentQty} ${unitLabel})`
+                        : `+ Rp ${addon.harga.toLocaleString('id-ID')} / ${unitLabel}`;
 
                     const toggleAddon = () => {
                       if (isSelected) {
@@ -303,44 +398,95 @@ const BookingPackage: React.FC = () => {
                       }
                     };
 
+                    const updateQty = (delta: number) => {
+                      setLocalAddOns(localAddOns.map(a =>
+                        a.id === String(addon.id)
+                          ? { ...a, quantity: Math.max(1, (a.quantity ?? 1) + delta) }
+                          : a
+                      ));
+                    };
+
                     return (
                       <div
                         key={addon.id}
-                        onClick={toggleAddon}
-                        className={`p-3.5 sm:p-4 rounded-2xl border cursor-pointer transition-all flex items-center justify-between gap-3 ${
+                        className={`p-3.5 sm:p-4 rounded-2xl border transition-all flex flex-col gap-3 ${
                           isSelected
                             ? 'border-[#182cc1] bg-[#f8faff] shadow-md shadow-[#182cc1]/10'
                             : 'border-[#c5d0ff] bg-white hover:border-[#182cc1] hover:shadow-sm'
                         }`}
                       >
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-1">
-                            <span className="font-bold text-[#091540] text-sm sm:text-base">{addon.nama}</span>
-                            {addon.is_free && (
-                              <span className="bg-green-100 text-green-700 text-[10px] font-bold px-2 py-0.5 rounded-full">FREE</span>
-                            )}
+                        <div className="flex items-center justify-between gap-3 cursor-pointer" onClick={toggleAddon}>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-1">
+                              <span className="font-bold text-[#091540] text-sm sm:text-base">{addon.nama}</span>
+                              {addon.is_free && (
+                                <span className="bg-green-100 text-green-700 text-[10px] font-bold px-2 py-0.5 rounded-full">FREE</span>
+                              )}
+                            </div>
+                            <p className="text-xs sm:text-sm text-[#3d518c] leading-snug line-clamp-2 pr-2" style={{ fontFamily: "Inter, sans-serif" }}>
+                              {addon.deskripsi}
+                            </p>
+                            <div className="mt-1.5 font-bold text-[#182cc1] text-xs sm:text-sm">
+                              {priceLabel}
+                            </div>
                           </div>
-                          <p className="text-xs sm:text-sm text-[#3d518c] leading-snug line-clamp-2 pr-2" style={{ fontFamily: "Inter, sans-serif" }}>
-                            {addon.deskripsi}
-                          </p>
-                          <div className="mt-1.5 font-bold text-[#182cc1] text-xs sm:text-sm">
-                            {priceLabel}
+
+                          {/* Checkbox box indicator */}
+                          <div className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center flex-shrink-0 transition-colors ${
+                            isSelected ? 'bg-[#182cc1] border-[#182cc1]' : 'border-[#c5d0ff] bg-white'
+                          }`}>
+                            {isSelected && (
+                              <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
+                              </svg>
+                            )}
                           </div>
                         </div>
 
-                        {/* Checkbox box indicator */}
-                        <div className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center flex-shrink-0 transition-colors ${
-                          isSelected ? 'bg-[#182cc1] border-[#182cc1]' : 'border-[#c5d0ff] bg-white'
-                        }`}>
-                          {isSelected && (
-                            <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
-                            </svg>
-                          )}
-                        </div>
+                        {/* Qty counter — muncul untuk SEMUA add-on yang dipilih */}
+                        {isSelected && !addon.is_free && addon.harga > 0 && (
+                          <div className="flex items-center justify-between bg-[#f0f3ff] rounded-xl px-3.5 py-2 border border-[#c5d0ff]/50">
+                            <span className="text-xs font-semibold text-[#091540]" style={{ fontFamily: "Inter, sans-serif" }}>
+                              {isPerOrang ? "Jumlah orang yang pesan:" : "Jumlah unit / item:"}
+                            </span>
+                            <div className="flex items-center gap-1.5">
+                              <button
+                                type="button"
+                                onClick={(e) => { e.stopPropagation(); updateQty(-1); }}
+                                disabled={currentQty <= 1}
+                                className="w-8 h-8 rounded-lg bg-white border border-[#c5d0ff] text-[#182cc1] flex items-center justify-center hover:border-[#182cc1] hover:bg-[#e8edff] transition disabled:opacity-40 flex-shrink-0"
+                              >
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                              </button>
+                              <input
+                                type="number"
+                                min={1}
+                                value={currentQty}
+                                onChange={(e) => {
+                                  const val = Math.max(1, parseInt(e.target.value) || 1);
+                                  setLocalAddOns(localAddOns.map(a =>
+                                    a.id === String(addon.id) ? { ...a, quantity: val } : a
+                                  ));
+                                }}
+                                onClick={(e) => e.stopPropagation()}
+                                className="w-12 h-8 text-center font-bold text-[#091540] text-sm bg-white border border-[#c5d0ff] rounded-lg p-0 focus:outline-none focus:border-[#182cc1] [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                style={{ fontFamily: "Poppins, sans-serif" }}
+                              />
+                              <button
+                                type="button"
+                                onClick={(e) => { e.stopPropagation(); updateQty(1); }}
+                                className="w-8 h-8 rounded-lg bg-[#182cc1] text-white flex items-center justify-center hover:bg-[#1524a3] transition shadow-sm flex-shrink-0"
+                              >
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                              </button>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     );
                   })}
+
+
                 </div>
                 <div className="px-6 py-4 border-t bg-white flex justify-end">
                   <button 
@@ -363,22 +509,22 @@ const BookingPackage: React.FC = () => {
               <svg className="w-5 h-5 text-orange-600 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
               <p className="text-sm text-orange-900 leading-relaxed">
                 <strong>Waktu Check-in & Check-out:</strong><br />
-                Check-in mulai pukul 13.00 WIB.<br />
-                Check-out maksimal pukul 11.00 WIB.
+                Check-in mulai pukul {policies.check_in_time}.<br />
+                Check-out maksimal pukul {policies.check_out_time}.
               </p>
             </div>
             <div className="flex items-start gap-2">
               <svg className="w-5 h-5 text-orange-600 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20.618 5.984A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016zM12 9v2m0 4h.01"></path></svg>
               <p className="text-sm text-orange-900 leading-relaxed">
                 <strong>Kebijakan Pembatalan:</strong><br />
-                Pembatalan atau reschedule maksimal 8 jam sebelum waktu kedatangan.
+                {policies.cancel_policy}
               </p>
             </div>
             <div className="flex items-start gap-2">
               <svg className="w-5 h-5 text-orange-600 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
               <p className="text-sm text-orange-900 leading-relaxed">
                 <strong>Jam Malam:</strong><br />
-                Peraturan jam malam dan ketenangan berlaku mulai pukul 22.00 WIB (10 malam).
+                {policies.night_curfew}
               </p>
             </div>
           </div>

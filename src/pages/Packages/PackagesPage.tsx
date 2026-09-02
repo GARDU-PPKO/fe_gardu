@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowRight, ArrowLeft, CheckCircle2, Clock, Users, Leaf, Loader2 } from "lucide-react";
+import { ArrowRight, ArrowLeft, CheckCircle2, Clock, Users, Leaf, Loader2, X, CheckCircle } from "lucide-react";
 import { getTourPackages } from "../../services/tour-package.service";
 import { useBooking } from "../../hooks/useBooking";
 import { resolveImageUrl } from "../../utils/image";
@@ -14,11 +14,24 @@ export default function PackagesPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
   const [filter, setFilter] = useState("Semua");
-  const categories = ["Semua", "Adventure", "Education", "Family", "Camping"];
+  const [selectedPreview, setSelectedPreview] = useState<TourPackage | null>(null);
+
+  // Lock body scroll when modal is open
+  useEffect(() => {
+    if (selectedPreview) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [selectedPreview]);
 
   useEffect(() => {
     window.scrollTo(0, 0);
     let cancelled = false;
+
     getTourPackages()
       .then(res => {
         if (cancelled) return;
@@ -34,13 +47,13 @@ export default function PackagesPage() {
     return () => { cancelled = true; };
   }, []);
 
+  const categories = ["Semua", ...Array.from(new Set(packages.map(p => p.tag).filter(Boolean))) as string[]];
+
   const filteredPackages = packages.filter(p => {
     if (filter === "Semua") return true;
-    if (p.tag) {
-       return p.tag.toLowerCase() === filter.toLowerCase();
-    }
-    return true;
+    return p.tag?.toLowerCase() === filter.toLowerCase();
   });
+
 
   const handleSelectPackage = (p: TourPackage) => {
     updatePackage({
@@ -48,6 +61,9 @@ export default function PackagesPage() {
       name: p.nama,
       description: p.deskripsi,
       price: Number(p.harga),
+      tipe_harga: p.tipe_harga,
+      kapasitas_per_unit: p.kapasitas_per_unit,
+      tiers: p.tiers,
       unit: p.satuan === 'orang' ? 'orang' : 'grup',
       tag: p.tag ?? undefined,
       minParticipants: p.min_participants ?? undefined,
@@ -94,29 +110,28 @@ export default function PackagesPage() {
             ))}
           </div>
 
-
           <div className="mb-10 max-w-2xl">
             <span className="text-[#182cc1] text-sm font-bold tracking-widest uppercase mb-2 block flex items-center gap-2">
               <span className="w-8 h-0.5 bg-[#182cc1] rounded-full"></span>
-              Daftar Paket Getas
+              Pilihan Paket Wisata
             </span>
-            <h1 className="text-4xl sm:text-5xl font-black text-[#091540] leading-tight drop-shadow-sm" style={{ fontFamily: "Poppins, sans-serif" }}>
-              Eksplorasi Petualangan
+            <h1 className="text-3xl sm:text-4xl font-extrabold text-[#091540] tracking-tight mb-4" style={{ fontFamily: "Poppins, sans-serif" }}>
+              Jelajahi Pesona Alam Desa Getas
             </h1>
-            <p className="text-[#3d518c] mt-4 text-sm sm:text-base leading-relaxed max-w-xl">
-              Temukan paket wisata alam eksklusif, edukasi, hingga rekreasi keluarga yang telah kami susun khusus untuk pengalaman tak terlupakan di Desa Getas.
+            <p className="text-[#3d518c] text-sm sm:text-base leading-relaxed" style={{ fontFamily: "Inter, sans-serif" }}>
+              Pilih paket petualangan air, edukasi, atau liburan keluarga yang paling cocok untuk rombongan Anda.
             </p>
           </div>
 
           {/* Grid Layout - Flows naturally, handles unlimited data */}
           {isLoading ? (
-            <div className="flex flex-col items-center justify-center py-24 gap-4">
-              <Loader2 className="w-9 h-9 animate-spin text-[#182cc1]" />
-              <p className="text-[#3d518c] text-sm font-medium" style={{ fontFamily: "Inter, sans-serif" }}>Memuat paket wisata...</p>
+            <div className="flex flex-col items-center justify-center py-24 gap-3 text-[#3d518c]" style={{ fontFamily: "Inter, sans-serif" }}>
+              <Loader2 className="w-8 h-8 animate-spin text-[#182cc1]" />
+              <span className="text-sm font-medium">Memuat paket wisata...</span>
             </div>
           ) : hasError ? (
             <div className="flex flex-col items-center justify-center py-24 gap-4 text-center">
-              <p className="text-[#3d518c] text-sm" style={{ fontFamily: "Inter, sans-serif" }}>Gagal memuat paket wisata.</p>
+              <p className="text-[#3d518c] text-sm" style={{ fontFamily: "Inter, sans-serif" }}>Gagal memuat paket wisata. Silakan periksa koneksi Anda.</p>
               <button onClick={() => window.location.reload()}
                 className="px-6 py-3 bg-[#182cc1] hover:bg-[#1524a3] text-white text-sm font-bold rounded-full transition"
                 style={{ fontFamily: "Poppins, sans-serif" }}>
@@ -129,10 +144,15 @@ export default function PackagesPage() {
             </div>
           ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 sm:gap-8">
-            {filteredPackages.map(p => (
+            {filteredPackages.map(p => {
+              const minTierPrice = p.tiers && p.tiers.length > 0
+                ? Math.min(...p.tiers.map(t => Number(t.harga_per_orang)))
+                : Number(p.harga);
+
+              return (
               <div 
                 key={p.id} 
-                onClick={() => handleSelectPackage(p)}
+                onClick={() => setSelectedPreview(p)}
                 className="bg-white rounded-[2rem] overflow-hidden group hover:-translate-y-2 hover:shadow-[0_20px_40px_-15px_rgba(24,44,193,0.15)] shadow-md border border-[#e8edff] transition-all duration-300 cursor-pointer flex flex-col h-full relative"
               >
                 {/* Image Section */}
@@ -174,10 +194,17 @@ export default function PackagesPage() {
                   <div className="flex items-end justify-between pt-5 mt-4 border-t border-dashed border-[#c5d0ff]">
                     <div>
                       <div className="text-[10px] text-[#3d518c] uppercase tracking-widest mb-1 font-bold flex items-center gap-1">
-                        Harga Tiket
+                        {p.tiers && p.tiers.length > 0 ? "Tier Rombongan" : "Harga Tiket"}
                       </div>
                       <div className="text-[#091540] font-black text-2xl leading-none" style={{ fontFamily: "Poppins, sans-serif" }}>
-                        Rp {Number(p.harga).toLocaleString('id-ID')}
+                        {p.tiers && p.tiers.length > 0 ? (
+                          <>
+                            <span className="text-xs font-normal text-[#3d518c] mr-1">Mulai</span>
+                            Rp {minTierPrice.toLocaleString('id-ID')}
+                          </>
+                        ) : (
+                          `Rp ${Number(p.harga).toLocaleString('id-ID')}`
+                        )}
                         <span className="text-[11px] text-[#3d518c] font-semibold ml-1">/{p.satuan}</span>
                       </div>
                     </div>
@@ -187,7 +214,8 @@ export default function PackagesPage() {
                   </div>
                 </div>
               </div>
-            ))}
+            );
+            })}
           </div>
           )}
         </main>
@@ -195,6 +223,200 @@ export default function PackagesPage() {
       
       {/* Footer */}
       <Footer />
+
+      {/* Package Detail Preview Modal */}
+      {selectedPreview && (
+        <div
+          className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4"
+          onClick={() => setSelectedPreview(null)}
+        >
+          <div
+            className="bg-white rounded-3xl overflow-hidden max-w-lg w-full shadow-2xl flex flex-col max-h-[90vh]"
+            onClick={e => e.stopPropagation()}
+          >
+            {/* Hero Image */}
+            <div className="relative h-52 flex-shrink-0">
+              <img
+                src={resolveImageUrl(selectedPreview.gambar)}
+                alt={selectedPreview.nama}
+                className="w-full h-full object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#091540]/70 via-transparent to-transparent" />
+              {selectedPreview.tag && (
+                <div className={`absolute top-3 left-3 flex items-center gap-1.5 px-3 py-1.5 rounded-full backdrop-blur-md shadow-lg ${
+                  selectedPreview.tag.toLowerCase() === 'education' ? 'bg-emerald-500/95'
+                  : selectedPreview.tag.toLowerCase() === 'family' ? 'bg-amber-500/95'
+                  : 'bg-[#182cc1]/95'
+                }`}>
+                  {selectedPreview.tag.toLowerCase() === 'education'
+                    ? <Leaf size={12} className="text-white" />
+                    : selectedPreview.tag.toLowerCase() === 'family'
+                      ? <Users size={12} className="text-white" />
+                      : <CheckCircle2 size={12} className="text-white" />
+                  }
+                  <span className="text-[10px] font-bold text-white uppercase tracking-wider">{selectedPreview.tag}</span>
+                </div>
+              )}
+              <div className="absolute bottom-3 left-4">
+                <h2 className="text-white font-black text-xl drop-shadow" style={{ fontFamily: "Poppins, sans-serif" }}>
+                  {selectedPreview.nama}
+                </h2>
+              </div>
+              <button
+                onClick={() => setSelectedPreview(null)}
+                className="absolute top-3 right-3 w-9 h-9 rounded-full bg-white/90 flex items-center justify-center text-[#091540] hover:bg-white transition shadow"
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            {/* Scrollable body */}
+            <div className="flex-1 overflow-y-auto p-5 space-y-4">
+            {/* Info chips & Rating */}
+            <div className="flex items-center justify-between gap-3 flex-wrap">
+              <div className="flex gap-2.5 flex-wrap">
+                <div className="flex items-center gap-2 bg-[#f8faff] rounded-xl px-3 py-2 border border-[#e8edff]">
+                  <Clock size={14} className="text-[#182cc1]" />
+                  <span className="text-xs font-bold text-[#3d518c]">{selectedPreview.durasi}</span>
+                </div>
+                {selectedPreview.min_participants && (
+                  <div className="flex items-center gap-2 bg-[#f8faff] rounded-xl px-3 py-2 border border-[#e8edff]">
+                    <Users size={14} className="text-[#182cc1]" />
+                    <span className="text-xs font-bold text-[#3d518c]">Min {selectedPreview.min_participants} orang</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Rating badge - top right */}
+              {selectedPreview.rating_avg ? (
+                <div className="flex items-center gap-1.5 bg-amber-50 rounded-xl px-3 py-2 border border-amber-200 shadow-xs">
+                  <span className="text-amber-500 text-sm leading-none font-black">★</span>
+                  <span className="text-xs font-black text-amber-900">{selectedPreview.rating_avg.toFixed(1)}</span>
+                  <span className="text-[11px] font-semibold text-amber-700/80">({selectedPreview.reviews_count ?? selectedPreview.reviews?.length ?? 0})</span>
+                </div>
+              ) : (
+                <div className="flex items-center gap-1.5 bg-[#f8faff] rounded-xl px-3 py-2 border border-[#e8edff]">
+                  <span className="text-amber-400 text-xs">★</span>
+                  <span className="text-xs font-semibold text-[#3d518c]">Belum ada ulasan</span>
+                </div>
+              )}
+            </div>
+
+            {/* Deskripsi */}
+            <div>
+              <p className="text-[#3d518c] text-sm leading-relaxed" style={{ fontFamily: "Inter, sans-serif" }}>
+                {selectedPreview.deskripsi}
+              </p>
+            </div>
+
+            {/* Fasilitas */}
+            {selectedPreview.includes && selectedPreview.includes.length > 0 && (
+              <div>
+                <div className="text-xs font-bold uppercase tracking-widest text-[#182cc1] mb-2" style={{ fontFamily: "Inter, sans-serif" }}>
+                  Fasilitas
+                </div>
+                <div className="space-y-1.5">
+                  {selectedPreview.includes.map(inc => (
+                    <div key={inc.id} className="flex items-center gap-2 text-sm text-[#091540]" style={{ fontFamily: "Inter, sans-serif" }}>
+                      <CheckCircle size={14} className="text-[#182cc1] flex-shrink-0" />
+                      {inc.item}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Harga */}
+            <div className="pt-1">
+              <div className="text-[10px] text-[#3d518c] uppercase tracking-widest font-bold mb-1">
+                {selectedPreview.tiers && selectedPreview.tiers.length > 0 ? "Tier Rombongan" : "Harga Tiket"}
+              </div>
+              <div className="text-[#091540] font-black text-2xl" style={{ fontFamily: "Poppins, sans-serif" }}>
+                {selectedPreview.tiers && selectedPreview.tiers.length > 0 ? (
+                  <>
+                    <span className="text-sm font-normal text-[#3d518c] mr-1">Mulai</span>
+                    Rp {Math.min(...selectedPreview.tiers.map(t => Number(t.harga_per_orang))).toLocaleString('id-ID')}
+                  </>
+                ) : (
+                  `Rp ${Number(selectedPreview.harga).toLocaleString('id-ID')}`
+                )}
+                <span className="text-sm text-[#3d518c] font-semibold ml-1">/{selectedPreview.satuan}</span>
+              </div>
+            </div>
+
+            {/* Ulasan Pengunjung */}
+            <div className="pt-3 border-t border-[#e8edff] space-y-3">
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="text-xs font-bold uppercase tracking-widest text-[#182cc1]" style={{ fontFamily: "Inter, sans-serif" }}>
+                    Ulasan Pengunjung
+                  </div>
+                  <p className="text-[11px] text-[#3d518c] mt-0.5">
+                    Pengalaman nyata dari wisatawan yang telah berkunjung
+                  </p>
+                </div>
+                {selectedPreview.rating_avg && (
+                  <div className="flex items-center gap-1 bg-[#f0f4ff] px-2.5 py-1 rounded-lg border border-[#c5d0ff]">
+                    <span className="text-amber-500 text-xs">★</span>
+                    <span className="text-xs font-bold text-[#091540]">{selectedPreview.rating_avg.toFixed(1)}</span>
+                    <span className="text-[10px] text-[#3d518c]">/ 5.0</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Daftar Ulasan */}
+              {selectedPreview.reviews && selectedPreview.reviews.length > 0 ? (
+                <div className="space-y-2.5 max-h-56 overflow-y-auto pr-1">
+                  {selectedPreview.reviews.map(rev => (
+                    <div key={rev.id} className="bg-[#f8faff] rounded-2xl p-3.5 border border-[#e8edff] space-y-1.5 hover:border-[#c5d0ff] transition-colors">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <div className="w-7 h-7 rounded-full bg-[#182cc1] text-white flex items-center justify-center text-xs font-bold shadow-xs">
+                            {rev.nama_pengulas.charAt(0).toUpperCase()}
+                          </div>
+                          <div>
+                            <div className="text-xs font-bold text-[#091540] flex items-center gap-1">
+                              {rev.nama_pengulas}
+                              <span className="text-[9px] bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded-full font-semibold">✓ Terverifikasi</span>
+                            </div>
+                            <div className="text-[10px] text-[#3d518c]">{rev.tanggal_formatted ?? 'Baru saja'}</div>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-0.5 text-amber-400 text-xs">
+                          {[1, 2, 3, 4, 5].map(star => (
+                            <span key={star} className={star <= rev.rating ? "text-amber-400" : "text-gray-300"}>★</span>
+                          ))}
+                        </div>
+                      </div>
+                      <p className="text-xs text-[#3d518c] leading-relaxed italic" style={{ fontFamily: "Inter, sans-serif" }}>
+                        "{rev.komentar}"
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="bg-[#f8faff] rounded-2xl p-4 border border-dashed border-[#c5d0ff] text-center space-y-1">
+                  <p className="text-xs font-semibold text-[#091540]">Belum ada ulasan untuk paket ini</p>
+                  <p className="text-[11px] text-[#3d518c]">Jadilah pengunjung pertama yang memesan dan membagikan pengalaman serumu!</p>
+                </div>
+              )}
+            </div>
+            </div>
+
+            {/* Footer — tombol Pesan */}
+            <div className="flex-shrink-0 p-4 border-t border-[#e8edff] bg-white flex justify-end">
+              <button
+                onClick={() => { setSelectedPreview(null); handleSelectPackage(selectedPreview); }}
+                className="flex items-center gap-2.5 px-7 py-3 bg-[#182cc1] hover:bg-[#1524a3] text-white font-bold rounded-2xl transition shadow-lg shadow-[#182cc1]/20 text-sm"
+                style={{ fontFamily: "Poppins, sans-serif" }}
+              >
+                Pesan Sekarang
+                <ArrowRight size={16} />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

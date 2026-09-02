@@ -67,7 +67,7 @@ export const validatePhone = (phone: string, isRequired = true): ValidationResul
 };
 
 /**
- * Validasi Kontak Darurat
+ * Validasi Kontak Darurat (Nomor HP)
  */
 export const validateEmergencyContact = (contact: string, isRequired = false): ValidationResult => {
   const trimmed = (contact || '').trim();
@@ -77,17 +77,23 @@ export const validateEmergencyContact = (contact: string, isRequired = false): V
       error: isRequired ? 'Kontak darurat wajib diisi' : null,
     };
   }
-  if (trimmed.length < 3) {
+
+  const digitsOnly = trimmed.replace(/\D/g, '');
+  const isValidPrefix = digitsOnly.startsWith('08') || digitsOnly.startsWith('628');
+  if (!isValidPrefix) {
     return {
       isValid: false,
-      error: 'Kontak darurat minimal 3 karakter',
+      error: 'Kontak darurat harus diawali 08 (contoh: 081234567890)',
     };
   }
-  if (trimmed.length > 100) {
+
+  if (digitsOnly.length < 10 || digitsOnly.length > 15) {
     return {
       isValid: false,
-      error: 'Kontak darurat maksimal 100 karakter',
+      error: 'Kontak darurat harus terdiri dari 10-15 digit angka',
     };
   }
+
   return { isValid: true, error: null };
 };
+

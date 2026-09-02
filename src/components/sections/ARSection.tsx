@@ -1,15 +1,52 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Camera, ExternalLink, Box, Scan, Smartphone, RotateCcw, X } from "lucide-react";
-
-const AR_URL = "https://getas-gardu.vercel.app/";
-
+import { getSettings } from "../../services/village.service";
 
 export default function ARSection() {
   const [modal, setModal] = useState(false);
   const [iframeError, setIframeError] = useState(false);
   const [loaded, setLoaded] = useState(false);
+  const [arUrl, setArUrl] = useState("");
+  const iframeLoadCountRef = useRef(0);
+
+  useEffect(() => {
+    getSettings('ar_url').then(res => {
+      if (res?.data) {
+        const map = Object.fromEntries(res.data.map(item => [item.key, item.value]));
+        if (map.ar_url) {
+          setArUrl(map.ar_url);
+        }
+      }
+    }).catch(() => {});
+  }, []);
+
+  // Lock body scroll saat modal AR terbuka
+  useEffect(() => {
+    if (modal) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [modal]);
+
+  // Ketika halaman kembali visible (misal user balik dari tab lain), tutup modal
+  useEffect(() => {
+    const handleVisibility = () => {
+      if (!document.hidden && modal) {
+        setModal(false);
+        setLoaded(false);
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+    return () => document.removeEventListener('visibilitychange', handleVisibility);
+  }, [modal]);
+
 
   const openAR = () => {
+    iframeLoadCountRef.current = 0;
     setModal(true);
     setLoaded(false);
     setIframeError(false);
@@ -17,12 +54,27 @@ export default function ARSection() {
 
   const closeAR = () => {
     setModal(false);
+    iframeLoadCountRef.current = 0;
     setLoaded(false);
   };
 
   const handleIframeError = () => {
     setIframeError(true);
   };
+
+  // Deteksi navigasi dalam iframe:
+  // Load ke-1 = normal (AR site muat pertama kali)
+  // Load ke-2+ = user klik "Kunjungi Website" atau navigasi lain di dalam AR site → tutup modal
+  const handleIframeLoad = () => {
+    iframeLoadCountRef.current += 1;
+    if (iframeLoadCountRef.current === 1) {
+      setLoaded(true);
+    } else {
+      // Iframe navigasi ke URL lain → tutup modal agar tidak ada sisa border
+      closeAR();
+    }
+  };
+
 
   return (
     <>
@@ -97,7 +149,7 @@ export default function ARSection() {
                 <Camera size={16} />
                 Buka Pengalaman AR
               </button>
-              <a href={AR_URL} target="_blank" rel="noopener noreferrer"
+              <a href={arUrl} target="_blank" rel="noopener noreferrer"
                 className="flex items-center gap-2 px-6 py-3 bg-transparent border border-white/25 hover:bg-white/10 text-white font-semibold rounded-xl transition-all text-sm"
                 style={{ fontFamily: "Poppins, sans-serif" }}>
                 <ExternalLink size={14} />
@@ -220,7 +272,7 @@ export default function ARSection() {
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <a href={AR_URL} target="_blank" rel="noopener noreferrer"
+              <a href={arUrl} target="_blank" rel="noopener noreferrer"
                 className="flex items-center gap-1.5 px-3 py-1.5 bg-white/10 hover:bg-white/20 text-white text-xs font-medium rounded-lg transition"
                 style={{ fontFamily: "Inter, sans-serif" }}>
                 <ExternalLink size={12} /> Tab Baru
@@ -251,7 +303,7 @@ export default function ARSection() {
                 <p className="text-white/60 text-sm max-w-xs" style={{ fontFamily: "Inter, sans-serif" }}>
                   Situs AR memblokir pemuatan dalam iframe. Silakan buka di tab baru untuk pengalaman penuh.
                 </p>
-                <a href={AR_URL} target="_blank" rel="noopener noreferrer"
+                <a href={arUrl} target="_blank" rel="noopener noreferrer"
                   className="flex items-center gap-2 px-6 py-3 bg-[#182cc1] text-white font-bold rounded-xl hover:bg-[#1524a3] transition"
                   style={{ fontFamily: "Poppins, sans-serif" }}>
                   <ExternalLink size={16} /> Buka di Tab Baru
@@ -259,12 +311,12 @@ export default function ARSection() {
               </div>
             ) : (
               <iframe
-                src={AR_URL}
+                src={arUrl}
                 title="AR Wisata Desa Getas"
                 className="w-full h-full border-0"
                 allow="camera; microphone; accelerometer; gyroscope; xr-spatial-tracking; geolocation"
                 allowFullScreen
-                onLoad={() => setLoaded(true)}
+                onLoad={handleIframeLoad}
                 onError={handleIframeError}
               />
             )}

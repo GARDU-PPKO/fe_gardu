@@ -35,22 +35,43 @@ export interface DusunKeunggulan {
 
 // ── Tour Packages ──
 
+export interface PackageReview {
+  id: number;
+  nama_pengulas: string;
+  rating: number;
+  komentar: string;
+  created_at?: string;
+  tanggal_formatted?: string;
+}
+
+export interface TourPackageTier {
+  id?: number;
+  min_peserta: number;
+  harga_per_orang: number;
+}
+
 export interface TourPackage {
   id: number;
   nama: string;
   deskripsi: string;
+  tipe_harga?: 'per_orang_tier' | 'per_paket_fixed';
   harga: number;
   satuan: 'orang' | 'grup' | 'tenda' | 'paket';
+  kapasitas_per_unit?: number | null;
   tag: string | null;
   durasi: string;
   min_participants: number | null;
   max_participants: number | null;
   gambar: string;
   is_active: boolean;
+  rating_avg?: number | null;
+  reviews_count?: number;
+  reviews?: PackageReview[];
   created_by?: number;
   created_at?: string;
   updated_at?: string;
   includes?: TourPackageInclude[];
+  tiers?: TourPackageTier[];
 }
 
 export interface TourPackageInclude {
@@ -150,7 +171,7 @@ export interface Budaya {
   kategori: string;
   deskripsi: string;
   gambar: string;
-  span_grid: number;
+  span_grid?: number;
   is_active: boolean;
   created_by?: number;
   schedules?: BudayaSchedule[];
