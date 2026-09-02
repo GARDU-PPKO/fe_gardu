@@ -22,6 +22,7 @@ const BookingPackage = lazy(() => import('../pages/Booking/BookingPackage'));
 const BookingFormPage = lazy(() => import('../pages/Booking/BookingForm'));
 const PaymentPage = lazy(() => import('../pages/Booking/PaymentPage'));
 const CheckBooking = lazy(() => import('../pages/Booking/CheckBooking'));
+const SubmitReviewPage = lazy(() => import('../pages/Review/SubmitReviewPage'));
 
 const PageWrapper = ({ children }: { children: React.ReactNode }) => (
   <motion.div
@@ -52,6 +53,8 @@ const AnimatedRoutes: React.FC = () => {
         <Route path="/payment/:kode" element={<PageWrapper><PaymentPage /></PageWrapper>} />
 
         <Route path="/cek-pesanan" element={<PageWrapper><CheckBooking /></PageWrapper>} />
+
+        <Route path="/review/:token" element={<PageWrapper><SubmitReviewPage /></PageWrapper>} />
 
 
         <Route path="/booking/*" element={

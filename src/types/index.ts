@@ -35,6 +35,15 @@ export interface DusunKeunggulan {
 
 // ── Tour Packages ──
 
+export interface PackageReview {
+  id: number;
+  nama_pengulas: string;
+  rating: number;
+  komentar: string;
+  created_at?: string;
+  tanggal_formatted?: string;
+}
+
 export interface TourPackageTier {
   id?: number;
   min_peserta: number;
@@ -55,6 +64,9 @@ export interface TourPackage {
   max_participants: number | null;
   gambar: string;
   is_active: boolean;
+  rating_avg?: number | null;
+  reviews_count?: number;
+  reviews?: PackageReview[];
   created_by?: number;
   created_at?: string;
   updated_at?: string;
